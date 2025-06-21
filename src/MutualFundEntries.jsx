@@ -133,9 +133,12 @@ function MutualFundEntries() {
               <label>
                 Fund Name:
                 <select value={fundName} onChange={e => setFundName(e.target.value)}>
-                  {fundOptions.map(opt => (
-                    <option key={opt._id} value={opt._id}>{opt.MutualFundName}</option>
-                  ))}
+                  {fundOptions
+                    .slice()
+                    .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
+                    .map(opt => (
+                      <option key={opt._id} value={opt._id}>{opt.MutualFundName}</option>
+                    ))}
                 </select>
               </label>
               <label>
@@ -176,9 +179,12 @@ function MutualFundEntries() {
                     <td>
                       {editId === entry._id ? (
                         <select value={editFundName} onChange={e => setEditFundName(e.target.value)}>
-                          {fundOptions.map(opt => (
-                            <option key={opt._id} value={opt._id}>{opt.MutualFundName}</option>
-                          ))}
+                          {fundOptions
+                            .slice()
+                            .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
+                            .map(opt => (
+                              <option key={opt._id} value={opt._id}>{opt.MutualFundName}</option>
+                            ))}
                         </select>
                       ) : (
                         entry.fundName?.MutualFundName || ''

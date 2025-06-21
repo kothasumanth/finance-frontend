@@ -122,9 +122,12 @@ function ViewMutualFundData() {
         <span>Select Mutual Fund:</span>
         <select value={selectedFund} onChange={e => setSelectedFund(e.target.value)}>
           <option value="">-- Select --</option>
-          {fundOptions.map(f => (
-            <option key={f._id} value={f._id}>{f.MutualFundName}</option>
-          ))}
+          {fundOptions
+            .slice()
+            .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
+            .map(f => (
+              <option key={f._id} value={f._id}>{f.MutualFundName}</option>
+            ))}
         </select>
         <button onClick={handleGetAllNavs} style={{marginLeft:'2rem', background:'#059669', color:'#fff', border:'none', borderRadius:6, padding:'0.5rem 1.2rem', fontWeight:600, fontSize:'1rem'}}>Get All NAVs</button>
         {/* Move Date and NAV next to dropdown */}
