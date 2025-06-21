@@ -11,6 +11,7 @@ function MutualFundMetadata() {
   const [editId, setEditId] = useState(null)
   const [fundName, setFundName] = useState('')
   const [googleValue, setGoogleValue] = useState('')
+  const [editGoogleValue, setEditGoogleValue] = useState('')
 
   useEffect(() => {
     fetch('http://localhost:3000/mutualfund-metadata')
@@ -38,8 +39,8 @@ function MutualFundMetadata() {
   const handleEdit = (meta) => {
     setEditId(meta._id)
     setFundName(meta.MutualFundName)
-    setGoogleValue(meta.GoogleValue)
-    setShowPopup(true)
+    setEditGoogleValue(meta.GoogleValue)
+    setShowPopup(false)
   }
 
   const handleSave = () => {
@@ -48,7 +49,7 @@ function MutualFundMetadata() {
     fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ MutualFundName: fundName, GoogleValue: googleValue })
+      body: JSON.stringify({ MutualFundName: fundName, GoogleValue: editId ? editGoogleValue : googleValue })
     })
       .then(res => {
         if (!res.ok) throw new Error('Failed to save metadata')
@@ -60,6 +61,10 @@ function MutualFundMetadata() {
         } else {
           setMetadata([...metadata, saved])
         }
+        setEditId(null)
+        setFundName('')
+        setEditGoogleValue('')
+        setGoogleValue('')
         setShowPopup(false)
       })
       .catch(err => alert(err.message))
@@ -96,16 +101,36 @@ function MutualFundMetadata() {
             </tr>
           </thead>
           <tbody>
-            {metadata.map(meta => (
-              <tr key={meta._id}>
-                <td>{meta.MutualFundName}</td>
-                <td>{meta.GoogleValue}</td>
-                <td>
-                  <IconButton icon={"✏️"} title="Edit" onClick={() => handleEdit(meta)} />
-                  <IconButton icon={"🗑️"} title="Delete" onClick={() => handleDelete(meta._id)} />
-                </td>
-              </tr>
-            ))}
+            {metadata
+              .slice()
+              .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
+              .map(meta => (
+                <tr key={meta._id}>
+                  {editId === meta._id ? (
+                    <>
+                      <td>
+                        <input value={fundName} onChange={e => setFundName(e.target.value)} />
+                      </td>
+                      <td>
+                        <input value={editGoogleValue} onChange={e => setEditGoogleValue(e.target.value)} />
+                      </td>
+                      <td>
+                        <IconButton icon={"💾"} title="Save" onClick={handleSave} />
+                        <IconButton icon={"✖️"} title="Cancel" onClick={() => { setEditId(null); setFundName(''); setEditGoogleValue(''); }} />
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td>{meta.MutualFundName}</td>
+                      <td>{meta.GoogleValue}</td>
+                      <td>
+                        <IconButton icon={"✏️"} title="Edit" onClick={() => handleEdit(meta)} />
+                        <IconButton icon={"🗑️"} title="Delete" onClick={() => handleDelete(meta._id)} />
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))}
           </tbody>
         </table>
       )}
