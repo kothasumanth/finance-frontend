@@ -12,6 +12,7 @@ function ViewMutualFundData() {
   const [mfApiData, setMfApiData] = useState(null)
   const [mfApiUrl, setMfApiUrl] = useState('')
   const [mfApiRawResponse, setMfApiRawResponse] = useState('')
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     fetch('http://localhost:3000/mutualfund-metadata')
@@ -92,7 +93,10 @@ function ViewMutualFundData() {
           navObj = prev.reduce((a, b) => toDateNum(a.date) > toDateNum(b.date) ? a : b)
         }
       }
+      let units = ''
       if (navObj && navObj.nav) {
+        const navValue = parseFloat(navObj.nav)
+        units = entry.amount && navValue ? (parseFloat(entry.amount) / navValue).toFixed(4) : ''
         await fetch(`http://localhost:3000/mutual-funds/${entry._id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -101,11 +105,12 @@ function ViewMutualFundData() {
             purchaseDate: entry.purchaseDate,
             investType: entry.investType,
             amount: entry.amount,
-            nav: parseFloat(navObj.nav)
+            nav: navValue,
+            units: units
           })
         })
         // Update UI
-        setEntries(entries => entries.map(e => e._id === entry._id ? { ...e, nav: parseFloat(navObj.nav) } : e))
+        setEntries(entries => entries.map(e => e._id === entry._id ? { ...e, nav: navValue, units } : e))
       }
     }
   }
@@ -144,39 +149,48 @@ function ViewMutualFundData() {
         entries.length === 0 ? (
           <p>No entries found for this fund.</p>
         ) : (
-          <table className="user-table colorful-table">
-            <thead>
-              <tr>
-                <th>Purchase Date</th>
-                <th>Fund Name</th>
-                <th>Invest Type</th>
-                <th>Amount</th>
-                <th>NAV</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries
-                .slice()
-                .sort((a, b) => a.purchaseDate.localeCompare(b.purchaseDate))
-                .map(entry => (
-                  <tr key={entry._id}>
-                    <td>{entry.purchaseDate}</td>
-                    <td>{entry.fundName?.MutualFundName}</td>
-                    <td>
-                      <span style={{
-                        background: entry.investType === 'Invest' ? '#d1fae5' : '#fee2e2',
-                        color: entry.investType === 'Invest' ? '#065f46' : '#991b1b',
-                        borderRadius: 4,
-                        padding: '0.2em 0.7em',
-                        fontWeight: 600
-                      }}>{entry.investType}</span>
-                    </td>
-                    <td>{entry.amount}</td>
-                    <td>{entry.nav}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+          <>
+            <table className="user-table colorful-table">
+              <thead>
+                <tr>
+                  <th>Invest Type</th>
+                  <th>Purchase Date</th>
+                  <th>Amount</th>
+                  <th>NAV</th>
+                  <th>Units</th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries
+                  .slice()
+                  .sort((a, b) => a.purchaseDate.localeCompare(b.purchaseDate))
+                  .slice((page-1)*10, page*10)
+                  .map(entry => (
+                    <tr key={entry._id}>
+                      <td>
+                        <span style={{
+                          background: entry.investType === 'Invest' ? '#d1fae5' : '#fee2e2',
+                          color: entry.investType === 'Invest' ? '#065f46' : '#991b1b',
+                          borderRadius: 4,
+                          padding: '0.2em 0.7em',
+                          fontWeight: 600
+                        }}>{entry.investType}</span>
+                      </td>
+                      <td>{entry.purchaseDate}</td>
+                      <td>{entry.amount}</td>
+                      <td>{entry.nav !== undefined && entry.nav !== '' ? Number(entry.nav).toFixed(2) : ''}</td>
+                      <td>{entry.units !== undefined && entry.units !== '' ? Number(entry.units).toFixed(2) : ''}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+            {/* Pagination controls */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '1rem', gap: '1rem' }}>
+              <button onClick={() => setPage(page-1)} disabled={page === 1}>Prev</button>
+              <span>Page {page} of {Math.ceil(entries.length/10)}</span>
+              <button onClick={() => setPage(page+1)} disabled={page === Math.ceil(entries.length/10) || entries.length === 0}>Next</button>
+            </div>
+          </>
         )
       )}
       {/* Remove Date/NAV from below, keep only in label above */}
