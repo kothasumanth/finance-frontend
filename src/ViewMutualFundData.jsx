@@ -66,34 +66,33 @@ function ViewMutualFundData() {
       })
   }, [selectedFund, fundOptions])
 
-  // Add function to get NAV for an entry
-  const handleGetNav = async (entry) => {
+  // Add function to get NAV for all entries with blank nav
+  const handleGetAllNavs = async () => {
     const fund = fundOptions.find(f => f._id === selectedFund)
     if (!fund || !fund.GoogleValue) return
-    // GoogleValue is the mfapi code
     const url = `https://api.mfapi.in/mf/${fund.GoogleValue}`
+    let apiData = []
     try {
       const res = await fetch(url)
       const data = await res.json()
       if (!data.data || !Array.isArray(data.data)) return
-      // Convert our date (YYYY-MM-DD) to DD-MM-YYYY for comparison
+      apiData = data.data
+    } catch (err) { return }
+    // Only process entries with blank nav
+    const blankNavEntries = entries.filter(e => !e.nav && e.fundName && (e.fundName._id === selectedFund))
+    for (const entry of blankNavEntries) {
       const [yyyy, mm, dd] = entry.purchaseDate.split('-')
       const ourDate = `${dd}-${mm}-${yyyy}`
-      // Find NAV for the purchase date (format: DD-MM-YYYY)
-      let navObj = data.data.find(d => d.date === ourDate)
+      let navObj = apiData.find(d => d.date === ourDate)
       if (!navObj) {
-        // If not found, find the most recent previous date
-        // Sort API data by date descending (DD-MM-YYYY)
         const toDateNum = s => parseInt(s.split('-').reverse().join(''))
         const purchaseNum = toDateNum(ourDate)
-        const prev = data.data.filter(d => toDateNum(d.date) < purchaseNum)
+        const prev = apiData.filter(d => toDateNum(d.date) < purchaseNum)
         if (prev.length > 0) {
-          // Get the latest available before purchase date
           navObj = prev.reduce((a, b) => toDateNum(a.date) > toDateNum(b.date) ? a : b)
         }
       }
       if (navObj && navObj.nav) {
-        // Update entry in backend
         await fetch(`http://localhost:3000/mutual-funds/${entry._id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -105,14 +104,9 @@ function ViewMutualFundData() {
             nav: parseFloat(navObj.nav)
           })
         })
-        // Refresh entries
+        // Update UI
         setEntries(entries => entries.map(e => e._id === entry._id ? { ...e, nav: parseFloat(navObj.nav) } : e))
-      } else {
-        // If not found, set nav to blank
-        setEntries(entries => entries.map(e => e._id === entry._id ? { ...e, nav: '' } : e))
       }
-    } catch (err) {
-      // On error, do nothing
     }
   }
 
@@ -132,6 +126,7 @@ function ViewMutualFundData() {
             <option key={f._id} value={f._id}>{f.MutualFundName}</option>
           ))}
         </select>
+        <button onClick={handleGetAllNavs} style={{marginLeft:'2rem', background:'#059669', color:'#fff', border:'none', borderRadius:6, padding:'0.5rem 1.2rem', fontWeight:600, fontSize:'1rem'}}>Get All NAVs</button>
         {/* Move Date and NAV next to dropdown */}
         <span style={{ fontWeight: 'bold', color: '#059669', marginLeft: '2rem' }}>
           Date: <span style={{ color: '#2563eb' }}>{mfApiData && mfApiData.date ? mfApiData.date : ''}</span>
@@ -154,7 +149,6 @@ function ViewMutualFundData() {
                 <th>Invest Type</th>
                 <th>Amount</th>
                 <th>NAV</th>
-                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -173,9 +167,6 @@ function ViewMutualFundData() {
                   </td>
                   <td>{entry.amount}</td>
                   <td>{entry.nav}</td>
-                  <td>
-                    <IconButton icon={"🔄"} title="Get NAV" onClick={() => handleGetNav(entry)} />
-                  </td>
                 </tr>
               ))}
             </tbody>
