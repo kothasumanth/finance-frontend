@@ -86,7 +86,14 @@ function MutualFundEntries() {
     fetch(`http://localhost:3000/mutual-funds/${entry._id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fundName: editFundName, purchaseDate: editDate, investType: editInvestType, amount: parseFloat(editAmount) })
+      body: JSON.stringify({
+        fundName: editFundName,
+        purchaseDate: editDate,
+        investType: editInvestType,
+        amount: parseFloat(editAmount),
+        nav: null,
+        units: null
+      })
     })
       .then((res) => {
         if (!res.ok) throw new Error('Failed to update entry')
