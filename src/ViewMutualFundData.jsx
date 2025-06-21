@@ -98,15 +98,29 @@ function ViewMutualFundData() {
           <table className="user-table colorful-table">
             <thead>
               <tr>
-                <th>Date</th>
+                <th>Purchase Date</th>
                 <th>Fund Name</th>
+                <th>Invest Type</th>
+                <th>Amount</th>
+                <th>NAV</th>
               </tr>
             </thead>
             <tbody>
               {entries.map(entry => (
                 <tr key={entry._id}>
-                  <td>{entry.date}</td>
+                  <td>{entry.purchaseDate}</td>
                   <td>{entry.fundName?.MutualFundName}</td>
+                  <td>
+                    <span style={{
+                      background: entry.investType === 'Invest' ? '#d1fae5' : '#fee2e2',
+                      color: entry.investType === 'Invest' ? '#065f46' : '#991b1b',
+                      borderRadius: 4,
+                      padding: '0.2em 0.7em',
+                      fontWeight: 600
+                    }}>{entry.investType}</span>
+                  </td>
+                  <td>{entry.amount}</td>
+                  <td>{entry.nav}</td>
                 </tr>
               ))}
             </tbody>

@@ -11,9 +11,13 @@ function MutualFundEntries() {
   const [showPopup, setShowPopup] = useState(false)
   const [fundName, setFundName] = useState('')
   const [date, setDate] = useState('')
+  const [investType, setInvestType] = useState('Invest')
+  const [amount, setAmount] = useState('')
   const [editId, setEditId] = useState(null)
   const [editFundName, setEditFundName] = useState('')
   const [editDate, setEditDate] = useState('')
+  const [editInvestType, setEditInvestType] = useState('Invest')
+  const [editAmount, setEditAmount] = useState('')
   const [fundOptions, setFundOptions] = useState([])
 
   useEffect(() => {
@@ -42,13 +46,15 @@ function MutualFundEntries() {
     setShowPopup(true)
     setFundName(fundOptions.length > 0 ? fundOptions[0]._id : '')
     setDate('')
+    setInvestType('Invest')
+    setAmount('')
   }
 
   const handleSave = () => {
     fetch('http://localhost:3000/mutual-funds', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, fundName, date })
+      body: JSON.stringify({ userId, fundName, purchaseDate: date, investType, amount: parseFloat(amount) })
     })
       .then((res) => {
         if (!res.ok) throw new Error('Failed to add entry')
@@ -59,6 +65,8 @@ function MutualFundEntries() {
         setShowPopup(false)
         setFundName('')
         setDate('')
+        setInvestType('Invest')
+        setAmount('')
       })
       .catch((err) => {
         alert(err.message)
@@ -68,14 +76,16 @@ function MutualFundEntries() {
   const handleEdit = (entry) => {
     setEditId(entry._id)
     setEditFundName(entry.fundName)
-    setEditDate(entry.date)
+    setEditDate(entry.purchaseDate)
+    setEditInvestType(entry.investType || 'Invest')
+    setEditAmount(entry.amount || '')
   }
 
   const handleSaveEdit = (entry) => {
     fetch(`http://localhost:3000/mutual-funds/${entry._id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fundName: editFundName, date: editDate })
+      body: JSON.stringify({ fundName: editFundName, purchaseDate: editDate, investType: editInvestType, amount: parseFloat(editAmount) })
     })
       .then((res) => {
         if (!res.ok) throw new Error('Failed to update entry')
@@ -124,7 +134,9 @@ function MutualFundEntries() {
               <thead>
                 <tr>
                   <th>Fund Name</th>
-                  <th>Date</th>
+                  <th>Purchase Date</th>
+                  <th>Invest Type</th>
+                  <th>Amount</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -146,7 +158,30 @@ function MutualFundEntries() {
                       {editId === entry._id ? (
                         <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} />
                       ) : (
-                        entry.date
+                        entry.purchaseDate
+                      )}
+                    </td>
+                    <td>
+                      {editId === entry._id ? (
+                        <select value={editInvestType} onChange={e => setEditInvestType(e.target.value)}>
+                          <option value="Invest">Invest</option>
+                          <option value="Redeem">Redeem</option>
+                        </select>
+                      ) : (
+                        <span style={{
+                          background: entry.investType === 'Invest' ? '#d1fae5' : '#fee2e2',
+                          color: entry.investType === 'Invest' ? '#065f46' : '#991b1b',
+                          borderRadius: 4,
+                          padding: '0.2em 0.7em',
+                          fontWeight: 600
+                        }}>{entry.investType}</span>
+                      )}
+                    </td>
+                    <td>
+                      {editId === entry._id ? (
+                        <input type="number" value={editAmount} onChange={e => setEditAmount(e.target.value)} min="0" step="0.01" />
+                      ) : (
+                        entry.amount
                       )}
                     </td>
                     <td>
@@ -180,6 +215,17 @@ function MutualFundEntries() {
           <label>
             Date:
             <input type="date" value={date} onChange={e => setDate(e.target.value)} />
+          </label>
+          <label>
+            Invest Type:
+            <select value={investType} onChange={e => setInvestType(e.target.value)}>
+              <option value="Invest">Invest</option>
+              <option value="Redeem">Redeem</option>
+            </select>
+          </label>
+          <label>
+            Amount:
+            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} min="0" step="0.01" />
           </label>
           <IconButton icon={"💾"} title="Save" onClick={handleSave} />
           <IconButton icon={"✖️"} title="Cancel" onClick={() => setShowPopup(false)} />
