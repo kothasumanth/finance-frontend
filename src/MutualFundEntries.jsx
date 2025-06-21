@@ -248,7 +248,7 @@ function MutualFundEntries() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '1.2rem', justifyContent: 'center', marginTop: '0.5rem' }}>
-                <IconButton icon={"💾"} title="Save" onClick={handleSave} />
+                <IconButton icon={"💾"} title="Save" type="submit" />
                 <IconButton icon={"✖️"} title="Cancel" onClick={() => setShowPopup(false)} />
               </div>
             </form>
