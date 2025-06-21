@@ -137,6 +137,50 @@ function ViewMutualFundData() {
         <div style={{marginTop: '1.2rem', fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.2rem'}}>
           <span>Date: <span style={{ color: '#2563eb' }}>{mfApiData && mfApiData.date ? mfApiData.date : ''}</span></span>
           <span>NAV: <span style={{ color: '#2563eb' }}>{mfApiData && mfApiData.nav ? mfApiData.nav : ''}</span></span>
+          <hr style={{ width: '100%', border: 'none', borderTop: '2.5px dashed #cbd5e1', margin: '0.5rem 0' }} />
+          <span style={{
+            alignSelf: 'center',
+            background: 'linear-gradient(90deg, #fef9c3 0%, #fef08a 100%)',
+            color: '#b45309',
+            borderRadius: 6,
+            padding: '0.2rem 1.2rem',
+            fontWeight: 700,
+            fontSize: '1.08rem',
+            marginBottom: '0.2rem',
+            boxShadow: '0 1px 4px rgba(202,138,4,0.08)'
+          }}>Summary</span>
+          <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
+            <span>Invested:</span>
+            <span style={{ color: '#2563eb', textAlign: 'right', minWidth: 70 }}>{entries && entries.length > 0 ? Math.round(entries.filter(e => e.investType === 'Invest').reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)) : ''}</span>
+          </span>
+          <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
+            <span>Today Value:</span>
+            <span style={{ color: '#2563eb', textAlign: 'right', minWidth: 70 }}>{(() => {
+              if (!entries || entries.length === 0 || !mfApiData || !mfApiData.nav) return '';
+              const totalTodayValue = entries.reduce((sum, e) => sum + ((e.investType === 'Invest' && e.units !== undefined && e.units !== '') ? (Number(e.units) * Number(mfApiData.nav)) : 0), 0);
+              return Math.round(totalTodayValue);
+            })()}</span>
+          </span>
+          <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
+            <span>P/L:</span>
+            <span style={{ fontWeight: 700, textAlign: 'right', minWidth: 70, color: (() => {
+              if (!entries || entries.length === 0 || !mfApiData || !mfApiData.nav) return '#2563eb';
+              const invested = entries.filter(e => e.investType === 'Invest').reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+              const totalTodayValue = entries.reduce((sum, e) => sum + ((e.investType === 'Invest' && e.units !== undefined && e.units !== '') ? (Number(e.units) * Number(mfApiData.nav)) : 0), 0);
+              const profitLoss = totalTodayValue - invested;
+              return profitLoss >= 0 ? '#059669' : '#dc2626';
+            })(),}}>{(() => {
+              if (!entries || entries.length === 0 || !mfApiData || !mfApiData.nav) return '';
+              const invested = entries.filter(e => e.investType === 'Invest').reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+              const totalTodayValue = entries.reduce((sum, e) => sum + ((e.investType === 'Invest' && e.units !== undefined && e.units !== '') ? (Number(e.units) * Number(mfApiData.nav)) : 0), 0);
+              const profitLoss = totalTodayValue - invested;
+              return profitLoss.toFixed(2);
+            })()}</span>
+          </span>
+          <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
+            <span>Balance Units:</span>
+            <span style={{ color: '#2563eb', textAlign: 'right', minWidth: 70 }}>{entries && entries.length > 0 ? Math.round(entries.reduce((sum, e) => sum + (parseFloat(e.units) || 0), 0)) : ''}</span>
+          </span>
         </div>
       </div>
       <h1 className="colorful-title" style={{ fontSize: '1.5rem', marginTop: '0.5rem', marginBottom: '0.7rem' }}>View Mutual Fund Data</h1>
@@ -180,6 +224,7 @@ function ViewMutualFundData() {
                   <th>Amount</th>
                   <th>NAV</th>
                   <th>Units</th>
+                  <th>Today Value</th>
                 </tr>
               </thead>
               <tbody>
@@ -202,6 +247,15 @@ function ViewMutualFundData() {
                       <td>{entry.amount}</td>
                       <td>{entry.nav !== undefined && entry.nav !== '' ? Number(entry.nav).toFixed(2) : ''}</td>
                       <td>{entry.units !== undefined && entry.units !== '' ? Number(entry.units).toFixed(2) : ''}</td>
+                      <td>{(() => {
+                        if (entry.units !== undefined && entry.units !== '' && mfApiData && mfApiData.nav) {
+                          const todayValue = Number(entry.units) * Number(mfApiData.nav);
+                          const amount = parseFloat(entry.amount) || 0;
+                          const color = todayValue > amount ? '#059669' : '#dc2626';
+                          return <span style={{ color, fontWeight: 600 }}>{todayValue.toFixed(2)}</span>;
+                        }
+                        return '';
+                      })()}</td>
                     </tr>
                   ))}
               </tbody>
