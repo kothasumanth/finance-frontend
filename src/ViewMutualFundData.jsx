@@ -8,6 +8,9 @@ function ViewMutualFundData() {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [mfApiData, setMfApiData] = useState(null)
+  const [mfApiUrl, setMfApiUrl] = useState('')
+  const [mfApiRawResponse, setMfApiRawResponse] = useState('')
 
   useEffect(() => {
     fetch('http://localhost:3000/mutualfund-metadata')
@@ -32,6 +35,35 @@ function ViewMutualFundData() {
       })
   }, [selectedFund, userId])
  
+  useEffect(() => {
+    if (!selectedFund) {
+      setMfApiData(null)
+      setMfApiUrl('')
+      setMfApiRawResponse('')
+      return
+    }
+    const fund = fundOptions.find(f => f._id === selectedFund)
+    if (!fund || !fund.GoogleValue) {
+      setMfApiData(null)
+      setMfApiUrl('')
+      setMfApiRawResponse('')
+      return
+    }
+    const url = `http://localhost:3000/mf-api?googleValue=${encodeURIComponent(fund.GoogleValue)}`
+    setMfApiUrl(url)
+    fetch(url)
+      .then(res => res.json().then(data => ({ ok: res.ok, data, raw: JSON.stringify(data) })))
+      .then(({ ok, data, raw }) => {
+        setMfApiData(data)
+        setMfApiRawResponse(raw)
+        console.log('MF API URL:', url)
+        console.log('MF API Response:', data)
+      })
+      .catch(() => {
+        setMfApiData(null)
+        setMfApiRawResponse('')
+      })
+  }, [selectedFund, fundOptions])
 
   return (
     <div className="container colorful-bg">
@@ -41,14 +73,21 @@ function ViewMutualFundData() {
         }}>Dashboard</Link>
       </div>
       <h1 className="colorful-title">View Mutual Fund Data</h1>
-      <label>
-        Select Mutual Fund:
+      <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
+        <span>Select Mutual Fund:</span>
         <select value={selectedFund} onChange={e => setSelectedFund(e.target.value)}>
           <option value="">-- Select --</option>
           {fundOptions.map(f => (
             <option key={f._id} value={f._id}>{f.MutualFundName}</option>
           ))}
         </select>
+        {/* Move Date and NAV next to dropdown */}
+        <span style={{ fontWeight: 'bold', color: '#059669', marginLeft: '2rem' }}>
+          Date: <span style={{ color: '#2563eb' }}>{mfApiData && mfApiData.date ? mfApiData.date : ''}</span>
+        </span>
+        <span style={{ fontWeight: 'bold', color: '#059669', marginLeft: '1.5rem' }}>
+          NAV: <span style={{ color: '#2563eb' }}>{mfApiData && mfApiData.nav ? mfApiData.nav : ''}</span>
+        </span>
       </label>      
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -74,6 +113,7 @@ function ViewMutualFundData() {
           </table>
         )
       )}
+      {/* Remove Date/NAV from below, keep only in label above */}
     </div>
   )
 }
