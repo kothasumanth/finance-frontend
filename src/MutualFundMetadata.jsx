@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import IconButton from './IconButton'
 
 function MutualFundMetadata() {
   const { userId } = useParams()
@@ -100,8 +101,8 @@ function MutualFundMetadata() {
                 <td>{meta.MutualFundName}</td>
                 <td>{meta.GoogleValue}</td>
                 <td>
-                  <button onClick={() => handleEdit(meta)}>✏️</button>
-                  <button onClick={() => handleDelete(meta._id)}>🗑️</button>
+                  <IconButton icon={"✏️"} title="Edit" onClick={() => handleEdit(meta)} />
+                  <IconButton icon={"🗑️"} title="Delete" onClick={() => handleDelete(meta._id)} />
                 </td>
               </tr>
             ))}
@@ -119,8 +120,8 @@ function MutualFundMetadata() {
             Google Value:
             <input value={googleValue} onChange={e => setGoogleValue(e.target.value)} />
           </label>
-          <button onClick={handleSave}>Save</button>
-          <button onClick={() => setShowPopup(false)}>Cancel</button>
+          <IconButton icon={"💾"} title="Save" onClick={handleSave} />
+          <IconButton icon={"✖️"} title="Cancel" onClick={() => setShowPopup(false)} />
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { fetchMutualFundMetadata } from './api'
+import IconButton from './IconButton'
 
 function MutualFundEntries() {
   const { userId } = useParams()
@@ -150,11 +151,11 @@ function MutualFundEntries() {
                     </td>
                     <td>
                       {editId === entry._id ? (
-                        <button onClick={() => handleSaveEdit(entry)} title="Save">💾</button>
+                        <IconButton icon={"💾"} title="Save" onClick={() => handleSaveEdit(entry)} />
                       ) : (
                         <>
-                          <button onClick={() => handleEdit(entry)} title="Edit">✏️</button>
-                          <button onClick={() => handleDelete(entry)} title="Delete">🗑️</button>
+                          <IconButton icon={"✏️"} title="Edit" onClick={() => handleEdit(entry)} />
+                          <IconButton icon={"🗑️"} title="Delete" onClick={() => handleDelete(entry)} />
                         </>
                       )}
                     </td>
@@ -180,8 +181,8 @@ function MutualFundEntries() {
             Date:
             <input type="date" value={date} onChange={e => setDate(e.target.value)} />
           </label>
-          <button onClick={handleSave}>Save</button>
-          <button onClick={() => setShowPopup(false)}>Cancel</button>
+          <IconButton icon={"💾"} title="Save" onClick={handleSave} />
+          <IconButton icon={"✖️"} title="Cancel" onClick={() => setShowPopup(false)} />
         </div>
       )}
     </div>
