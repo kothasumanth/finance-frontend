@@ -293,7 +293,10 @@ function MutualFundEntries() {
                             fontFamily: 'monospace',
                             background: '#f0f9ff',
                             outline: 'none',
-                            minWidth: 180
+                            minWidth: 180,
+                            maxWidth: '100%',
+                            width: '100%',
+                            boxSizing: 'border-box',
                           }}>
                           {fundOptions
                             .slice()
@@ -308,7 +311,23 @@ function MutualFundEntries() {
                     </td>
                     <td>
                       {editId === entry._id ? (
-                        <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} />
+                        <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)}
+                          style={{
+                            fontWeight: 600,
+                            color: '#2563eb',
+                            fontSize: '1rem',
+                            border: '1.5px solid #059669',
+                            borderRadius: 6,
+                            padding: '0.3rem 1.1rem',
+                            fontFamily: 'monospace',
+                            background: '#f0f9ff',
+                            outline: 'none',
+                            minWidth: 110,
+                            maxWidth: 180,
+                            width: '100%',
+                            boxSizing: 'border-box',
+                          }}
+                        />
                       ) : (
                         entry.purchaseDate
                       )}
@@ -326,8 +345,12 @@ function MutualFundEntries() {
                             fontFamily: 'monospace',
                             background: '#f0f9ff',
                             outline: 'none',
-                            minWidth: 180
-                          }}>
+                            minWidth: 110,
+                            maxWidth: 180,
+                            width: '100%',
+                            boxSizing: 'border-box',
+                          }}
+                        >
                           <option value="Invest">Invest</option>
                           <option value="Redeem">Redeem</option>
                         </select>
@@ -343,14 +366,33 @@ function MutualFundEntries() {
                     </td>
                     <td>
                       {editId === entry._id ? (
-                        <input type="number" value={editAmount} onChange={e => setEditAmount(e.target.value)} min="0" step="0.01" />
+                        <input type="number" value={editAmount} onChange={e => setEditAmount(e.target.value)} min="0" step="0.01"
+                          style={{
+                            fontWeight: 600,
+                            color: '#2563eb',
+                            fontSize: '1rem',
+                            border: '1.5px solid #059669',
+                            borderRadius: 6,
+                            padding: '0.3rem 1.1rem',
+                            fontFamily: 'monospace',
+                            background: '#f0f9ff',
+                            outline: 'none',
+                            minWidth: 110,
+                            maxWidth: 180,
+                            width: '100%',
+                            boxSizing: 'border-box',
+                          }}
+                        />
                       ) : (
                         entry.amount
                       )}
                     </td>
-                    <td>
+                    <td style={{ minWidth: 120, whiteSpace: 'nowrap' }}>
                       {editId === entry._id ? (
-                        <IconButton icon={"💾"} title="Save" onClick={() => handleSaveEdit(entry)} />
+                        <>
+                          <IconButton icon={"💾"} title="Save" onClick={() => handleSaveEdit(entry)} />
+                          <IconButton icon={"✖️"} title="Cancel" onClick={() => setEditId(null)} />
+                        </>
                       ) : (
                         <>
                           <IconButton icon={"✏️"} title="Edit" onClick={() => handleEdit(entry)} />
