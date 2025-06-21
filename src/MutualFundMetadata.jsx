@@ -12,6 +12,7 @@ function MutualFundMetadata() {
   const [fundName, setFundName] = useState('')
   const [googleValue, setGoogleValue] = useState('')
   const [editGoogleValue, setEditGoogleValue] = useState('')
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     fetch('http://localhost:3000/mutualfund-metadata')
@@ -87,8 +88,26 @@ function MutualFundMetadata() {
           background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', textDecoration: 'none', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'
         }}>Dashboard</Link>
       </div>
-      <h1 className="colorful-title">Mutual Fund Meta Data</h1>
-      <button onClick={handleAdd}>Add</button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.2rem' }}>
+        <h1 className="colorful-title" style={{ margin: 0 }}>
+          Mutual Fund Meta Data
+        </h1>
+        <button onClick={handleAdd} style={{
+          marginLeft: '2rem',
+          background: '#6366f1',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 6,
+          padding: '0.35rem 1.1rem',
+          fontWeight: 600,
+          fontSize: '1rem',
+          boxShadow: '0 2px 8px rgba(99,102,241,0.08)',
+          cursor: 'pointer',
+          height: '2.2rem',
+        }}>
+          Add
+        </button>
+      </div>
       {/* Show Add form below Add button when showPopup is true and not editing */}
       {showPopup && editId === null && (
         <div className="popup" style={{ marginBottom: '1rem', marginTop: '1rem' }}>
@@ -112,49 +131,57 @@ function MutualFundMetadata() {
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {!loading && !error && (
-        <table className="user-table colorful-table">
-          <thead>
-            <tr>
-              <th>Mutual Fund Name</th>
-              <th>Google Value</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {metadata
-              .slice()
-              .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
-              .map(meta => (
-                <tr key={meta._id}>
-                  {editId === meta._id ? (
-                    <>
-                      <td>
-                        <input value={fundName} onChange={e => setFundName(e.target.value)} />
-                      </td>
-                      <td>
-                        <input value={editGoogleValue} onChange={e => setEditGoogleValue(e.target.value)} />
-                      </td>
-                      <td>
-                        <IconButton icon={"💾"} title="Save" onClick={handleSave} />
-                        <IconButton icon={"✖️"} title="Cancel" onClick={() => { setEditId(null); setFundName(''); setEditGoogleValue(''); }} />
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td>{meta.MutualFundName}</td>
-                      <td>{meta.GoogleValue}</td>
-                      <td>
-                        <IconButton icon={"✏️"} title="Edit" onClick={() => handleEdit(meta)} />
-                        <IconButton icon={"🗑️"} title="Delete" onClick={() => handleDelete(meta._id)} />
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))}
-          </tbody>
-        </table>
+        <>
+          <table className="user-table colorful-table">
+            <thead>
+              <tr>
+                <th>Mutual Fund Name</th>
+                <th>Google Value</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {metadata
+                .slice()
+                .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
+                .slice((page-1)*10, page*10)
+                .map(meta => (
+                  <tr key={meta._id}>
+                    {editId === meta._id ? (
+                      <>
+                        <td>
+                          <input value={fundName} onChange={e => setFundName(e.target.value)} />
+                        </td>
+                        <td>
+                          <input value={editGoogleValue} onChange={e => setEditGoogleValue(e.target.value)} />
+                        </td>
+                        <td>
+                          <IconButton icon={"💾"} title="Save" onClick={handleSave} />
+                          <IconButton icon={"✖️"} title="Cancel" onClick={() => { setEditId(null); setFundName(''); setEditGoogleValue(''); }} />
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td>{meta.MutualFundName}</td>
+                        <td>{meta.GoogleValue}</td>
+                        <td>
+                          <IconButton icon={"✏️"} title="Edit" onClick={() => handleEdit(meta)} />
+                          <IconButton icon={"🗑️"} title="Delete" onClick={() => handleDelete(meta._id)} />
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+          {/* Pagination controls */}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '1rem', gap: '1rem' }}>
+            <button onClick={() => setPage(page-1)} disabled={page === 1}>Prev</button>
+            <span>Page {page} of {Math.ceil(metadata.length/10)}</span>
+            <button onClick={() => setPage(page+1)} disabled={page === Math.ceil(metadata.length/10) || metadata.length === 0}>Next</button>
+          </div>
+        </>
       )}
-      {/* Remove old Add/Edit popup at the bottom */}
     </div>
   )
 }

@@ -19,6 +19,7 @@ function MutualFundEntries() {
   const [editInvestType, setEditInvestType] = useState('Invest')
   const [editAmount, setEditAmount] = useState('')
   const [fundOptions, setFundOptions] = useState([])
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     fetch(`http://localhost:3000/mutual-funds/${userId}`)
@@ -121,60 +122,83 @@ function MutualFundEntries() {
           background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', textDecoration: 'none', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'
         }}>Dashboard</Link>
       </div>
-      <h1 className="colorful-title">Mutual Fund Entries</h1>
-      {loading && <p>Loading entries...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {!loading && !error && (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.2rem' }}>
+        <h1 className="colorful-title" style={{ margin: 0 }}>
+          Mutual Fund Entries
+        </h1>
+        <button onClick={handleAdd} style={{
+          marginLeft: '2rem',
+          background: '#6366f1',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 6,
+          padding: '0.35rem 1.1rem',
+          fontWeight: 600,
+          fontSize: '1rem',
+          boxShadow: '0 2px 8px rgba(99,102,241,0.08)',
+          cursor: 'pointer',
+          height: '2.2rem',
+        }}>
+          Add
+        </button>
+      </div>
+      {showPopup && (
+        <div className="popup" style={{marginBottom: '2rem'}}>
+          <h2>Add Mutual Fund Entry</h2>
+          <label>
+            Fund Name:
+            <select value={fundName} onChange={e => setFundName(e.target.value)}>
+              {fundOptions
+                .slice()
+                .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
+                .map(opt => (
+                  <option key={opt._id} value={opt._id}>{opt.MutualFundName}</option>
+                ))}
+            </select>
+          </label>
+          <label>
+            Date:
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} />
+          </label>
+          <label>
+            Invest Type:
+            <select value={investType} onChange={e => setInvestType(e.target.value)}>
+              <option value="Invest">Invest</option>
+              <option value="Redeem">Redeem</option>
+            </select>
+          </label>
+          <label>
+            Amount:
+            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} min="0" step="0.01" />
+          </label>
+          <IconButton icon={"💾"} title="Save" onClick={handleSave} />
+          <IconButton icon={"✖️"} title="Cancel" onClick={() => setShowPopup(false)} />
+        </div>
+      )}
+      {entries.length === 0 ? (
+        <p>No entries found.</p>
+      ) : (
         <>
-          <button onClick={handleAdd}>Add</button>
-          {showPopup && (
-            <div className="popup" style={{marginBottom: '2rem'}}>
-              <h2>Add Mutual Fund Entry</h2>
-              <label>
-                Fund Name:
-                <select value={fundName} onChange={e => setFundName(e.target.value)}>
-                  {fundOptions
-                    .slice()
-                    .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
-                    .map(opt => (
-                      <option key={opt._id} value={opt._id}>{opt.MutualFundName}</option>
-                    ))}
-                </select>
-              </label>
-              <label>
-                Date:
-                <input type="date" value={date} onChange={e => setDate(e.target.value)} />
-              </label>
-              <label>
-                Invest Type:
-                <select value={investType} onChange={e => setInvestType(e.target.value)}>
-                  <option value="Invest">Invest</option>
-                  <option value="Redeem">Redeem</option>
-                </select>
-              </label>
-              <label>
-                Amount:
-                <input type="number" value={amount} onChange={e => setAmount(e.target.value)} min="0" step="0.01" />
-              </label>
-              <IconButton icon={"💾"} title="Save" onClick={handleSave} />
-              <IconButton icon={"✖️"} title="Cancel" onClick={() => setShowPopup(false)} />
-            </div>
-          )}
-          {entries.length === 0 ? (
-            <p>No entries found.</p>
-          ) : (
-            <table className="user-table colorful-table">
-              <thead>
-                <tr>
-                  <th>Fund Name</th>
-                  <th>Purchase Date</th>
-                  <th>Invest Type</th>
-                  <th>Amount</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {entries.map((entry) => (
+          <table className="user-table colorful-table">
+            <thead>
+              <tr>
+                <th>Fund Name</th>
+                <th>Purchase Date</th>
+                <th>Invest Type</th>
+                <th>Amount</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {entries
+                .slice()
+                .sort((a, b) => {
+                  const nameA = a.fundName?.MutualFundName || '';
+                  const nameB = b.fundName?.MutualFundName || '';
+                  return nameA.localeCompare(nameB);
+                })
+                .slice((page-1)*10, page*10)
+                .map((entry) => (
                   <tr key={entry._id}>
                     <td>
                       {editId === entry._id ? (
@@ -232,9 +256,14 @@ function MutualFundEntries() {
                     </td>
                   </tr>
                 ))}
-              </tbody>
-            </table>
-          )}
+            </tbody>
+          </table>
+          {/* Pagination controls */}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '1rem', gap: '1rem' }}>
+            <button onClick={() => setPage(page-1)} disabled={page === 1}>Prev</button>
+            <span>Page {page} of {Math.ceil(entries.length/10)}</span>
+            <button onClick={() => setPage(page+1)} disabled={page === Math.ceil(entries.length/10) || entries.length === 0}>Next</button>
+          </div>
         </>
       )}
     </div>
