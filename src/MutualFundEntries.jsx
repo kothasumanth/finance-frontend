@@ -143,82 +143,116 @@ function MutualFundEntries() {
         </button>
       </div>
       {showPopup && (
-        <div className="popup" style={{marginBottom: '2rem'}}>
-          <h2>Add Mutual Fund Entry</h2>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
-            <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Fund Name:</span>
-            <select value={fundName} onChange={e => setFundName(e.target.value)}
-              style={{
-                fontWeight: 600,
-                color: '#2563eb',
-                fontSize: '1rem',
-                border: '1.5px solid #059669',
-                borderRadius: 6,
-                padding: '0.3rem 1.1rem',
-                fontFamily: 'monospace',
-                background: '#f0f9ff',
-                outline: 'none',
-                minWidth: 180
-              }}>
-              {fundOptions
-                .slice()
-                .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
-                .map(opt => (
-                  <option key={opt._id} value={opt._id}>{opt.MutualFundName}</option>
-                ))}
-            </select>
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
-            <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Date:</span>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{
-              fontWeight: 600,
-              color: '#2563eb',
-              fontSize: '1rem',
-              border: '1.5px solid #059669',
-              borderRadius: 6,
-              padding: '0.3rem 1.1rem',
-              fontFamily: 'monospace',
-              background: '#f0f9ff',
-              outline: 'none',
-              minWidth: 180
-            }} />
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
-            <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Invest Type:</span>
-            <select value={investType} onChange={e => setInvestType(e.target.value)}
-              style={{
-                fontWeight: 600,
-                color: '#2563eb',
-                fontSize: '1rem',
-                border: '1.5px solid #059669',
-                borderRadius: 6,
-                padding: '0.3rem 1.1rem',
-                fontFamily: 'monospace',
-                background: '#f0f9ff',
-                outline: 'none',
-                minWidth: 180
-              }}>
-              <option value="Invest">Invest</option>
-              <option value="Redeem">Redeem</option>
-            </select>
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
-            <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Amount:</span>
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} min="0" step="0.01" style={{
-              fontWeight: 600,
-              color: '#2563eb',
-              fontSize: '1rem',
-              border: '1.5px solid #059669',
-              borderRadius: 6,
-              padding: '0.3rem 1.1rem',
-              fontFamily: 'monospace',
-              background: '#f0f9ff',
-              outline: 'none',
-              minWidth: 180
-            }} />
-          </label>
-          <IconButton icon={"💾"} title="Save" onClick={handleSave} />
-          <IconButton icon={"✖️"} title="Cancel" onClick={() => setShowPopup(false)} />
+        <div className="popup" style={{
+          position: 'fixed', left: 0, top: 0, width: '100vw', height: '100vh',
+          background: 'rgba(0,0,0,0.18)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 12,
+            boxShadow: '0 4px 32px rgba(0,0,0,0.13)',
+            padding: '2.2rem 2.5rem 1.5rem 2.5rem',
+            minWidth: 420,
+            maxWidth: '90vw',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            position: 'relative'
+          }}>
+            <h2 style={{marginBottom: '1.5rem', color: '#059669'}}>Add Mutual Fund Entry</h2>
+            <form style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1.1rem' }} onSubmit={e => { e.preventDefault(); handleSave(); }}>
+              {/* Fund Name row */}
+              <div style={{ display: 'flex', alignItems: 'center', width: '100%', marginBottom: 0 }}>
+                <span style={{ flex: '0 0 140px', fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left', paddingRight: 10 }}>Fund Name:</span>
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-start' }}>
+                  <select value={fundName} onChange={e => setFundName(e.target.value)}
+                    style={{
+                      fontWeight: 600,
+                      color: '#2563eb',
+                      fontSize: '1rem',
+                      border: '1.5px solid #059669',
+                      borderRadius: 6,
+                      padding: '0.3rem 1.1rem',
+                      fontFamily: 'monospace',
+                      background: '#f0f9ff',
+                      outline: 'none',
+                      minWidth: 180,
+                      textAlign: 'left'
+                    }}>
+                    {fundOptions
+                      .slice()
+                      .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
+                      .map(opt => (
+                        <option key={opt._id} value={opt._id}>{opt.MutualFundName}</option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+              {/* Date, Invest Type, Amount row */}
+              <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '1.2rem', marginTop: 0 }}>
+                {/* Date */}
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+                  <span style={{ flex: '0 0 70px', fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left', paddingRight: 8 }}>Date:</span>
+                  <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{
+                    fontWeight: 600,
+                    color: '#2563eb',
+                    fontSize: '1rem',
+                    border: '1.5px solid #059669',
+                    borderRadius: 6,
+                    padding: '0.3rem 1.1rem',
+                    fontFamily: 'monospace',
+                    background: '#f0f9ff',
+                    outline: 'none',
+                    minWidth: 110,
+                    textAlign: 'right',
+                    flex: 1
+                  }} />
+                </div>
+                {/* Invest Type */}
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+                  <span style={{ flex: '0 0 90px', fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left', paddingRight: 8 }}>Invest Type:</span>
+                  <select value={investType} onChange={e => setInvestType(e.target.value)}
+                    style={{
+                      fontWeight: 600,
+                      color: '#2563eb',
+                      fontSize: '1rem',
+                      border: '1.5px solid #059669',
+                      borderRadius: 6,
+                      padding: '0.3rem 1.1rem',
+                      fontFamily: 'monospace',
+                      background: '#f0f9ff',
+                      outline: 'none',
+                      minWidth: 110,
+                      textAlign: 'left',
+                      flex: 1
+                    }}>
+                    <option value="Invest">Invest</option>
+                    <option value="Redeem">Redeem</option>
+                  </select>
+                </div>
+                {/* Amount */}
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+                  <span style={{ flex: '0 0 70px', fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left', paddingRight: 8 }}>Amount:</span>
+                  <input type="number" value={amount} onChange={e => setAmount(e.target.value)} min="0" step="0.01" style={{
+                    fontWeight: 600,
+                    color: '#2563eb',
+                    fontSize: '1rem',
+                    border: '1.5px solid #059669',
+                    borderRadius: 6,
+                    padding: '0.3rem 1.1rem',
+                    fontFamily: 'monospace',
+                    background: '#f0f9ff',
+                    outline: 'none',
+                    minWidth: 110,
+                    textAlign: 'right',
+                    flex: 1
+                  }} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '1.2rem', justifyContent: 'center', marginTop: '0.5rem' }}>
+                <IconButton icon={"💾"} title="Save" onClick={handleSave} />
+                <IconButton icon={"✖️"} title="Cancel" onClick={() => setShowPopup(false)} />
+              </div>
+            </form>
+          </div>
         </div>
       )}
       {entries.length === 0 ? (
