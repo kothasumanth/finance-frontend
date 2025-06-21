@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import IconButton from './IconButton'
 
 function ViewMutualFundData() {
   const { userId } = useParams()
@@ -65,6 +66,56 @@ function ViewMutualFundData() {
       })
   }, [selectedFund, fundOptions])
 
+  // Add function to get NAV for an entry
+  const handleGetNav = async (entry) => {
+    const fund = fundOptions.find(f => f._id === selectedFund)
+    if (!fund || !fund.GoogleValue) return
+    // GoogleValue is the mfapi code
+    const url = `https://api.mfapi.in/mf/${fund.GoogleValue}`
+    try {
+      const res = await fetch(url)
+      const data = await res.json()
+      if (!data.data || !Array.isArray(data.data)) return
+      // Convert our date (YYYY-MM-DD) to DD-MM-YYYY for comparison
+      const [yyyy, mm, dd] = entry.purchaseDate.split('-')
+      const ourDate = `${dd}-${mm}-${yyyy}`
+      // Find NAV for the purchase date (format: DD-MM-YYYY)
+      let navObj = data.data.find(d => d.date === ourDate)
+      if (!navObj) {
+        // If not found, find the most recent previous date
+        // Sort API data by date descending (DD-MM-YYYY)
+        const toDateNum = s => parseInt(s.split('-').reverse().join(''))
+        const purchaseNum = toDateNum(ourDate)
+        const prev = data.data.filter(d => toDateNum(d.date) < purchaseNum)
+        if (prev.length > 0) {
+          // Get the latest available before purchase date
+          navObj = prev.reduce((a, b) => toDateNum(a.date) > toDateNum(b.date) ? a : b)
+        }
+      }
+      if (navObj && navObj.nav) {
+        // Update entry in backend
+        await fetch(`http://localhost:3000/mutual-funds/${entry._id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fundName: entry.fundName?._id || entry.fundName,
+            purchaseDate: entry.purchaseDate,
+            investType: entry.investType,
+            amount: entry.amount,
+            nav: parseFloat(navObj.nav)
+          })
+        })
+        // Refresh entries
+        setEntries(entries => entries.map(e => e._id === entry._id ? { ...e, nav: parseFloat(navObj.nav) } : e))
+      } else {
+        // If not found, set nav to blank
+        setEntries(entries => entries.map(e => e._id === entry._id ? { ...e, nav: '' } : e))
+      }
+    } catch (err) {
+      // On error, do nothing
+    }
+  }
+
   return (
     <div className="container colorful-bg">
       <div style={{ position: 'absolute', top: 10, right: 20 }}>
@@ -103,6 +154,7 @@ function ViewMutualFundData() {
                 <th>Invest Type</th>
                 <th>Amount</th>
                 <th>NAV</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -121,6 +173,9 @@ function ViewMutualFundData() {
                   </td>
                   <td>{entry.amount}</td>
                   <td>{entry.nav}</td>
+                  <td>
+                    <IconButton icon={"🔄"} title="Get NAV" onClick={() => handleGetNav(entry)} />
+                  </td>
                 </tr>
               ))}
             </tbody>
