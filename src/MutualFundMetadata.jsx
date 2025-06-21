@@ -89,6 +89,26 @@ function MutualFundMetadata() {
       </div>
       <h1 className="colorful-title">Mutual Fund Meta Data</h1>
       <button onClick={handleAdd}>Add</button>
+      {/* Show Add form below Add button when showPopup is true and not editing */}
+      {showPopup && editId === null && (
+        <div className="popup" style={{ marginBottom: '1rem', marginTop: '1rem' }}>
+          <h2>Add Mutual Fund Meta Data</h2>
+          <label>
+            Mutual Fund Name:
+            <input value={fundName} onChange={e => setFundName(e.target.value)} />
+          </label>
+          <label>
+            Google Value:
+            <input value={googleValue} onChange={e => setGoogleValue(e.target.value)} />
+          </label>
+          <IconButton icon={"💾"} title="Save" onClick={handleSave} />
+          <IconButton icon={"✖️"} title="Cancel" onClick={() => {
+            setShowPopup(false);
+            setFundName('');
+            setGoogleValue('');
+          }} />
+        </div>
+      )}
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {!loading && !error && (
@@ -134,21 +154,7 @@ function MutualFundMetadata() {
           </tbody>
         </table>
       )}
-      {showPopup && (
-        <div className="popup">
-          <h2>{editId ? 'Edit' : 'Add'} Mutual Fund Meta Data</h2>
-          <label>
-            Mutual Fund Name:
-            <input value={fundName} onChange={e => setFundName(e.target.value)} />
-          </label>
-          <label>
-            Google Value:
-            <input value={googleValue} onChange={e => setGoogleValue(e.target.value)} />
-          </label>
-          <IconButton icon={"💾"} title="Save" onClick={handleSave} />
-          <IconButton icon={"✖️"} title="Cancel" onClick={() => setShowPopup(false)} />
-        </div>
-      )}
+      {/* Remove old Add/Edit popup at the bottom */}
     </div>
   )
 }

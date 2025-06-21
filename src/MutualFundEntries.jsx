@@ -127,6 +127,36 @@ function MutualFundEntries() {
       {!loading && !error && (
         <>
           <button onClick={handleAdd}>Add</button>
+          {showPopup && (
+            <div className="popup" style={{marginBottom: '2rem'}}>
+              <h2>Add Mutual Fund Entry</h2>
+              <label>
+                Fund Name:
+                <select value={fundName} onChange={e => setFundName(e.target.value)}>
+                  {fundOptions.map(opt => (
+                    <option key={opt._id} value={opt._id}>{opt.MutualFundName}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Date:
+                <input type="date" value={date} onChange={e => setDate(e.target.value)} />
+              </label>
+              <label>
+                Invest Type:
+                <select value={investType} onChange={e => setInvestType(e.target.value)}>
+                  <option value="Invest">Invest</option>
+                  <option value="Redeem">Redeem</option>
+                </select>
+              </label>
+              <label>
+                Amount:
+                <input type="number" value={amount} onChange={e => setAmount(e.target.value)} min="0" step="0.01" />
+              </label>
+              <IconButton icon={"💾"} title="Save" onClick={handleSave} />
+              <IconButton icon={"✖️"} title="Cancel" onClick={() => setShowPopup(false)} />
+            </div>
+          )}
           {entries.length === 0 ? (
             <p>No entries found.</p>
           ) : (
@@ -200,36 +230,6 @@ function MutualFundEntries() {
             </table>
           )}
         </>
-      )}
-      {showPopup && (
-        <div className="popup">
-          <h2>Add Mutual Fund Entry</h2>
-          <label>
-            Fund Name:
-            <select value={fundName} onChange={e => setFundName(e.target.value)}>
-              {fundOptions.map(opt => (
-                <option key={opt._id} value={opt._id}>{opt.MutualFundName}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Date:
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} />
-          </label>
-          <label>
-            Invest Type:
-            <select value={investType} onChange={e => setInvestType(e.target.value)}>
-              <option value="Invest">Invest</option>
-              <option value="Redeem">Redeem</option>
-            </select>
-          </label>
-          <label>
-            Amount:
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} min="0" step="0.01" />
-          </label>
-          <IconButton icon={"💾"} title="Save" onClick={handleSave} />
-          <IconButton icon={"✖️"} title="Cancel" onClick={() => setShowPopup(false)} />
-        </div>
       )}
     </div>
   )

@@ -152,23 +152,26 @@ function ViewMutualFundData() {
               </tr>
             </thead>
             <tbody>
-              {entries.map(entry => (
-                <tr key={entry._id}>
-                  <td>{entry.purchaseDate}</td>
-                  <td>{entry.fundName?.MutualFundName}</td>
-                  <td>
-                    <span style={{
-                      background: entry.investType === 'Invest' ? '#d1fae5' : '#fee2e2',
-                      color: entry.investType === 'Invest' ? '#065f46' : '#991b1b',
-                      borderRadius: 4,
-                      padding: '0.2em 0.7em',
-                      fontWeight: 600
-                    }}>{entry.investType}</span>
-                  </td>
-                  <td>{entry.amount}</td>
-                  <td>{entry.nav}</td>
-                </tr>
-              ))}
+              {entries
+                .slice()
+                .sort((a, b) => a.purchaseDate.localeCompare(b.purchaseDate))
+                .map(entry => (
+                  <tr key={entry._id}>
+                    <td>{entry.purchaseDate}</td>
+                    <td>{entry.fundName?.MutualFundName}</td>
+                    <td>
+                      <span style={{
+                        background: entry.investType === 'Invest' ? '#d1fae5' : '#fee2e2',
+                        color: entry.investType === 'Invest' ? '#065f46' : '#991b1b',
+                        borderRadius: 4,
+                        padding: '0.2em 0.7em',
+                        fontWeight: 600
+                      }}>{entry.investType}</span>
+                    </td>
+                    <td>{entry.amount}</td>
+                    <td>{entry.nav}</td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         )
