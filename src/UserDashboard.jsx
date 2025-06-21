@@ -4,7 +4,7 @@ function UserDashboard() {
   const { userId } = useParams()
   const navigate = useNavigate()
   return (
-    <div className="container colorful-bg">
+    <div className="container colorful-bg" style={{ maxWidth: 1250, margin: '0 auto' }}>
       <div style={{ position: 'absolute', top: 10, right: 20 }}>
         <button onClick={() => navigate('/')}>Home</button>
       </div>

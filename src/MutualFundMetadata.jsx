@@ -82,7 +82,7 @@ function MutualFundMetadata() {
   }
 
   return (
-    <div className="container colorful-bg" style={{ paddingTop: '1.2rem' }}>
+    <div className="container colorful-bg" style={{ paddingTop: '1.2rem', maxWidth: 1250, margin: '0 auto' }}>
       <div style={{ position: 'absolute', top: 10, right: 20 }}>
         <Link to={`/user/${userId}/dashboard`} style={{
           background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', textDecoration: 'none', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'
@@ -110,22 +110,65 @@ function MutualFundMetadata() {
       </div>
       {/* Show Add form below Add button when showPopup is true and not editing */}
       {showPopup && editId === null && (
-        <div className="popup" style={{ marginBottom: '1rem', marginTop: '1rem' }}>
-          <h2>Add Mutual Fund Meta Data</h2>
-          <label>
-            Mutual Fund Name:
-            <input value={fundName} onChange={e => setFundName(e.target.value)} />
-          </label>
-          <label>
-            Google Value:
-            <input value={googleValue} onChange={e => setGoogleValue(e.target.value)} />
-          </label>
-          <IconButton icon={"💾"} title="Save" onClick={handleSave} />
-          <IconButton icon={"✖️"} title="Cancel" onClick={() => {
-            setShowPopup(false);
-            setFundName('');
-            setGoogleValue('');
-          }} />
+        <div className="popup" style={{
+          marginBottom: '1rem', marginTop: '1rem',
+          position: 'fixed', left: 0, top: 0, width: '100vw', height: '100vh',
+          background: 'rgba(0,0,0,0.18)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 12,
+            boxShadow: '0 4px 32px rgba(0,0,0,0.13)',
+            padding: '2.2rem 2.5rem 1.5rem 2.5rem',
+            minWidth: 340,
+            maxWidth: '90vw',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            position: 'relative'
+          }}>
+            <h2 style={{marginBottom: '1.5rem', color: '#059669'}}>Add Mutual Fund Meta Data</h2>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1.2rem' }}>
+              <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Mutual Fund Name:</span>
+              <input value={fundName} onChange={e => setFundName(e.target.value)}
+                style={{
+                  fontWeight: 600,
+                  color: '#2563eb',
+                  fontSize: '1rem',
+                  border: '1.5px solid #059669',
+                  borderRadius: 6,
+                  padding: '0.3rem 1.1rem',
+                  fontFamily: 'monospace',
+                  background: '#f0f9ff',
+                  outline: 'none',
+                  minWidth: 180
+                }}
+              />
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1.2rem' }}>
+              <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Google Value:</span>
+              <input value={googleValue} onChange={e => setGoogleValue(e.target.value)}
+                style={{
+                  fontWeight: 600,
+                  color: '#2563eb',
+                  fontSize: '1rem',
+                  border: '1.5px solid #059669',
+                  borderRadius: 6,
+                  padding: '0.3rem 1.1rem',
+                  fontFamily: 'monospace',
+                  background: '#f0f9ff',
+                  outline: 'none',
+                  minWidth: 180
+                }}
+              />
+            </label>
+            <div style={{ display: 'flex', gap: '1.2rem', marginTop: '0.5rem' }}>
+              <IconButton icon={"💾"} title="Save" onClick={handleSave} />
+              <IconButton icon={"✖️"} title="Cancel" onClick={() => {
+                setShowPopup(false);
+                setFundName('');
+                setGoogleValue('');
+              }} />
+            </div>
+          </div>
         </div>
       )}
       {loading && <p>Loading...</p>}
@@ -150,10 +193,36 @@ function MutualFundMetadata() {
                     {editId === meta._id ? (
                       <>
                         <td>
-                          <input value={fundName} onChange={e => setFundName(e.target.value)} />
+                          <input value={fundName} onChange={e => setFundName(e.target.value)}
+                            style={{
+                              fontWeight: 600,
+                              color: '#2563eb',
+                              fontSize: '1rem',
+                              border: '1.5px solid #059669',
+                              borderRadius: 6,
+                              padding: '0.3rem 1.1rem',
+                              fontFamily: 'monospace',
+                              background: '#f0f9ff',
+                              outline: 'none',
+                              minWidth: 180
+                            }}
+                          />
                         </td>
                         <td>
-                          <input value={editGoogleValue} onChange={e => setEditGoogleValue(e.target.value)} />
+                          <input value={editGoogleValue} onChange={e => setEditGoogleValue(e.target.value)}
+                            style={{
+                              fontWeight: 600,
+                              color: '#2563eb',
+                              fontSize: '1rem',
+                              border: '1.5px solid #059669',
+                              borderRadius: 6,
+                              padding: '0.3rem 1.1rem',
+                              fontFamily: 'monospace',
+                              background: '#f0f9ff',
+                              outline: 'none',
+                              minWidth: 180
+                            }}
+                          />
                         </td>
                         <td>
                           <IconButton icon={"💾"} title="Save" onClick={handleSave} />

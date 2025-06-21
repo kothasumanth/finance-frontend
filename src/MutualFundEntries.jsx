@@ -116,7 +116,7 @@ function MutualFundEntries() {
   }
 
   return (
-    <div className="container colorful-bg" style={{ paddingTop: '1.2rem' }}>
+    <div className="container colorful-bg" style={{ paddingTop: '1.2rem', maxWidth: 1250, margin: '0 auto' }}>
       <div style={{ position: 'absolute', top: 10, right: 20 }}>
         <Link to={`/user/${userId}/dashboard`} style={{
           background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', textDecoration: 'none', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'
@@ -145,9 +145,21 @@ function MutualFundEntries() {
       {showPopup && (
         <div className="popup" style={{marginBottom: '2rem'}}>
           <h2>Add Mutual Fund Entry</h2>
-          <label>
-            Fund Name:
-            <select value={fundName} onChange={e => setFundName(e.target.value)}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
+            <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Fund Name:</span>
+            <select value={fundName} onChange={e => setFundName(e.target.value)}
+              style={{
+                fontWeight: 600,
+                color: '#2563eb',
+                fontSize: '1rem',
+                border: '1.5px solid #059669',
+                borderRadius: 6,
+                padding: '0.3rem 1.1rem',
+                fontFamily: 'monospace',
+                background: '#f0f9ff',
+                outline: 'none',
+                minWidth: 180
+              }}>
               {fundOptions
                 .slice()
                 .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
@@ -156,20 +168,54 @@ function MutualFundEntries() {
                 ))}
             </select>
           </label>
-          <label>
-            Date:
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
+            <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Date:</span>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{
+              fontWeight: 600,
+              color: '#2563eb',
+              fontSize: '1rem',
+              border: '1.5px solid #059669',
+              borderRadius: 6,
+              padding: '0.3rem 1.1rem',
+              fontFamily: 'monospace',
+              background: '#f0f9ff',
+              outline: 'none',
+              minWidth: 180
+            }} />
           </label>
-          <label>
-            Invest Type:
-            <select value={investType} onChange={e => setInvestType(e.target.value)}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
+            <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Invest Type:</span>
+            <select value={investType} onChange={e => setInvestType(e.target.value)}
+              style={{
+                fontWeight: 600,
+                color: '#2563eb',
+                fontSize: '1rem',
+                border: '1.5px solid #059669',
+                borderRadius: 6,
+                padding: '0.3rem 1.1rem',
+                fontFamily: 'monospace',
+                background: '#f0f9ff',
+                outline: 'none',
+                minWidth: 180
+              }}>
               <option value="Invest">Invest</option>
               <option value="Redeem">Redeem</option>
             </select>
           </label>
-          <label>
-            Amount:
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} min="0" step="0.01" />
+          <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
+            <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Amount:</span>
+            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} min="0" step="0.01" style={{
+              fontWeight: 600,
+              color: '#2563eb',
+              fontSize: '1rem',
+              border: '1.5px solid #059669',
+              borderRadius: 6,
+              padding: '0.3rem 1.1rem',
+              fontFamily: 'monospace',
+              background: '#f0f9ff',
+              outline: 'none',
+              minWidth: 180
+            }} />
           </label>
           <IconButton icon={"💾"} title="Save" onClick={handleSave} />
           <IconButton icon={"✖️"} title="Cancel" onClick={() => setShowPopup(false)} />
@@ -202,7 +248,19 @@ function MutualFundEntries() {
                   <tr key={entry._id}>
                     <td>
                       {editId === entry._id ? (
-                        <select value={editFundName} onChange={e => setEditFundName(e.target.value)}>
+                        <select value={editFundName} onChange={e => setEditFundName(e.target.value)}
+                          style={{
+                            fontWeight: 600,
+                            color: '#2563eb',
+                            fontSize: '1rem',
+                            border: '1.5px solid #059669',
+                            borderRadius: 6,
+                            padding: '0.3rem 1.1rem',
+                            fontFamily: 'monospace',
+                            background: '#f0f9ff',
+                            outline: 'none',
+                            minWidth: 180
+                          }}>
                           {fundOptions
                             .slice()
                             .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
@@ -223,7 +281,19 @@ function MutualFundEntries() {
                     </td>
                     <td>
                       {editId === entry._id ? (
-                        <select value={editInvestType} onChange={e => setEditInvestType(e.target.value)}>
+                        <select value={editInvestType} onChange={e => setEditInvestType(e.target.value)}
+                          style={{
+                            fontWeight: 600,
+                            color: '#2563eb',
+                            fontSize: '1rem',
+                            border: '1.5px solid #059669',
+                            borderRadius: 6,
+                            padding: '0.3rem 1.1rem',
+                            fontFamily: 'monospace',
+                            background: '#f0f9ff',
+                            outline: 'none',
+                            minWidth: 180
+                          }}>
                           <option value="Invest">Invest</option>
                           <option value="Redeem">Redeem</option>
                         </select>
