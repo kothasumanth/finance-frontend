@@ -116,32 +116,54 @@ function ViewMutualFundData() {
   }
 
   return (
-    <div className="container colorful-bg">
-      <div style={{ position: 'absolute', top: 10, right: 20 }}>
+    <div className="container colorful-bg" style={{ paddingTop: '1.2rem' }}>
+      <div style={{ position: 'absolute', top: 10, right: 20, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.7rem' }}>
         <Link to={`/user/${userId}/dashboard`} style={{
           background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', textDecoration: 'none', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'
         }}>Dashboard</Link>
+        <button onClick={handleGetAllNavs} style={{
+          marginLeft: 0,
+          marginTop: '1.2rem',
+          background: '#059669',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 6,
+          padding: '0.5rem 1.2rem',
+          fontWeight: 600,
+          fontSize: '1rem',
+          boxShadow: '0 2px 8px rgba(5,150,105,0.08)',
+          cursor: 'pointer'
+        }}>Get All NAVs</button>
+        <div style={{marginTop: '1.2rem', fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.2rem'}}>
+          <span>Date: <span style={{ color: '#2563eb' }}>{mfApiData && mfApiData.date ? mfApiData.date : ''}</span></span>
+          <span>NAV: <span style={{ color: '#2563eb' }}>{mfApiData && mfApiData.nav ? mfApiData.nav : ''}</span></span>
+        </div>
       </div>
-      <h1 className="colorful-title">View Mutual Fund Data</h1>
+      <h1 className="colorful-title" style={{ fontSize: '1.5rem', marginTop: '0.5rem', marginBottom: '0.7rem' }}>View Mutual Fund Data</h1>
       <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
-        <span>Select Mutual Fund:</span>
-        <select value={selectedFund} onChange={e => setSelectedFund(e.target.value)}>
-          <option value="">-- Select --</option>
+        <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Select MF:</span>
+        <select value={selectedFund} onChange={e => setSelectedFund(e.target.value)}
+          style={{
+            fontWeight: 600,
+            color: '#2563eb',
+            fontSize: '1rem',
+            border: '1.5px solid #059669',
+            borderRadius: 6,
+            padding: '0.3rem 1.1rem',
+            fontFamily: 'monospace',
+            background: '#f0f9ff',
+            outline: 'none',
+            minWidth: 180
+          }}>
+          <option value="" style={{ fontFamily: 'monospace', color: '#64748b' }}>-- Select --</option>
           {fundOptions
             .slice()
             .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
             .map(f => (
-              <option key={f._id} value={f._id}>{f.MutualFundName}</option>
+              <option key={f._id} value={f._id} style={{ fontFamily: 'monospace', color: '#0f172a', fontWeight: 600 }}>{f.MutualFundName}</option>
             ))}
         </select>
-        <button onClick={handleGetAllNavs} style={{marginLeft:'2rem', background:'#059669', color:'#fff', border:'none', borderRadius:6, padding:'0.5rem 1.2rem', fontWeight:600, fontSize:'1rem'}}>Get All NAVs</button>
-        {/* Move Date and NAV next to dropdown */}
-        <span style={{ fontWeight: 'bold', color: '#059669', marginLeft: '2rem' }}>
-          Date: <span style={{ color: '#2563eb' }}>{mfApiData && mfApiData.date ? mfApiData.date : ''}</span>
-        </span>
-        <span style={{ fontWeight: 'bold', color: '#059669', marginLeft: '1.5rem' }}>
-          NAV: <span style={{ color: '#2563eb' }}>{mfApiData && mfApiData.nav ? mfApiData.nav : ''}</span>
-        </span>
+        {/* Remove Date/NAV from here, keep only in label above */}
       </label>      
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -193,7 +215,6 @@ function ViewMutualFundData() {
           </>
         )
       )}
-      {/* Remove Date/NAV from below, keep only in label above */}
     </div>
   )
 }

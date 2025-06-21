@@ -82,14 +82,14 @@ function MutualFundMetadata() {
   }
 
   return (
-    <div className="container colorful-bg">
+    <div className="container colorful-bg" style={{ paddingTop: '1.2rem' }}>
       <div style={{ position: 'absolute', top: 10, right: 20 }}>
         <Link to={`/user/${userId}/dashboard`} style={{
           background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', textDecoration: 'none', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'
         }}>Dashboard</Link>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.2rem' }}>
-        <h1 className="colorful-title" style={{ margin: 0 }}>
+        <h1 className="colorful-title" style={{ margin: 0, fontSize: '1.5rem' }}>
           Mutual Fund Meta Data
         </h1>
         <button onClick={handleAdd} style={{
