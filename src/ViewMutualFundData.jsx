@@ -106,14 +106,41 @@ function ViewMutualFundData() {
             investType: entry.investType,
             amount: entry.amount,
             nav: navValue,
-            units: units
+            units: units,
+            balanceUnit: units // set balanceUnit to units
           })
         })
         // Update UI
-        setEntries(entries => entries.map(e => e._id === entry._id ? { ...e, nav: navValue, units } : e))
+        setEntries(entries => entries.map(e => e._id === entry._id ? { ...e, nav: navValue, units, balanceUnit: units } : e))
       }
     }
   }
+
+  const handleReCal = async () => {
+    if (!selectedFund) return;
+    await fetch('http://localhost:3000/mutual-funds/recal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, fundId: selectedFund })
+    });
+    // Refresh entries
+    fetch(`http://localhost:3000/mutual-funds/${userId}`)
+      .then(res => res.json())
+      .then(data => setEntries(data.filter(e => e.fundName && e.fundName._id === selectedFund)));
+  };
+
+  const handleForceNull = async () => {
+    if (!selectedFund) return;
+    await fetch('http://localhost:3000/mutual-funds/force-null', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, fundId: selectedFund })
+    });
+    // Refresh entries
+    fetch(`http://localhost:3000/mutual-funds/${userId}`)
+      .then(res => res.json())
+      .then(data => setEntries(data.filter(e => e.fundName && e.fundName._id === selectedFund)));
+  };
 
   return (
     <div className="container colorful-bg" style={{ paddingTop: '1.2rem', maxWidth: 1250, margin: '0 auto' }}>
@@ -134,6 +161,32 @@ function ViewMutualFundData() {
           boxShadow: '0 2px 8px rgba(5,150,105,0.08)',
           cursor: 'pointer'
         }}>Get All NAVs</button>
+        <button onClick={handleReCal} style={{
+          marginLeft: 0,
+          marginTop: '0.7rem',
+          background: '#6366f1',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 6,
+          padding: '0.5rem 1.2rem',
+          fontWeight: 600,
+          fontSize: '1rem',
+          boxShadow: '0 2px 8px rgba(99,102,241,0.08)',
+          cursor: 'pointer'
+        }}>ReCal</button>
+        <button onClick={handleForceNull} style={{
+          marginLeft: 0,
+          marginTop: '0.7rem',
+          background: '#dc2626',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 6,
+          padding: '0.5rem 1.2rem',
+          fontWeight: 600,
+          fontSize: '1rem',
+          boxShadow: '0 2px 8px rgba(220,38,38,0.08)',
+          cursor: 'pointer'
+        }}>Force Null NAV/Units</button>
         <div style={{marginTop: '1.2rem', fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.2rem'}}>
           <span>Date: <span style={{ color: '#2563eb' }}>{mfApiData && mfApiData.date ? mfApiData.date : ''}</span></span>
           <span>NAV: <span style={{ color: '#2563eb' }}>{mfApiData && mfApiData.nav ? mfApiData.nav : ''}</span></span>
@@ -179,7 +232,13 @@ function ViewMutualFundData() {
           </span>
           <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
             <span>Balance Units:</span>
-            <span style={{ color: '#2563eb', textAlign: 'right', minWidth: 70 }}>{entries && entries.length > 0 ? Math.round(entries.reduce((sum, e) => sum + (parseFloat(e.units) || 0), 0)) : ''}</span>
+            <span style={{ color: '#2563eb', textAlign: 'right', minWidth: 70 }}>
+              {entries && entries.length > 0 ? (() => {
+                const investUnits = entries.filter(e => e.investType === 'Invest').reduce((sum, e) => sum + (parseFloat(e.units) || 0), 0);
+                const redeemUnits = entries.filter(e => e.investType === 'Redeem').reduce((sum, e) => sum + (parseFloat(e.units) || 0), 0);
+                return Math.round(investUnits - redeemUnits);
+              })() : ''}
+            </span>
           </span>
         </div>
       </div>
@@ -225,6 +284,8 @@ function ViewMutualFundData() {
                   <th>NAV</th>
                   <th>Units</th>
                   <th>Today Value</th>
+                  <th>isRedeemed</th>
+                  <th>balanceUnit</th>
                 </tr>
               </thead>
               <tbody>
@@ -256,6 +317,8 @@ function ViewMutualFundData() {
                         }
                         return '';
                       })()}</td>
+                      <td>{entry.isRedeemed ? 'true' : 'false'}</td>
+                      <td>{entry.balanceUnit !== undefined && entry.balanceUnit !== '' ? Number(entry.balanceUnit).toFixed(2) : ''}</td>
                     </tr>
                   ))}
               </tbody>
