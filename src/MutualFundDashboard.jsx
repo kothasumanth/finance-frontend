@@ -8,6 +8,7 @@ function MutualFundDashboard() {
   const [fundSummary, setFundSummary] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [sortConfig, setSortConfig] = useState({ key: 'fundName', direction: 'asc' })
 
   useEffect(() => {
     setLoading(true)
@@ -16,6 +17,27 @@ function MutualFundDashboard() {
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }, [userId])
+
+  // Sorting logic
+  const sortedSummary = [...fundSummary].sort((a, b) => {
+    const { key, direction } = sortConfig
+    let aValue = a[key]
+    let bValue = b[key]
+    if (typeof aValue === 'string') aValue = aValue.toLowerCase()
+    if (typeof bValue === 'string') bValue = bValue.toLowerCase()
+    if (aValue < bValue) return direction === 'asc' ? -1 : 1
+    if (aValue > bValue) return direction === 'asc' ? 1 : -1
+    return 0
+  })
+
+  const handleSort = key => {
+    setSortConfig(prev => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
+      }
+      return { key, direction: 'asc' }
+    })
+  }
 
   return (
     <div className="container colorful-bg" style={{ maxWidth: 1250, margin: '0 auto' }}>
@@ -94,15 +116,45 @@ function MutualFundDashboard() {
           <table className="user-table colorful-table">
             <thead>
               <tr>
-                <th>MF Name</th>
-                <th>Invested</th>
-                <th>Today Value</th>
-                <th>P/L</th>
-                <th>Balance Units</th>
+                <th>
+                  MF Name
+                  <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: 4 }}>
+                    <button onClick={() => handleSort('fundName')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▲</button>
+                    <button onClick={() => handleSort('fundName')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▼</button>
+                  </span>
+                </th>
+                <th>
+                  Invested
+                  <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: 4 }}>
+                    <button onClick={() => handleSort('invested')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▲</button>
+                    <button onClick={() => handleSort('invested')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▼</button>
+                  </span>
+                </th>
+                <th>
+                  Today Value
+                  <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: 4 }}>
+                    <button onClick={() => handleSort('todayValue')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▲</button>
+                    <button onClick={() => handleSort('todayValue')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▼</button>
+                  </span>
+                </th>
+                <th>
+                  P/L
+                  <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: 4 }}>
+                    <button onClick={() => handleSort('profitLoss')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▲</button>
+                    <button onClick={() => handleSort('profitLoss')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▼</button>
+                  </span>
+                </th>
+                <th>
+                  Balance Units
+                  <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: 4 }}>
+                    <button onClick={() => handleSort('balanceUnits')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▲</button>
+                    <button onClick={() => handleSort('balanceUnits')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▼</button>
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody>
-              {fundSummary.map(fund => (
+              {sortedSummary.map(fund => (
                 <tr key={fund.fundName}>
                   <td>{fund.fundName}</td>
                   <td>{fund.invested.toFixed(2)}</td>
