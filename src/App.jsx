@@ -7,6 +7,7 @@ import MutualFundMetadata from './MutualFundMetadata'
 import ViewMutualFundData from './ViewMutualFundData'
 import FinanceOverview from './FinanceOverview'
 import PfDashboard from './PfDashboard'
+import PpfDashboard from './PpfDashboard'
 import { fetchMutualFundMetadata } from './api'
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
         <Route path="/user/:userId/mutualfund-metadata" element={<MutualFundMetadata />} />
         <Route path="/user/:userId/view-mf-data" element={<ViewMutualFundData />} />
         <Route path="/user/:userId/pf-dashboard" element={<PfDashboard />} />
+        <Route path="/user/:userId/ppf-dashboard" element={<PpfDashboard />} />
       </Routes>
     </Router>
   )
