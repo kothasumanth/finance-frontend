@@ -204,28 +204,38 @@ function ViewMutualFundData() {
           }}>Summary</span>
           <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
             <span>Invested:</span>
-            <span style={{ color: '#2563eb', textAlign: 'right', minWidth: 70 }}>{entries && entries.length > 0 ? Math.round(entries.filter(e => e.investType === 'Invest').reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)) : ''}</span>
+            <span style={{ color: '#2563eb', textAlign: 'right', minWidth: 70 }}>{entries && entries.length > 0 ? (() => {
+              // Only include Invest entries with balanceUnit > 0
+              return entries.filter(e => e.investType === 'Invest' && Number(e.balanceUnit) > 0)
+                .reduce((sum, e) => sum + (parseFloat(e.amount) - (parseFloat(e.principalRedeem) || 0)), 0).toFixed(2);
+            })() : ''}</span>
           </span>
           <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
             <span>Today Value:</span>
             <span style={{ color: '#2563eb', textAlign: 'right', minWidth: 70 }}>{(() => {
               if (!entries || entries.length === 0 || !mfApiData || !mfApiData.nav) return '';
-              const totalTodayValue = entries.reduce((sum, e) => sum + ((e.investType === 'Invest' && e.units !== undefined && e.units !== '') ? (Number(e.units) * Number(mfApiData.nav)) : 0), 0);
-              return Math.round(totalTodayValue);
+              // Only include Invest entries with balanceUnit > 0
+              const totalTodayValue = entries.filter(e => e.investType === 'Invest' && Number(e.balanceUnit) > 0)
+                .reduce((sum, e) => sum + (Number(e.balanceUnit) * Number(mfApiData.nav)), 0);
+              return totalTodayValue.toFixed(2);
             })()}</span>
           </span>
           <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
             <span>P/L:</span>
             <span style={{ fontWeight: 700, textAlign: 'right', minWidth: 70, color: (() => {
               if (!entries || entries.length === 0 || !mfApiData || !mfApiData.nav) return '#2563eb';
-              const invested = entries.filter(e => e.investType === 'Invest').reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
-              const totalTodayValue = entries.reduce((sum, e) => sum + ((e.investType === 'Invest' && e.units !== undefined && e.units !== '') ? (Number(e.units) * Number(mfApiData.nav)) : 0), 0);
+              const invested = entries.filter(e => e.investType === 'Invest' && Number(e.balanceUnit) > 0)
+                .reduce((sum, e) => sum + (parseFloat(e.amount) - (parseFloat(e.principalRedeem) || 0)), 0);
+              const totalTodayValue = entries.filter(e => e.investType === 'Invest' && Number(e.balanceUnit) > 0)
+                .reduce((sum, e) => sum + (Number(e.balanceUnit) * Number(mfApiData.nav)), 0);
               const profitLoss = totalTodayValue - invested;
               return profitLoss >= 0 ? '#059669' : '#dc2626';
             })(),}}>{(() => {
               if (!entries || entries.length === 0 || !mfApiData || !mfApiData.nav) return '';
-              const invested = entries.filter(e => e.investType === 'Invest').reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
-              const totalTodayValue = entries.reduce((sum, e) => sum + ((e.investType === 'Invest' && e.units !== undefined && e.units !== '') ? (Number(e.units) * Number(mfApiData.nav)) : 0), 0);
+              const invested = entries.filter(e => e.investType === 'Invest' && Number(e.balanceUnit) > 0)
+                .reduce((sum, e) => sum + (parseFloat(e.amount) - (parseFloat(e.principalRedeem) || 0)), 0);
+              const totalTodayValue = entries.filter(e => e.investType === 'Invest' && Number(e.balanceUnit) > 0)
+                .reduce((sum, e) => sum + (Number(e.balanceUnit) * Number(mfApiData.nav)), 0);
               const profitLoss = totalTodayValue - invested;
               return profitLoss.toFixed(2);
             })()}</span>
@@ -234,9 +244,10 @@ function ViewMutualFundData() {
             <span>Balance Units:</span>
             <span style={{ color: '#2563eb', textAlign: 'right', minWidth: 70 }}>
               {entries && entries.length > 0 ? (() => {
-                const investUnits = entries.filter(e => e.investType === 'Invest').reduce((sum, e) => sum + (parseFloat(e.units) || 0), 0);
-                const redeemUnits = entries.filter(e => e.investType === 'Redeem').reduce((sum, e) => sum + (parseFloat(e.units) || 0), 0);
-                return Math.round(investUnits - redeemUnits);
+                // Only include Invest entries with balanceUnit > 0
+                const investUnits = entries.filter(e => e.investType === 'Invest' && Number(e.balanceUnit) > 0)
+                  .reduce((sum, e) => sum + Number(e.balanceUnit), 0);
+                return investUnits.toFixed(2);
               })() : ''}
             </span>
           </span>
