@@ -5,6 +5,7 @@ import MutualFundDashboard from './MutualFundDashboard'
 import MutualFundEntries from './MutualFundEntries'
 import MutualFundMetadata from './MutualFundMetadata'
 import ViewMutualFundData from './ViewMutualFundData'
+import FinanceOverview from './FinanceOverview'
 import { fetchMutualFundMetadata } from './api'
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home users={users} loading={loading} error={error} />} />
+        <Route path="/user/:userId/overview" element={<FinanceOverview />} />
         <Route path="/user/:userId/dashboard" element={<MutualFundDashboard />} />
         <Route path="/user/:userId/mutual-funds" element={<MutualFundEntries />} />
         <Route path="/user/:userId/mutualfund-metadata" element={<MutualFundMetadata />} />
@@ -57,7 +59,7 @@ function Home({ users, loading, error }) {
           </thead>
           <tbody>
             {users.map((user) => (
-              <tr key={user._id} onClick={() => navigate(`/user/${user._id}/dashboard`)} style={{ cursor: 'pointer' }}>
+              <tr key={user._id} onClick={() => navigate(`/user/${user._id}/overview`)} style={{ cursor: 'pointer' }}>
                 <td>{user.name}</td>
               </tr>
             ))}
