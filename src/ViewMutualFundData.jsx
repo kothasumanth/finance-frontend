@@ -286,6 +286,8 @@ function ViewMutualFundData() {
                   <th>Today Value</th>
                   <th>isRedeemed</th>
                   <th>balanceUnit</th>
+                  <th>principalRedeem</th>
+                  <th>interestRedeem</th>
                 </tr>
               </thead>
               <tbody>
@@ -309,16 +311,18 @@ function ViewMutualFundData() {
                       <td>{entry.nav !== undefined && entry.nav !== '' ? Number(entry.nav).toFixed(2) : ''}</td>
                       <td>{entry.units !== undefined && entry.units !== '' ? Number(entry.units).toFixed(2) : ''}</td>
                       <td>{(() => {
-                        if (entry.units !== undefined && entry.units !== '' && mfApiData && mfApiData.nav) {
-                          const todayValue = Number(entry.units) * Number(mfApiData.nav);
-                          const amount = parseFloat(entry.amount) || 0;
-                          const color = todayValue > amount ? '#059669' : '#dc2626';
-                          return <span style={{ color, fontWeight: 600 }}>{todayValue.toFixed(2)}</span>;
+                        // Show Today Value as balanceUnit * latest NAV from API for Invest rows
+                        if (entry.investType === 'Invest' && entry.balanceUnit !== undefined && entry.balanceUnit !== '' && mfApiData && mfApiData.nav) {
+                          const todayValue = Number(entry.balanceUnit) * Number(mfApiData.nav);
+                          return <span style={{ fontWeight: 600 }}>{todayValue.toFixed(2)}</span>;
                         }
+                        // For Redeem rows, show blank or 0
                         return '';
                       })()}</td>
                       <td>{entry.isRedeemed ? 'true' : 'false'}</td>
                       <td>{entry.balanceUnit !== undefined && entry.balanceUnit !== '' ? Number(entry.balanceUnit).toFixed(2) : ''}</td>
+                      <td>{entry.principalRedeem !== undefined && entry.principalRedeem !== '' ? Number(entry.principalRedeem).toFixed(2) : ''}</td>
+                      <td>{entry.interestRedeem !== undefined && entry.interestRedeem !== '' ? Number(entry.interestRedeem).toFixed(2) : ''}</td>
                     </tr>
                   ))}
               </tbody>
