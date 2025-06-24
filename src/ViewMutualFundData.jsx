@@ -5,7 +5,7 @@ import IconButton from './IconButton'
 function ViewMutualFundData() {
   const { userId } = useParams()
   const [fundOptions, setFundOptions] = useState([])
-  const [selectedFund, setSelectedFund] = useState('')
+  const [selectedFund, setSelectedFund] = useState('ALL')
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -27,7 +27,11 @@ function ViewMutualFundData() {
     fetch(`http://localhost:3000/mutual-funds/${userId}`)
       .then(res => res.json())
       .then(data => {
-        setEntries(data.filter(e => e.fundName && e.fundName._id === selectedFund))
+        if (selectedFund === 'ALL') {
+          setEntries(data)
+        } else {
+          setEntries(data.filter(e => e.fundName && e.fundName._id === selectedFund))
+        }
         setLoading(false)
       })
       .catch(() => {
@@ -141,6 +145,11 @@ function ViewMutualFundData() {
       .then(res => res.json())
       .then(data => setEntries(data.filter(e => e.fundName && e.fundName._id === selectedFund)));
   };
+
+  // Reset page to 1 whenever selectedFund changes
+  useEffect(() => {
+    setPage(1);
+  }, [selectedFund]);
 
   return (
     <div className="container colorful-bg" style={{ paddingTop: '1.2rem', maxWidth: 1250, margin: '0 auto' }}>
@@ -269,6 +278,7 @@ function ViewMutualFundData() {
             outline: 'none',
             minWidth: 180
           }}>
+          <option value="ALL" style={{ fontFamily: 'monospace', color: '#059669', fontWeight: 700 }}>All Mutual Funds</option>
           <option value="" style={{ fontFamily: 'monospace', color: '#64748b' }}>-- Select --</option>
           {fundOptions
             .slice()
