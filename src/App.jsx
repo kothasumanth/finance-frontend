@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'
 import './App.css'
-import UserDashboard from './UserDashboard'
+import MutualFundDashboard from './MutualFundDashboard'
 import MutualFundEntries from './MutualFundEntries'
 import MutualFundMetadata from './MutualFundMetadata'
 import ViewMutualFundData from './ViewMutualFundData'
@@ -32,7 +32,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home users={users} loading={loading} error={error} />} />
-        <Route path="/user/:userId/dashboard" element={<UserDashboard />} />
+        <Route path="/user/:userId/dashboard" element={<MutualFundDashboard />} />
         <Route path="/user/:userId/mutual-funds" element={<MutualFundEntries />} />
         <Route path="/user/:userId/mutualfund-metadata" element={<MutualFundMetadata />} />
         <Route path="/user/:userId/view-mf-data" element={<ViewMutualFundData />} />

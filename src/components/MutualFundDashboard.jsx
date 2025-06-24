@@ -1,0 +1,3 @@
+// ...existing UserDashboard.jsx code moved here...
+import { useParams, useNavigate } from 'react-router-dom'
+// This file is now MutualFundDashboard.jsx
