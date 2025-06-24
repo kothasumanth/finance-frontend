@@ -133,6 +133,35 @@ function MutualFundEntries() {
         <h1 className="colorful-title" style={{ margin: 0, fontSize: '1.5rem' }}>
           Mutual Fund Entries
         </h1>
+        {/* Filter Mutual Fund Dropdown */}
+        <select
+          value={fundName || ''}
+          onChange={e => {
+            setFundName(e.target.value);
+            setPage(1);
+          }}
+          style={{
+            fontWeight: 600,
+            color: '#2563eb',
+            fontSize: '1rem',
+            border: '1.5px solid #059669',
+            borderRadius: 6,
+            padding: '0.3rem 1.1rem',
+            fontFamily: 'monospace',
+            background: '#f0f9ff',
+            outline: 'none',
+            minWidth: 180,
+            marginLeft: '1.5rem',
+          }}
+        >
+          <option value="">All Mutual Funds</option>
+          {fundOptions
+            .slice()
+            .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
+            .map(opt => (
+              <option key={opt._id} value={opt._id}>{opt.MutualFundName}</option>
+            ))}
+        </select>
         <button onClick={handleAdd} style={{
           marginLeft: '2rem',
           background: '#6366f1',
@@ -278,6 +307,7 @@ function MutualFundEntries() {
             </thead>
             <tbody>
               {entries
+                .filter(e => !fundName || e.fundName?._id === fundName)
                 .slice()
                 .sort((a, b) => {
                   const nameA = a.fundName?.MutualFundName || '';
