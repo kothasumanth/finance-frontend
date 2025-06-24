@@ -18,14 +18,14 @@ function MutualFundDashboard() {
   }, [userId])
 
   return (
-    <div className="container colorful-bg" style={{ maxWidth: 900, margin: '0 auto', position: 'relative' }}>
+    <div className="container colorful-bg" style={{ maxWidth: 1250, margin: '0 auto' }}>
       <div style={{ position: 'absolute', top: 10, right: 20 }}>
         <button onClick={() => navigate('/')}>Home</button>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '0.2rem', width: '100%' }}>
-          <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem', textAlign: 'center' }}>Mutual Fund Dashboard</h1>
-          <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', marginTop: 0, justifyContent: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', marginTop: '0.2rem' }}>
+          <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>Mutual Fund Dashboard</h1>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', marginTop: 0 }}>
             <button style={{background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'}} onClick={() => navigate(`/user/${userId}/mutualfund-metadata`)}>
               Add MF MetaData
             </button>
@@ -37,8 +37,8 @@ function MutualFundDashboard() {
             </button>
           </div>
         </div>
-        {/* Overall summary section, centered */}
-        <div style={{marginTop: 0, marginBottom: '1.2rem', fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem', minWidth: 320, maxWidth: 400}}>
+        {/* Overall summary section, right-aligned */}
+        <div style={{marginTop: 0, marginBottom: '1.2rem', fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.2rem', minWidth: 320}}>
           <span style={{
             alignSelf: 'center',
             background: 'linear-gradient(90deg, #fef9c3 0%, #fef08a 100%)',
@@ -88,10 +88,10 @@ function MutualFundDashboard() {
         </div>
       </div>
       {/* Fund-wise summary table */}
-      <div style={{marginTop: '1.0rem', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-        <h2 style={{fontSize: '1.15rem', color: '#059669', marginBottom: '0.7rem', textAlign: 'center'}}>Fund Wise Summary</h2>
+      <div style={{marginTop: '1.0rem'}}>
+        <h2 style={{fontSize: '1.15rem', color: '#059669', marginBottom: '0.7rem'}}>Fund Wise Summary</h2>
         {loading ? <p>Loading summary...</p> : error ? <p style={{color: 'red'}}>{error}</p> : (
-          <table className="user-table colorful-table" style={{margin: '0 auto'}}>
+          <table className="user-table colorful-table">
             <thead>
               <tr>
                 <th>MF Name</th>
