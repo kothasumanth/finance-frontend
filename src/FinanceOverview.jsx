@@ -34,20 +34,20 @@ function FinanceOverview() {
           Home
         </button>
       </div>
-      <div className="container colorful-bg" style={{ maxWidth: 600, margin: '0 auto', paddingTop: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h1 className="colorful-title" style={{ fontSize: '2rem', marginTop: 0, marginBottom: '0.7rem' }}>Finance Overview</h1>
+      <div className="container colorful-bg" style={{ maxWidth: 600, margin: '0 auto', paddingTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1rem' }}>
+          <h1 className="colorful-title" style={{ fontSize: '2rem', marginTop: 0, marginBottom: '0.7rem', textAlign: 'center' }}>Finance Overview</h1>
         </div>
         <button
           style={{
-            background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)', marginBottom: '2rem', cursor: 'pointer'
+            background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)', marginBottom: '2rem', cursor: 'pointer', alignSelf: 'center'
           }}
           onClick={() => navigate(`/user/${userId}/dashboard`)}
         >
           Mutual Fund
         </button>
-        <div style={{marginTop: '1.2rem'}}>
-          <table className="user-table colorful-table" style={{ minWidth: 320 }}>
+        <div style={{marginTop: '1.2rem', width: '100%', display: 'flex', justifyContent: 'center'}}>
+          <table className="user-table colorful-table" style={{ minWidth: 320, margin: '0 auto' }}>
             <thead>
               <tr>
                 <th>Type</th>

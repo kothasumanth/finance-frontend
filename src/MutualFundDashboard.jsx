@@ -20,7 +20,7 @@ function MutualFundDashboard() {
   return (
     <div className="container colorful-bg" style={{ maxWidth: 1250, margin: '0 auto' }}>
       <div style={{ position: 'absolute', top: 10, right: 20 }}>
-        <button onClick={() => navigate('/')}>Home</button>
+        <button onClick={() => navigate(`/user/${userId}/overview`)}>Overview</button>
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', marginTop: '0.2rem' }}>
