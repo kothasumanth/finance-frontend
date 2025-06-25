@@ -165,6 +165,8 @@ function PpfDashboard() {
                 <th>Date</th>
                 <th>Opening Balance</th>
                 <th>Amount Deposited</th>
+                <th>Lowest Balance</th>
+                <th>Balance</th>
                 <th>Month Interest</th>
                 <th>ROI</th>
                 <th></th>
@@ -178,6 +180,8 @@ function PpfDashboard() {
                       <td><input type="date" name="date" value={editForm.date} onChange={handleEditChange} /></td>
                       <td>{entry.openingBalance}</td>
                       <td><input type="number" name="amountDeposited" value={editForm.amountDeposited} onChange={handleEditChange} /></td>
+                      <td>{entry.lowestBalance ?? 0}</td>
+                      <td>{entry.balance ?? 0}</td>
                       <td>{(() => {
                         const roi = entry.roi || 0;
                         const amount = parseFloat(editForm.amountDeposited) || 0;
@@ -199,6 +203,8 @@ function PpfDashboard() {
                       <td>{entry.date ? entry.date.slice(0, 10) : ''}</td>
                       <td>{entry.openingBalance}</td>
                       <td>{entry.amountDeposited ?? 0}</td>
+                      <td>{entry.lowestBalance ?? 0}</td>
+                      <td>{entry.balance ?? 0}</td>
                       <td>{entry.monthInterest}</td>
                       <td>{entry.roi !== undefined ? entry.roi : ''}</td>
                       <td><button onClick={() => handleEdit(entry)}>Edit</button></td>
