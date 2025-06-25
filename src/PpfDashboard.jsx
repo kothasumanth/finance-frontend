@@ -110,7 +110,6 @@ function PpfDashboard() {
   };
 
   const handleEditSave = async (entry) => {
-    // Calculate new monthInterest
     const roi = entry.roi || 0;
     const amount = parseFloat(editForm.amountDeposited) || 0;
     let monthInterest = 0;
@@ -128,9 +127,25 @@ function PpfDashboard() {
       })
     });
     if (res.ok) {
-      setEntries((prev) => prev.map(e => e._id === entry._id ? { ...e, date: editForm.date, amountDeposited: amount, monthInterest } : e));
-      const fyGroups = groupEntriesByFinancialYear(entries.map(e => e._id === entry._id ? { ...e, date: editForm.date, amountDeposited: amount, monthInterest } : e));
-      setGroups(fyGroups);
+      const data = await res.json();
+      if (data.success && data.updatedEntries) {
+        // Optionally, re-attach ROI to each entry as before
+        let updated = data.updatedEntries;
+        const ids = [...new Set(updated.map(e => e.pfInterestId).filter(Boolean))];
+        let roiMap = {};
+        if (ids.length > 0) {
+          const roiRes = await fetch('http://localhost:3000/pf-interest');
+          const roiData = await roiRes.json();
+          ids.forEach(id => {
+            const found = roiData.find(r => r._id === id);
+            if (found) roiMap[id] = found.rateOfInterest;
+          });
+        }
+        updated = updated.map(e => ({ ...e, roi: roiMap[e.pfInterestId] ?? '' }));
+        setEntries(updated);
+        const fyGroups = groupEntriesByFinancialYear(updated);
+        setGroups(fyGroups);
+      }
       setEditId(null);
       setEditForm({ date: '', amountDeposited: '' });
     } else {
