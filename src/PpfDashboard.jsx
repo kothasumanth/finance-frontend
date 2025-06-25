@@ -3,40 +3,35 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 function groupEntriesByFinancialYear(entries) {
   if (!entries || entries.length === 0) return [];
-  // Sort by date ascending
   const sorted = [...entries].sort((a, b) => new Date(a.date) - new Date(b.date));
   const groups = [];
   let group = [];
-  let fyStart, fyEnd;
+  let fyStart = null;
+  let fyEnd = null;
   for (let i = 0; i < sorted.length; i++) {
     const entry = sorted[i];
     const d = new Date(entry.date);
-    // Determine FY for this entry
-    let fyStartYear, fyEndYear;
-    if (d.getMonth() >= 3) { // April or later
-      fyStartYear = d.getFullYear();
-      fyEndYear = d.getFullYear() + 1;
-    } else {
-      fyStartYear = d.getFullYear() - 1;
-      fyEndYear = d.getFullYear();
-    }
-    // If group is empty, set current FY
     if (group.length === 0) {
-      fyStart = new Date(fyStartYear, 3, 1); // April 1
-      fyEnd = new Date(fyEndYear, 2, 31, 23, 59, 59, 999); // March 31
-    }
-    // If entry is within current FY, add to group
-    if (d >= fyStart && d <= fyEnd) {
-      group.push(entry);
-    } else {
-      // Push previous group, start new group
-      if (group.length > 0) groups.push({ fyStart, fyEnd, entries: group });
-      group = [entry];
+      // Start of a new group: FY starts in April of this year if month >= 3, else previous year
+      const fyStartYear = d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1;
       fyStart = new Date(fyStartYear, 3, 1);
-      fyEnd = new Date(fyEndYear, 2, 31, 23, 59, 59, 999);
+      fyEnd = null;
+    }
+    group.push(entry);
+    if (d.getMonth() === 2) { // March
+      fyEnd = new Date(d.getFullYear(), 2, 31, 23, 59, 59, 999);
+      groups.push({ fyStart, fyEnd, entries: group });
+      group = [];
+      fyStart = null;
+      fyEnd = null;
     }
   }
-  if (group.length > 0) groups.push({ fyStart, fyEnd, entries: group });
+  // If any entries left (e.g., last group doesn't end in March), add them as a group
+  if (group.length > 0) {
+    const last = new Date(group[group.length - 1].date);
+    fyEnd = last.getMonth() === 2 ? new Date(last.getFullYear(), 2, 31, 23, 59, 59, 999) : last;
+    groups.push({ fyStart, fyEnd, entries: group });
+  }
   return groups;
 }
 
@@ -52,6 +47,8 @@ function PpfDashboard() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(0);
   const [groups, setGroups] = useState([]);
+  const [editId, setEditId] = useState(null);
+  const [editForm, setEditForm] = useState({ date: '', amountDeposited: '' });
 
   useEffect(() => {
     async function fetchEntries() {
@@ -95,6 +92,52 @@ function PpfDashboard() {
 
   const currentGroup = groups[page] || { entries: [], fyStart: null, fyEnd: null };
 
+  const handleEdit = (entry) => {
+    setEditId(entry._id);
+    setEditForm({
+      date: entry.date ? entry.date.slice(0, 10) : '',
+      amountDeposited: entry.amountDeposited ?? 0
+    });
+  };
+
+  const handleEditChange = (e) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
+  const handleEditCancel = () => {
+    setEditId(null);
+    setEditForm({ date: '', amountDeposited: '' });
+  };
+
+  const handleEditSave = async (entry) => {
+    // Calculate new monthInterest
+    const roi = entry.roi || 0;
+    const amount = parseFloat(editForm.amountDeposited) || 0;
+    let monthInterest = 0;
+    const day = editForm.date ? Number(editForm.date.split('-')[2]) : 1;
+    if (day <= 5) {
+      monthInterest = parseFloat((amount * (1/12) * (parseFloat(roi)/100)).toFixed(2));
+    }
+    const res = await fetch(`http://localhost:3000/pfentry/${entry._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        date: editForm.date,
+        amountDeposited: amount,
+        monthInterest
+      })
+    });
+    if (res.ok) {
+      setEntries((prev) => prev.map(e => e._id === entry._id ? { ...e, date: editForm.date, amountDeposited: amount, monthInterest } : e));
+      const fyGroups = groupEntriesByFinancialYear(entries.map(e => e._id === entry._id ? { ...e, date: editForm.date, amountDeposited: amount, monthInterest } : e));
+      setGroups(fyGroups);
+      setEditId(null);
+      setEditForm({ date: '', amountDeposited: '' });
+    } else {
+      alert('Error saving changes');
+    }
+  };
+
   return (
     <div className="container colorful-bg">
       <div style={{ position: 'absolute', top: 10, right: 20 }}>
@@ -124,16 +167,43 @@ function PpfDashboard() {
                 <th>Amount Deposited</th>
                 <th>Month Interest</th>
                 <th>ROI</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {currentGroup.entries.map((entry) => (
                 <tr key={entry._id}>
-                  <td>{entry.date ? entry.date.slice(0, 10) : ''}</td>
-                  <td>{entry.openingBalance}</td>
-                  <td>{entry.amountDeposited ?? 0}</td>
-                  <td>{entry.monthInterest}</td>
-                  <td>{entry.roi !== undefined ? entry.roi : ''}</td>
+                  {editId === entry._id ? (
+                    <>
+                      <td><input type="date" name="date" value={editForm.date} onChange={handleEditChange} /></td>
+                      <td>{entry.openingBalance}</td>
+                      <td><input type="number" name="amountDeposited" value={editForm.amountDeposited} onChange={handleEditChange} /></td>
+                      <td>{(() => {
+                        const roi = entry.roi || 0;
+                        const amount = parseFloat(editForm.amountDeposited) || 0;
+                        const day = editForm.date ? Number(editForm.date.split('-')[2]) : 1;
+                        if (day <= 5) {
+                          return (amount * (1/12) * (parseFloat(roi)/100)).toFixed(2);
+                        } else {
+                          return '0.00';
+                        }
+                      })()}</td>
+                      <td>{entry.roi !== undefined ? entry.roi : ''}</td>
+                      <td>
+                        <button onClick={() => handleEditSave(entry)} style={{ marginRight: 8 }}>Save</button>
+                        <button onClick={handleEditCancel}>Cancel</button>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td>{entry.date ? entry.date.slice(0, 10) : ''}</td>
+                      <td>{entry.openingBalance}</td>
+                      <td>{entry.amountDeposited ?? 0}</td>
+                      <td>{entry.monthInterest}</td>
+                      <td>{entry.roi !== undefined ? entry.roi : ''}</td>
+                      <td><button onClick={() => handleEdit(entry)}>Edit</button></td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>
