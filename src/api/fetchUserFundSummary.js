@@ -41,5 +41,7 @@ export async function fetchUserFundSummary(userId) {
   for (const id in fundMap) {
     fundMap[id].profitLoss = fundMap[id].todayValue - fundMap[id].invested;
   }
-  return Object.values(fundMap);
+  // Only include funds where user has at least one entry
+  const filtered = Object.values(fundMap).filter(fund => fund.invested > 0 || fund.balanceUnits > 0 || fund.todayValue > 0);
+  return filtered;
 }
