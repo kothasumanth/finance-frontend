@@ -151,6 +151,17 @@ function ViewMutualFundData() {
     setPage(1);
   }, [selectedFund]);
 
+  // Helper to format date as dd-MMM-yy
+  function formatDateDMY(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d)) return dateStr;
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = d.toLocaleString('en-US', { month: 'short' });
+    const year = d.getFullYear().toString().slice(-2);
+    return `${day}-${month}-${year}`;
+  }
+
   return (
     <div className="container colorful-bg" style={{ paddingTop: '1.2rem', maxWidth: 1250, margin: '0 auto' }}>
       <div style={{ position: 'absolute', top: 10, right: 20, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.7rem' }}>
@@ -314,7 +325,7 @@ function ViewMutualFundData() {
               <tbody>
                 {entries
                   .slice()
-                  .sort((a, b) => a.purchaseDate.localeCompare(b.purchaseDate))
+                  .sort((a, b) => b.purchaseDate.localeCompare(a.purchaseDate))
                   .slice((page-1)*10, page*10)
                   .map(entry => (
                     <tr key={entry._id}>
@@ -327,7 +338,7 @@ function ViewMutualFundData() {
                           fontWeight: 600
                         }}>{entry.investType}</span>
                       </td>
-                      <td>{entry.purchaseDate}</td>
+                      <td>{formatDateDMY(entry.purchaseDate)}</td>
                       <td>{entry.amount}</td>
                       <td>{entry.nav !== undefined && entry.nav !== '' ? Number(entry.nav).toFixed(2) : ''}</td>
                       <td>{entry.units !== undefined && entry.units !== '' ? Number(entry.units).toFixed(2) : ''}</td>
