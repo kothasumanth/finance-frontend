@@ -62,11 +62,20 @@ function PfDashboard() {
           arr.sort((a, b) => new Date(a.date) - new Date(b.date));
           return {
             fy,
-            openingBalance: arr[0]?.openingBalance ?? 0,
+            // We'll set openingBalance below
             amountDeposited: arr.reduce((sum, e) => sum + (e.amountDeposited || 0), 0),
             interest: arr.reduce((sum, e) => sum + (e.monthInterest || 0), 0)
           };
         }).sort((a, b) => a.fy.localeCompare(b.fy));
+        // Calculate openingBalance for each year as per new rule
+        let prevTotal = 0;
+        for (let i = 0; i < fyRows.length; i++) {
+          if (i === 0) {
+            fyRows[i].openingBalance = 0;
+          } else {
+            fyRows[i].openingBalance = fyRows[i-1].openingBalance + fyRows[i-1].amountDeposited + fyRows[i-1].interest;
+          }
+        }
         setPpfYearwise(fyRows);
       } catch (e) {
         setPpfYearwise([]);
