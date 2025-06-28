@@ -346,7 +346,9 @@ function ViewMutualFundData() {
                         // Show Today Value as balanceUnit * latest NAV from API for Invest rows
                         if (entry.investType === 'Invest' && entry.balanceUnit !== undefined && entry.balanceUnit !== '' && mfApiData && mfApiData.nav) {
                           const todayValue = Number(entry.balanceUnit) * Number(mfApiData.nav);
-                          return <span style={{ fontWeight: 600 }}>{todayValue.toFixed(2)}</span>;
+                          const amount = parseFloat(entry.amount) || 0;
+                          const color = todayValue > amount ? '#059669' : '#dc2626';
+                          return <span style={{ fontWeight: 600, color }}>{todayValue.toFixed(2)}</span>;
                         }
                         // For Redeem rows, show blank or 0
                         return '';

@@ -3,6 +3,17 @@ import { useParams, Link } from 'react-router-dom'
 import { fetchMutualFundMetadata } from './api'
 import IconButton from './IconButton'
 
+// Helper to format date as dd-MMM-yy
+function formatDateDMY(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = d.toLocaleString('en-US', { month: 'short' });
+  const year = d.getFullYear().toString().slice(-2);
+  return `${day}-${month}-${year}`;
+}
+
 function MutualFundEntries() {
   const { userId } = useParams()
   const [entries, setEntries] = useState([])
@@ -309,11 +320,7 @@ function MutualFundEntries() {
               {entries
                 .filter(e => !fundName || e.fundName?._id === fundName)
                 .slice()
-                .sort((a, b) => {
-                  const nameA = a.fundName?.MutualFundName || '';
-                  const nameB = b.fundName?.MutualFundName || '';
-                  return nameA.localeCompare(nameB);
-                })
+                .sort((a, b) => b.purchaseDate.localeCompare(a.purchaseDate))
                 .slice((page-1)*10, page*10)
                 .map((entry) => (
                   <tr key={entry._id}>
@@ -366,7 +373,7 @@ function MutualFundEntries() {
                           }}
                         />
                       ) : (
-                        entry.purchaseDate
+                        formatDateDMY(entry.purchaseDate)
                       )}
                     </td>
                     <td>
