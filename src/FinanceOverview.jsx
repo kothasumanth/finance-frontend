@@ -47,7 +47,7 @@ function FinanceOverview() {
           }}
           onClick={() => navigate(`/user/${userId}/pf-dashboard`)}
         >
-          PF
+          Provident Fund
         </button>
       </div>
       <div className="container colorful-bg" style={{ maxWidth: 600, margin: '0 auto', paddingTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
