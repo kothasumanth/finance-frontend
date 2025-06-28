@@ -158,7 +158,7 @@ function PpfDashboard() {
       <div style={{ position: 'absolute', top: 10, right: 20 }}>
         <button onClick={() => navigate(`/user/${userId}/pf-dashboard`)}>PF Dashboard</button>
       </div>
-      <h1 className="colorful-title">PPF Dashboard</h1>
+      <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>Detailed PPF Dashboard</h1>
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {!loading && !error && (

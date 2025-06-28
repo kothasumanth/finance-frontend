@@ -218,7 +218,12 @@ function PfDashboard() {
                           <td>{idx === editRow ? <input type="date" name="endDate" value={form.endDate} onChange={handleInputChange} /> : row.endDate?.slice(0, 10)}</td>
                           <td>{idx === editRow ? <input type="number" step="0.01" name="rateOfInterest" value={form.rateOfInterest} onChange={handleInputChange} /> : row.rateOfInterest}</td>
                           <td>
-                            {idx === interestRows.length - 1 && (
+                            {idx === editRow ? (
+                              <>
+                                <button onClick={handleSave} style={{ marginRight: 8 }}>Save</button>
+                                <button onClick={() => { setEditRow(null); setForm({ startDate: '', endDate: '', rateOfInterest: '' }); }}>Cancel</button>
+                              </>
+                            ) : idx === interestRows.length - 1 && (
                               <>
                                 <button onClick={() => handleEdit(idx)} style={{ marginRight: 8 }}>Edit</button>
                                 <button onClick={() => handleDelete(idx)} style={{ marginRight: 8 }}>Delete</button>
@@ -278,6 +283,19 @@ function PfDashboard() {
         <div style={{ marginTop: '2rem', color: '#64748b' }}>
           <em>Provident Fund dashboard coming soon...</em>
         </div>
+        <button
+          style={{ background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}
+          onClick={async () => {
+            if (!window.confirm('Recalculate all PF entries for all users and PF types?')) return;
+            const res = await fetch('http://localhost:3000/pfentry/recalculate-all', { method: 'POST' });
+            if (res.ok) {
+              alert('Recalculation complete!');
+            } else {
+              const err = await res.json();
+              alert(err.error || 'Error recalculating PF entries');
+            }
+          }}
+        >Recalculate All PF Entries</button>
       </div>
     </div>
   );
