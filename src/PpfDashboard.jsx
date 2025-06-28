@@ -178,7 +178,6 @@ function PpfDashboard() {
             <thead>
               <tr>
                 <th>Date</th>
-                <th>Opening Balance</th>
                 <th>Amount Deposited</th>
                 <th>Lowest Balance</th>
                 <th>Balance</th>
@@ -193,7 +192,6 @@ function PpfDashboard() {
                   {editId === entry._id ? (
                     <>
                       <td><input type="date" name="date" value={editForm.date} onChange={handleEditChange} /></td>
-                      <td>{entry.openingBalance}</td>
                       <td><input type="number" name="amountDeposited" value={editForm.amountDeposited} onChange={handleEditChange} /></td>
                       <td>{entry.lowestBalance ?? 0}</td>
                       <td>{entry.balance ?? 0}</td>
@@ -216,7 +214,6 @@ function PpfDashboard() {
                   ) : (
                     <>
                       <td>{entry.date ? entry.date.slice(0, 10) : ''}</td>
-                      <td>{entry.openingBalance}</td>
                       <td>{entry.amountDeposited ?? 0}</td>
                       <td>{entry.lowestBalance ?? 0}</td>
                       <td>{entry.balance ?? 0}</td>
