@@ -102,6 +102,20 @@ function PpfDashboard() {
 
   const currentGroup = groups[page] || { entries: [], fyStart: null, fyEnd: null };
 
+  // Calculate summary for the current year
+  let openingBalance = 0;
+  let deposited = 0;
+  let interest = 0;
+  if (groups.length > 0 && currentGroup.entries.length > 0) {
+    // Opening balance is previous group's last entry's balance, or 0 for first group
+    if (page > 0 && groups[page - 1].entries.length > 0) {
+      const prevGroup = groups[page - 1];
+      openingBalance = prevGroup.entries[prevGroup.entries.length - 1].balance ?? 0;
+    }
+    deposited = currentGroup.entries.reduce((sum, e) => sum + (e.amountDeposited ?? 0), 0);
+    interest = currentGroup.entries.reduce((sum, e) => sum + (e.monthInterest ?? 0), 0);
+  }
+
   const handleEdit = (entry) => {
     setEditId(entry._id);
     setEditForm({
@@ -165,8 +179,44 @@ function PpfDashboard() {
 
   return (
     <div className="container colorful-bg">
+      <style>{`
+        .ppf-table th, .ppf-table td {
+          padding: 2px 6px;
+          font-size: 0.97rem;
+        }
+        .ppf-table th {
+          font-weight: 600;
+        }
+        .ppf-table td, .ppf-table th {
+          height: 28px;
+          line-height: 1.1;
+        }
+        .ppf-table td input {
+          height: 22px;
+          font-size: 0.97rem;
+          padding: 1px 4px;
+        }
+      `}</style>
       <div style={{ position: 'absolute', top: 10, right: 20 }}>
         <button onClick={() => navigate(`/user/${userId}/pf-dashboard`)}>PF Dashboard</button>
+
+        {/* Summary panel below PF Dashboard button */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 48, marginBottom: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-end' }}>
+          <div style={{ background: '#f5f7fa', borderRadius: 8, padding: '8px 18px', boxShadow: '0 1px 4px #0001', minWidth: 120, marginBottom: 0 }}>
+            <div style={{ fontSize: 13, color: '#888' }}>Opening Balance</div>
+            <div style={{ fontWeight: 600, fontSize: 18 }}>{openingBalance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+          </div>
+          <div style={{ background: '#f5f7fa', borderRadius: 8, padding: '8px 18px', boxShadow: '0 1px 4px #0001', minWidth: 120, marginBottom: 0 }}>
+            <div style={{ fontSize: 13, color: '#888' }}>Deposited</div>
+            <div style={{ fontWeight: 600, fontSize: 18 }}>{deposited.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+          </div>
+          <div style={{ background: '#f5f7fa', borderRadius: 8, padding: '8px 18px', boxShadow: '0 1px 4px #0001', minWidth: 120 }}>
+            <div style={{ fontSize: 13, color: '#888' }}>Interest</div>
+            <div style={{ fontWeight: 600, fontSize: 18 }}>{interest.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+          </div>
+        </div>
+      </div>
       </div>
       <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>Detailed PPF Page</h1>
       {loading && <p>Loading...</p>}
@@ -184,7 +234,16 @@ function PpfDashboard() {
               Next Year
             </button>
           </div>
-          <table className="user-table colorful-table">
+          <table className="user-table colorful-table ppf-table" style={{ tableLayout: 'fixed', width: '100%', minWidth: 700 }}>
+            <colgroup>
+              <col style={{ width: '110px' }} /> {/* Date */}
+              <col style={{ width: '120px' }} /> {/* Amount Deposited */}
+              <col style={{ width: '120px' }} /> {/* Lowest Balance */}
+              <col style={{ width: '110px' }} /> {/* Balance */}
+              <col style={{ width: '110px' }} /> {/* Month Interest */}
+              <col style={{ width: '70px' }} /> {/* ROI */}
+              <col style={{ width: '60px' }} /> {/* Edit */}
+            </colgroup>
             <thead>
               <tr>
                 <th>Date</th>
