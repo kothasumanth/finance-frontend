@@ -39,6 +39,16 @@ function formatFY(fyStart, fyEnd) {
   return `FY ${fyStart.getFullYear()}-${String(fyEnd.getFullYear()).slice(-2)}`;
 }
 
+function formatDateDDMMMYY(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return '';
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = d.toLocaleString('en-US', { month: 'short' });
+  const year = String(d.getFullYear()).slice(-2);
+  return `${day}-${month}-${year}`;
+}
+
 function PpfDashboard() {
   const { userId } = useParams();
   const navigate = useNavigate();
@@ -158,7 +168,7 @@ function PpfDashboard() {
       <div style={{ position: 'absolute', top: 10, right: 20 }}>
         <button onClick={() => navigate(`/user/${userId}/pf-dashboard`)}>PF Dashboard</button>
       </div>
-      <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>Detailed PPF Dashboard</h1>
+      <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>Detailed PPF Page</h1>
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {!loading && !error && (
@@ -213,7 +223,7 @@ function PpfDashboard() {
                     </>
                   ) : (
                     <>
-                      <td>{entry.date ? entry.date.slice(0, 10) : ''}</td>
+                      <td>{entry.date ? formatDateDDMMMYY(entry.date) : ''}</td>
                       <td>{entry.amountDeposited ?? 0}</td>
                       <td>{entry.lowestBalance ?? 0}</td>
                       <td>{entry.balance ?? 0}</td>
