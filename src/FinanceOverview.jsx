@@ -47,7 +47,31 @@ function FinanceOverview() {
           }}
           onClick={() => navigate(`/user/${userId}/pf-dashboard`)}
         >
+          Public Provident Fund
+        </button>
+        <button
+          style={{
+            background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(5,150,105,0.08)', marginTop: '0.7rem', cursor: 'pointer', alignSelf: 'flex-end', width: 200
+          }}
+          onClick={() => navigate(`/user/${userId}/pf-dashboard`)}
+        >
           Provident Fund
+        </button>
+        <button
+          style={{
+            background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(5,150,105,0.08)', marginTop: '0.7rem', cursor: 'pointer', alignSelf: 'flex-end', width: 200
+          }}
+          onClick={() => navigate(`/user/${userId}/pf-dashboard`)}
+        >
+          Volentire Provident Fund
+        </button>
+        <button
+          style={{
+            background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(5,150,105,0.08)', marginTop: '0.7rem', cursor: 'pointer', alignSelf: 'flex-end', width: 200
+          }}
+          onClick={() => navigate(`/user/${userId}/pf-dashboard`)}
+        >
+          EPS
         </button>
       </div>
       <div className="container colorful-bg" style={{ maxWidth: 600, margin: '0 auto', paddingTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

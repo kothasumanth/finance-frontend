@@ -251,7 +251,7 @@ function PfDashboard() {
   return (
     <div className="container colorful-bg" style={{ maxWidth: 1250, margin: '0 auto', display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>Provident Fund Dashboard</h1>
+        <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>Public Provident Fund Dashboard</h1>
         <div style={{ width: '100%', display: 'flex', flexDirection: 'row', marginTop: 0, marginBottom: '1.5rem' }}>
           <div style={{ flex: 1 }} />
           <div className="pf-dashboard-btn-row" style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center' }}>
