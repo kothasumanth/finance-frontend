@@ -8,6 +8,7 @@ function FinanceOverview() {
   const [fundSummary, setFundSummary] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [ppfTotal, setPpfTotal] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -15,6 +16,30 @@ function FinanceOverview() {
       .then(setFundSummary)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
+  }, [userId]);
+
+  useEffect(() => {
+    // Fetch PPF summary (Total After 15Y) from backend
+    async function fetchPPFSummary() {
+      try {
+        const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+        const pfTypes = await pfTypesRes.json();
+        const ppfType = pfTypes.find(t => t.name === 'PPF');
+        if (!ppfType) return;
+        const res = await fetch(`http://localhost:3000/pfentry/user/${userId}/type/${ppfType._id}`);
+        const entries = await res.json();
+        // Calculate totalDeposits and totalInterest
+        let totalDeposits = 0, totalInterest = 0;
+        entries.forEach(e => {
+          totalDeposits += e.amountDeposited || 0;
+          totalInterest += e.monthInterest || 0;
+        });
+        setPpfTotal((totalDeposits + totalInterest).toFixed(2));
+      } catch {
+        setPpfTotal(null);
+      }
+    }
+    fetchPPFSummary();
   }, [userId]);
 
   // Calculate Mutual Fund totals
@@ -90,6 +115,10 @@ function FinanceOverview() {
               <tr>
                 <td>Mutual Fund</td>
                 <td>{loading ? 'Loading...' : error ? '-' : todayValue.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td>Public Provident Fund</td>
+                <td>{ppfTotal === null ? (loading ? 'Loading...' : '-') : ppfTotal}</td>
               </tr>
             </tbody>
           </table>
