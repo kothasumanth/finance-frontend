@@ -35,7 +35,7 @@ function FinanceOverview() {
         </button>
         <button
           style={{
-            background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)', marginTop: '0.7rem', cursor: 'pointer', alignSelf: 'flex-end'
+            background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)', marginTop: '0.7rem', cursor: 'pointer', alignSelf: 'flex-end', width: 200
           }}
           onClick={() => navigate(`/user/${userId}/dashboard`)}
         >
@@ -43,7 +43,7 @@ function FinanceOverview() {
         </button>
         <button
           style={{
-            background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(5,150,105,0.08)', marginTop: '0.7rem', cursor: 'pointer', alignSelf: 'flex-end'
+            background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(5,150,105,0.08)', marginTop: '0.7rem', cursor: 'pointer', alignSelf: 'flex-end', width: 200
           }}
           onClick={() => navigate(`/user/${userId}/pf-dashboard`)}
         >
@@ -59,17 +59,13 @@ function FinanceOverview() {
             <thead>
               <tr>
                 <th>Type</th>
-                <th>Invested</th>
                 <th>Total Value</th>
-                <th>P/L</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>Mutual Fund</td>
-                <td>{loading ? 'Loading...' : error ? '-' : invested.toFixed(2)}</td>
                 <td>{loading ? 'Loading...' : error ? '-' : todayValue.toFixed(2)}</td>
-                <td style={{color: profitLoss >= 0 ? '#059669' : '#dc2626', fontWeight: 600}}>{loading ? 'Loading...' : error ? '-' : profitLoss.toFixed(2)}</td>
               </tr>
             </tbody>
           </table>
