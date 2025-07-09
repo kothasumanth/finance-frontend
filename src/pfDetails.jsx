@@ -47,7 +47,7 @@ function formatDateDDMMMYY(dateStr) {
   return `${day}-${month}-${year}`;
 }
 
-function PpfDetails() {
+function PfDetails() {
   const { userId } = useParams();
   const navigate = useNavigate();
   const [entries, setEntries] = useState([]);
@@ -64,9 +64,9 @@ function PpfDetails() {
       try {
         const typesRes = await fetch('http://localhost:3000/pf-types');
         const types = await typesRes.json();
-        const ppfType = types.find(t => t.name === 'PPF');
-        if (!ppfType) throw new Error('PPF type not found');
-        const res = await fetch(`http://localhost:3000/pfentry/user/${userId}/type/${ppfType._id}`);
+        const pfType = types.find(t => t.name === 'PF');
+        if (!pfType) throw new Error('PF type not found');
+        const res = await fetch(`http://localhost:3000/pfentry/user/${userId}/type/${pfType._id}`);
         let data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
           const ids = [...new Set(data.map(e => e.pfInterestId).filter(Boolean))];
@@ -188,7 +188,7 @@ function PpfDetails() {
         }
       `}</style>
       <div style={{ position: 'absolute', top: 10, right: 20 }}>
-        <button onClick={() => navigate(`/user/${userId}/ppf-dashboard`)}>PPF Dashboard</button>
+        <button onClick={() => navigate(`/user/${userId}/pf-dashboard`)}>PF Dashboard</button>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 48, marginBottom: 8 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-end' }}>
             <div style={{ background: '#f5f7fa', borderRadius: 8, padding: '8px 18px', boxShadow: '0 1px 4px #0001', minWidth: 120, marginBottom: 0 }}>
@@ -206,7 +206,7 @@ function PpfDetails() {
           </div>
         </div>
       </div>
-      <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>Detailed PPF Page</h1>
+      <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>Detailed PF Page</h1>
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {!loading && !error && (
@@ -289,4 +289,4 @@ function PpfDetails() {
   );
 }
 
-export default PpfDetails;
+export default PfDetails;
