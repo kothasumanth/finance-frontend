@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { fetchUserFundSummary } from './api/fetchUserFundSummary';
+import EpsDashboard from './epsDashboard';
 
 function FinanceOverview() {
   const { userId } = useParams();
@@ -10,6 +11,7 @@ function FinanceOverview() {
   const [error, setError] = useState(null);
   const [ppfTotal, setPpfTotal] = useState(null);
   const [pfTotal, setPfTotal] = useState(null);
+  const [epsTotal, setEpsTotal] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -66,6 +68,29 @@ function FinanceOverview() {
     fetchPFSummary();
   }, [userId]);
 
+  useEffect(() => {
+    // Fetch EPS summary (Total After 15Y) from backend
+    async function fetchEPSSummary() {
+      try {
+        const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+        const pfTypes = await pfTypesRes.json();
+        const epsType = pfTypes.find(t => t.name === 'EPS');
+        if (!epsType) return;
+        const res = await fetch(`http://localhost:3000/pfentry/user/${userId}/type/${epsType._id}`);
+        const entries = await res.json();
+        let totalDeposits = 0, totalInterest = 0;
+        entries.forEach(e => {
+          totalDeposits += e.amountDeposited || 0;
+          totalInterest += e.monthInterest || 0;
+        });
+        setEpsTotal((totalDeposits + totalInterest).toFixed(2));
+      } catch {
+        setEpsTotal(null);
+      }
+    }
+    fetchEPSSummary();
+  }, [userId]);
+
   // Calculate Mutual Fund totals
   const invested = fundSummary.reduce((sum, f) => sum + f.invested, 0);
   const todayValue = fundSummary.reduce((sum, f) => sum + f.todayValue, 0);
@@ -106,19 +131,19 @@ function FinanceOverview() {
         >
           Provident Fund
         </button>
-        <button
+        {/* <button
           style={{
             background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(5,150,105,0.08)', marginTop: '0.7rem', cursor: 'pointer', alignSelf: 'flex-end', width: 200
           }}
           onClick={() => navigate(`/user/${userId}/pf-dashboard`)}
         >
           Volentire Provident Fund
-        </button>
+        </button> */}
         <button
           style={{
             background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(5,150,105,0.08)', marginTop: '0.7rem', cursor: 'pointer', alignSelf: 'flex-end', width: 200
           }}
-          onClick={() => navigate(`/user/${userId}/pf-dashboard`)}
+          onClick={() => navigate(`/user/${userId}/eps-dashboard`)}
         >
           EPS
         </button>
@@ -147,6 +172,10 @@ function FinanceOverview() {
               <tr>
                 <td>Provident Fund</td>
                 <td>{pfTotal === null ? (loading ? 'Loading...' : '-') : pfTotal}</td>
+              </tr>
+              <tr>
+                <td>EPS</td>
+                <td>{epsTotal === null ? (loading ? 'Loading...' : '-') : epsTotal}</td>
               </tr>
             </tbody>
           </table>
