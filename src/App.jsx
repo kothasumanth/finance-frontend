@@ -40,8 +40,8 @@ function App() {
         <Route path="/user/:userId/mutual-funds" element={<MutualFundEntries />} />
         <Route path="/user/:userId/mutualfund-metadata" element={<MutualFundMetadata />} />
         <Route path="/user/:userId/view-mf-data" element={<ViewMutualFundData />} />
-        <Route path="/user/:userId/pf-dashboard" element={<PpfDashboard />} />
-        <Route path="/user/:userId/ppf-dashboard" element={<PpfDetails />} />
+        <Route path="/user/:userId/ppf-dashboard" element={<PpfDashboard />} />
+        <Route path="/user/:userId/ppf-details" element={<PpfDetails />} />
       </Routes>
     </Router>
   )

@@ -70,7 +70,7 @@ function FinanceOverview() {
           style={{
             background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(5,150,105,0.08)', marginTop: '0.7rem', cursor: 'pointer', alignSelf: 'flex-end', width: 200
           }}
-          onClick={() => navigate(`/user/${userId}/pf-dashboard`)}
+          onClick={() => navigate(`/user/${userId}/ppf-dashboard`)}
         >
           Public Provident Fund
         </button>

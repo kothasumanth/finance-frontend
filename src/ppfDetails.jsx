@@ -188,7 +188,7 @@ function PpfDetails() {
         }
       `}</style>
       <div style={{ position: 'absolute', top: 10, right: 20 }}>
-        <button onClick={() => navigate(`/user/${userId}/pf-dashboard`)}>PF Dashboard</button>
+        <button onClick={() => navigate(`/user/${userId}/ppf-dashboard`)}>PPF Dashboard</button>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 48, marginBottom: 8 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-end' }}>
             <div style={{ background: '#f5f7fa', borderRadius: 8, padding: '8px 18px', boxShadow: '0 1px 4px #0001', minWidth: 120, marginBottom: 0 }}>
