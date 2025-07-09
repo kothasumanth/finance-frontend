@@ -11,6 +11,8 @@ import PpfDetails from './ppfDetails'
 import { fetchMutualFundMetadata } from './api'
 import PfDashboard from './pfDashboard'
 import PfDetails from './pfDetails'
+import EpsDashboard from './epsDashboard'
+import EpsDetails from './epsDetails'
 
 function App() {
   const [users, setUsers] = useState([])
@@ -46,6 +48,8 @@ function App() {
         <Route path="/user/:userId/ppf-details" element={<PpfDetails />} />
         <Route path="/user/:userId/pf-dashboard" element={<PfDashboard />} />
         <Route path="/user/:userId/pf-details" element={<PfDetails />} />
+        <Route path="/user/:userId/eps-dashboard" element={<EpsDashboard />} />
+        <Route path="/user/:userId/eps-details" element={<EpsDetails />} />
       </Routes>
     </Router>
   )
