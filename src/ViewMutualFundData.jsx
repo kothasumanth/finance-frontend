@@ -287,32 +287,34 @@ function ViewMutualFundData() {
         </div>
       </div>
       <h1 className="colorful-title" style={{ fontSize: '1.5rem', marginTop: '0.5rem', marginBottom: '0.7rem' }}>View Mutual Fund Data</h1>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
-        <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Select MF:</span>
-        <select value={selectedFund} onChange={e => setSelectedFund(e.target.value)}
-          style={{
-            fontWeight: 600,
-            color: '#2563eb',
-            fontSize: '1rem',
-            border: '1.5px solid #059669',
-            borderRadius: 6,
-            padding: '0.3rem 1.1rem',
-            fontFamily: 'monospace',
-            background: '#f0f9ff',
-            outline: 'none',
-            minWidth: 180
-          }}>
-          <option value="ALL" style={{ fontFamily: 'monospace', color: '#059669', fontWeight: 700 }}>All Mutual Funds</option>
-          <option value="" style={{ fontFamily: 'monospace', color: '#64748b' }}>-- Select --</option>
-          {fundOptionsWithData
-            .slice()
-            .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
-            .map(f => (
-              <option key={f._id} value={f._id} style={{ fontFamily: 'monospace', color: '#0f172a', fontWeight: 600 }}>{f.MutualFundName}</option>
-            ))}
-        </select>
-        {/* Remove Date/NAV from here, keep only in label above */}
-      </label>      
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1rem' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+          <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Select MF:</span>
+          <select value={selectedFund} onChange={e => setSelectedFund(e.target.value)}
+            style={{
+              fontWeight: 600,
+              color: '#2563eb',
+              fontSize: '1rem',
+              border: '1.5px solid #059669',
+              borderRadius: 6,
+              padding: '0.3rem 1.1rem',
+              fontFamily: 'monospace',
+              background: '#f0f9ff',
+              outline: 'none',
+              minWidth: 180
+            }}>
+            <option value="ALL" style={{ fontFamily: 'monospace', color: '#059669', fontWeight: 700 }}>All Mutual Funds</option>
+            <option value="" style={{ fontFamily: 'monospace', color: '#64748b' }}>-- Select --</option>
+            {fundOptionsWithData
+              .slice()
+              .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
+              .map(f => (
+                <option key={f._id} value={f._id} style={{ fontFamily: 'monospace', color: '#0f172a', fontWeight: 600 }}>{f.MutualFundName}</option>
+              ))}
+          </select>
+          {/* Remove Date/NAV from here, keep only in label above */}
+        </label>
+      </div>      
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {!loading && !error && selectedFund && (
@@ -323,16 +325,17 @@ function ViewMutualFundData() {
             <table className="user-table colorful-table">
               <thead>
                 <tr>
+                  <th>Mutual Fund</th>
                   <th>Invest Type</th>
                   <th>Purchase Date</th>
                   <th>Amount</th>
                   <th>NAV</th>
-                  <th>Units</th>
+                  {/* <th>Units</th> */}
                   <th>Today Value</th>
-                  <th>isRedeemed</th>
-                  <th>balanceUnit</th>
-                  <th>principalRedeem</th>
-                  <th>interestRedeem</th>
+                  {/* <th>isRedeemed</th> */}
+                  <th style={{ whiteSpace: 'pre-line' }}>Balance{`\n`}Units</th>
+                  <th style={{ whiteSpace: 'pre-line' }}>Principal{`\n`}Redeem</th>
+                  <th style={{ whiteSpace: 'pre-line' }}>Interest{`\n`}Redeem</th>
                 </tr>
               </thead>
               <tbody>
@@ -342,6 +345,7 @@ function ViewMutualFundData() {
                   .slice((page-1)*10, page*10)
                   .map(entry => (
                     <tr key={entry._id}>
+                      <td>{entry.fundName?.MutualFundName || ''}</td>
                       <td>
                         <span style={{
                           background: entry.investType === 'Invest' ? '#d1fae5' : '#fee2e2',
@@ -354,7 +358,7 @@ function ViewMutualFundData() {
                       <td>{formatDateDMY(entry.purchaseDate)}</td>
                       <td>{entry.amount}</td>
                       <td>{entry.nav !== undefined && entry.nav !== '' ? Number(entry.nav).toFixed(2) : ''}</td>
-                      <td>{entry.units !== undefined && entry.units !== '' ? Number(entry.units).toFixed(2) : ''}</td>
+                      {/* <td>{entry.units !== undefined && entry.units !== '' ? Number(entry.units).toFixed(2) : ''}</td> */}
                       <td>{(() => {
                         // Show Today Value as balanceUnit * latest NAV from API for Invest rows
                         if (entry.investType === 'Invest' && entry.balanceUnit !== undefined && entry.balanceUnit !== '' && mfApiData && mfApiData.nav) {
@@ -366,10 +370,10 @@ function ViewMutualFundData() {
                         // For Redeem rows, show blank or 0
                         return '';
                       })()}</td>
-                      <td>{entry.isRedeemed ? 'true' : 'false'}</td>
-                      <td>{entry.balanceUnit !== undefined && entry.balanceUnit !== '' ? Number(entry.balanceUnit).toFixed(2) : ''}</td>
-                      <td>{entry.principalRedeem !== undefined && entry.principalRedeem !== '' ? Number(entry.principalRedeem).toFixed(2) : ''}</td>
-                      <td>{entry.interestRedeem !== undefined && entry.interestRedeem !== '' ? Number(entry.interestRedeem).toFixed(2) : ''}</td>
+                      {/* <td>{entry.isRedeemed ? 'true' : 'false'}</td> */}
+                      <td style={{ whiteSpace: 'pre-line' }}>{entry.balanceUnit !== undefined && entry.balanceUnit !== '' ? Number(entry.balanceUnit).toFixed(2) : ''}</td>
+                      <td style={{ whiteSpace: 'pre-line' }}>{entry.principalRedeem !== undefined && entry.principalRedeem !== '' ? Number(entry.principalRedeem).toFixed(2) : ''}</td>
+                      <td style={{ whiteSpace: 'pre-line' }}>{entry.interestRedeem !== undefined && entry.interestRedeem !== '' ? Number(entry.interestRedeem).toFixed(2) : ''}</td>
                     </tr>
                   ))}
               </tbody>
