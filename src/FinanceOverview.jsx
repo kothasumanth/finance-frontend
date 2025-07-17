@@ -177,6 +177,13 @@ function FinanceOverview() {
                 <td>EPS</td>
                 <td>{epsTotal === null ? (loading ? 'Loading...' : '-') : epsTotal}</td>
               </tr>
+              <tr style={{ fontWeight: 700, background: '#fffbe6', color: '#b45309', borderTop: '2px solid #fde68a' }}>
+                <td style={{ background: '#fffbe6', color: '#b45309' }}>Total</td>
+                <td style={{ background: '#fffbe6', color: '#b45309' }}>{(() => {
+                  const values = [todayValue, Number(ppfTotal), Number(pfTotal), Number(epsTotal)].filter(v => !isNaN(v));
+                  return values.length === 0 ? '-' : values.reduce((sum, v) => sum + v, 0).toFixed(2);
+                })()}</td>
+              </tr>
             </tbody>
           </table>
         </div>
