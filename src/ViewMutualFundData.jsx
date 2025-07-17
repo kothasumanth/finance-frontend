@@ -5,6 +5,7 @@ import IconButton from './IconButton'
 function ViewMutualFundData() {
   const { userId } = useParams()
   const [fundOptions, setFundOptions] = useState([])
+  const [fundOptionsWithData, setFundOptionsWithData] = useState([])
   const [selectedFund, setSelectedFund] = useState('ALL')
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(false)
@@ -20,6 +21,18 @@ function ViewMutualFundData() {
       .then(data => setFundOptions(data))
       .catch(() => setFundOptions([]))
   }, [])
+
+  useEffect(() => {
+    // Fetch all MF entries for user and filter fundOptions to only those with data
+    fetch(`http://localhost:3000/mutual-funds/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        // Get unique fund IDs that have data
+        const fundIdsWithData = [...new Set(data.filter(e => e.fundName && e.fundName._id).map(e => e.fundName._id))];
+        setFundOptionsWithData(fundOptions.filter(f => fundIdsWithData.includes(f._id)));
+      })
+      .catch(() => setFundOptionsWithData([]));
+  }, [fundOptions, userId])
 
   useEffect(() => {
     if (!selectedFund) return
@@ -291,7 +304,7 @@ function ViewMutualFundData() {
           }}>
           <option value="ALL" style={{ fontFamily: 'monospace', color: '#059669', fontWeight: 700 }}>All Mutual Funds</option>
           <option value="" style={{ fontFamily: 'monospace', color: '#64748b' }}>-- Select --</option>
-          {fundOptions
+          {fundOptionsWithData
             .slice()
             .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
             .map(f => (
