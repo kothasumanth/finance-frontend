@@ -6,7 +6,7 @@ function ViewMutualFundData() {
   const { userId } = useParams()
   const [fundOptions, setFundOptions] = useState([])
   const [fundOptionsWithData, setFundOptionsWithData] = useState([])
-  const [selectedFund, setSelectedFund] = useState('ALL')
+  const [selectedFund, setSelectedFund] = useState('')
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -21,6 +21,13 @@ function ViewMutualFundData() {
       .then(data => setFundOptions(data))
       .catch(() => setFundOptions([]))
   }, [])
+
+  // Set default selectedFund to first MF with data (not All) when fundOptionsWithData loads
+  useEffect(() => {
+    if (fundOptionsWithData.length > 0) {
+      setSelectedFund(fundOptionsWithData[0]._id);
+    }
+  }, [fundOptionsWithData]);
 
   useEffect(() => {
     // Fetch all MF entries for user and filter fundOptions to only those with data
@@ -290,28 +297,27 @@ function ViewMutualFundData() {
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1rem' }}>
         <label style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
           <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Select MF:</span>
-          <select value={selectedFund} onChange={e => setSelectedFund(e.target.value)}
-            style={{
-              fontWeight: 600,
-              color: '#2563eb',
-              fontSize: '1rem',
-              border: '1.5px solid #059669',
-              borderRadius: 6,
-              padding: '0.3rem 1.1rem',
-              fontFamily: 'monospace',
-              background: '#f0f9ff',
-              outline: 'none',
-              minWidth: 180
-            }}>
-            <option value="ALL" style={{ fontFamily: 'monospace', color: '#059669', fontWeight: 700 }}>All Mutual Funds</option>
-            <option value="" style={{ fontFamily: 'monospace', color: '#64748b' }}>-- Select --</option>
-            {fundOptionsWithData
-              .slice()
-              .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
-              .map(f => (
-                <option key={f._id} value={f._id} style={{ fontFamily: 'monospace', color: '#0f172a', fontWeight: 600 }}>{f.MutualFundName}</option>
-              ))}
-          </select>
+      <select value={selectedFund} onChange={e => setSelectedFund(e.target.value)}
+        style={{
+          fontWeight: 600,
+          color: '#2563eb',
+          fontSize: '1rem',
+          border: '1.5px solid #059669',
+          borderRadius: 6,
+          padding: '0.3rem 1.1rem',
+          fontFamily: 'monospace',
+          background: '#f0f9ff',
+          outline: 'none',
+          minWidth: 180
+        }}>
+        <option value="ALL" style={{ fontFamily: 'monospace', color: '#059669', fontWeight: 700 }}>All Mutual Funds</option>
+        {fundOptionsWithData
+          .slice()
+          .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
+          .map(f => (
+            <option key={f._id} value={f._id} style={{ fontFamily: 'monospace', color: '#0f172a', fontWeight: 600 }}>{f.MutualFundName}</option>
+          ))}
+      </select>
           {/* Remove Date/NAV from here, keep only in label above */}
         </label>
       </div>      
@@ -325,17 +331,14 @@ function ViewMutualFundData() {
             <table className="user-table colorful-table">
               <thead>
                 <tr>
-                  <th>Mutual Fund</th>
-                  <th>Invest Type</th>
                   <th>Purchase Date</th>
-                  <th>Amount</th>
+                  <th>Invest Type</th>
+                  <th>Mutual Fund</th>
                   <th>NAV</th>
-                  {/* <th>Units</th> */}
-                  <th>Today Value</th>
-                  {/* <th>isRedeemed</th> */}
                   <th style={{ whiteSpace: 'pre-line' }}>Balance{`\n`}Units</th>
-                  <th style={{ whiteSpace: 'pre-line' }}>Principal{`\n`}Redeem</th>
-                  <th style={{ whiteSpace: 'pre-line' }}>Interest{`\n`}Redeem</th>
+                  <th>Amount</th>
+                  <th>Today Value</th>
+                  <th>P/L</th>
                 </tr>
               </thead>
               <tbody>
@@ -345,7 +348,7 @@ function ViewMutualFundData() {
                   .slice((page-1)*10, page*10)
                   .map(entry => (
                     <tr key={entry._id}>
-                      <td>{entry.fundName?.MutualFundName || ''}</td>
+                      <td>{formatDateDMY(entry.purchaseDate)}</td>
                       <td>
                         <span style={{
                           background: entry.investType === 'Invest' ? '#d1fae5' : '#fee2e2',
@@ -355,10 +358,10 @@ function ViewMutualFundData() {
                           fontWeight: 600
                         }}>{entry.investType}</span>
                       </td>
-                      <td>{formatDateDMY(entry.purchaseDate)}</td>
-                      <td>{entry.amount}</td>
+                      <td>{entry.fundName?.MutualFundName || ''}</td>
                       <td>{entry.nav !== undefined && entry.nav !== '' ? Number(entry.nav).toFixed(2) : ''}</td>
-                      {/* <td>{entry.units !== undefined && entry.units !== '' ? Number(entry.units).toFixed(2) : ''}</td> */}
+                      <td style={{ whiteSpace: 'pre-line' }}>{entry.balanceUnit !== undefined && entry.balanceUnit !== '' ? Number(entry.balanceUnit).toFixed(2) : ''}</td>
+                      <td>{entry.amount}</td>
                       <td>{(() => {
                         // Show Today Value as balanceUnit * latest NAV from API for Invest rows
                         if (entry.investType === 'Invest' && entry.balanceUnit !== undefined && entry.balanceUnit !== '' && mfApiData && mfApiData.nav) {
@@ -370,10 +373,17 @@ function ViewMutualFundData() {
                         // For Redeem rows, show blank or 0
                         return '';
                       })()}</td>
-                      {/* <td>{entry.isRedeemed ? 'true' : 'false'}</td> */}
-                      <td style={{ whiteSpace: 'pre-line' }}>{entry.balanceUnit !== undefined && entry.balanceUnit !== '' ? Number(entry.balanceUnit).toFixed(2) : ''}</td>
-                      <td style={{ whiteSpace: 'pre-line' }}>{entry.principalRedeem !== undefined && entry.principalRedeem !== '' ? Number(entry.principalRedeem).toFixed(2) : ''}</td>
-                      <td style={{ whiteSpace: 'pre-line' }}>{entry.interestRedeem !== undefined && entry.interestRedeem !== '' ? Number(entry.interestRedeem).toFixed(2) : ''}</td>
+                      <td>{(() => {
+                        // P/L = Today Value - Amount
+                        if (entry.investType === 'Invest' && entry.balanceUnit !== undefined && entry.balanceUnit !== '' && mfApiData && mfApiData.nav) {
+                          const todayValue = Number(entry.balanceUnit) * Number(mfApiData.nav);
+                          const amount = parseFloat(entry.amount) || 0;
+                          const pl = todayValue - amount;
+                          const color = pl >= 0 ? '#059669' : '#dc2626';
+                          return <span style={{ fontWeight: 600, color }}>{pl.toFixed(2)}</span>;
+                        }
+                        return '';
+                      })()}</td>
                     </tr>
                   ))}
               </tbody>
