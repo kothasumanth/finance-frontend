@@ -5,6 +5,7 @@ import MutualFundDashboard from './MutualFundDashboard'
 import MutualFundEntries from './MutualFundEntries'
 import MutualFundMetadata from './MutualFundMetadata'
 import ViewMutualFundData from './ViewMutualFundData'
+import GoldData from './GoldData'
 import FinanceOverview from './FinanceOverview'
 import PpfDashboard from './PpfDashboard'
 import PpfDetails from './ppfDetails'
@@ -50,6 +51,7 @@ function App() {
         <Route path="/user/:userId/pf-details" element={<PfDetails />} />
         <Route path="/user/:userId/eps-dashboard" element={<EpsDashboard />} />
         <Route path="/user/:userId/eps-details" element={<EpsDetails />} />
+        <Route path="/user/:userId/gold" element={<GoldData />} />
       </Routes>
     </Router>
   )

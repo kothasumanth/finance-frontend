@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { fetchUserFundSummary } from './api/fetchUserFundSummary';
+import { fetchGoldTodayValue } from './api/fetchGoldTodayValue';
 import EpsDashboard from './epsDashboard';
 
 function FinanceOverview() {
@@ -12,6 +13,19 @@ function FinanceOverview() {
   const [ppfTotal, setPpfTotal] = useState(null);
   const [pfTotal, setPfTotal] = useState(null);
   const [epsTotal, setEpsTotal] = useState(null);
+  const [goldTodayValue, setGoldTodayValue] = useState(null);
+  useEffect(() => {
+    async function fetchGoldToday() {
+      setGoldTodayValue(null);
+      try {
+        const todayVal = await fetchGoldTodayValue(userId);
+        setGoldTodayValue(todayVal.toFixed(2));
+      } catch {
+        setGoldTodayValue(null);
+      }
+    }
+    fetchGoldToday();
+  }, [userId]);
 
   useEffect(() => {
     setLoading(true);
@@ -147,6 +161,14 @@ function FinanceOverview() {
         >
           EPS
         </button>
+        <button
+          style={{
+            background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(245,158,66,0.08)', marginTop: '0.7rem', cursor: 'pointer', alignSelf: 'flex-end', width: 200
+          }}
+          onClick={() => navigate(`/user/${userId}/gold`)}
+        >
+          Gold
+        </button>
       </div>
       <div className="container colorful-bg" style={{ maxWidth: 600, margin: '0 auto', paddingTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1rem' }}>
@@ -177,10 +199,14 @@ function FinanceOverview() {
                 <td>EPS</td>
                 <td>{epsTotal === null ? (loading ? 'Loading...' : '-') : epsTotal}</td>
               </tr>
+              <tr>
+                <td>Gold</td>
+                <td>{goldTodayValue === null ? (loading ? 'Loading...' : '-') : goldTodayValue}</td>
+              </tr>
               <tr style={{ fontWeight: 700, background: '#fffbe6', color: '#b45309', borderTop: '2px solid #fde68a' }}>
                 <td style={{ background: '#fffbe6', color: '#b45309' }}>Total</td>
                 <td style={{ background: '#fffbe6', color: '#b45309' }}>{(() => {
-                  const values = [todayValue, Number(ppfTotal), Number(pfTotal), Number(epsTotal)].filter(v => !isNaN(v));
+                  const values = [todayValue, Number(ppfTotal), Number(pfTotal), Number(epsTotal), Number(goldTodayValue)].filter(v => !isNaN(v));
                   return values.length === 0 ? '-' : values.reduce((sum, v) => sum + v, 0).toFixed(2);
                 })()}</td>
               </tr>
