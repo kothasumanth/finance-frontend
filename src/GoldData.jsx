@@ -25,10 +25,11 @@ function GoldData() {
   const [goldPriceInput, setGoldPriceInput] = useState('');
   const [todayGoldPrice, setTodayGoldPrice] = useState(null);
 
+  const { userId } = useParams();
   useEffect(() => {
     fetchGoldEntries();
     fetchGoldPriceValue();
-  }, []);
+  }, [userId]);
 
   const fetchGoldPriceValue = async () => {
     const val = await fetchTodayGoldPrice();
@@ -47,7 +48,7 @@ function GoldData() {
 
   const fetchGoldEntries = async () => {
     setLoading(true);
-    const res = await fetch('http://localhost:3000/gold-entries');
+    const res = await fetch(`http://localhost:3000/gold-entries?userId=${userId}`);
     const data = await res.json();
     setEntries(data);
     setLoading(false);
@@ -64,7 +65,7 @@ function GoldData() {
   };
 
   const handleSave = async () => {
-    const payload = { ...form };
+    const payload = { ...form, userId };
     if (editRow !== null && entries[editRow]?._id) payload._id = entries[editRow]._id;
     const res = await fetch('http://localhost:3000/gold-entries', {
       method: 'POST',
@@ -85,7 +86,7 @@ function GoldData() {
     setShowModal(true);
   };
 
-  const { userId } = useParams();
+  // ...existing code...
   return (
     <div className="container colorful-bg" style={{ paddingTop: '1.2rem', maxWidth: 900, margin: '0 auto' }}>
       <div style={{ position: 'absolute', top: 10, right: 20, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.7rem' }}>
