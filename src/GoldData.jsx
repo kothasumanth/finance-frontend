@@ -17,6 +17,8 @@ function GoldData() {
     }
   };
   const [entries, setEntries] = useState([]);
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 10;
   const [editRow, setEditRow] = useState(null);
   const [form, setForm] = useState({ purchaseDate: '', grams: '', price: '', comments: '' });
   const [showModal, setShowModal] = useState(false);
@@ -49,8 +51,11 @@ function GoldData() {
   const fetchGoldEntries = async () => {
     setLoading(true);
     const res = await fetch(`http://localhost:3000/gold-entries?userId=${userId}`);
-    const data = await res.json();
+    let data = await res.json();
+    // Sort by purchaseDate descending
+    data = data.sort((a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate));
     setEntries(data);
+    setPage(1); // Reset to first page on reload
     setLoading(false);
   };
 
@@ -236,48 +241,71 @@ function GoldData() {
               </td>
             </tr>
           ) : (
-            entries.map((entry, idx) => (
-              <tr key={entry._id || idx}>
-                <td>{entry.purchaseDate ? new Date(entry.purchaseDate).toLocaleDateString() : ''}</td>
-                <td>{entry.grams}</td>
-                <td>{entry.price}</td>
-                <td>{entry.comments}</td>
-                <td>
-                  {deleteIdx === idx ? (
-                    <>
-                      <IconButton
-                        icon={<span role="img" aria-label="confirm">✔️</span>}
-                        title="Confirm Delete"
-                        onClick={() => handleDelete(idx)}
-                        style={{ background: '#059669', border: '1.5px solid #059669', color: '#fff' }}
-                      />
-                      <IconButton
-                        icon={<span role="img" aria-label="cancel">❌</span>}
-                        title="Cancel"
-                        onClick={() => setDeleteIdx(null)}
-                        style={{ background: '#dc2626', border: '1.5px solid #dc2626', color: '#fff' }}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <IconButton
-                        icon={<span role="img" aria-label="edit">✏️</span>}
-                        title="Edit"
-                        onClick={() => handleEdit(idx)}
-                        style={{ background: '#6366f1', border: '1.5px solid #6366f1', color: '#fff', marginRight: 6 }}
-                      />
-                      <IconButton
-                        icon={<span role="img" aria-label="delete">🗑️</span>}
-                        title="Delete"
-                        onClick={() => setDeleteIdx(idx)}
-                        style={{ background: '#dc2626', border: '1.5px solid #dc2626', color: '#fff' }}
-                      />
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))
+            entries
+              .slice((page - 1) * rowsPerPage, page * rowsPerPage)
+              .map((entry, idx) => {
+                const globalIdx = (page - 1) * rowsPerPage + idx;
+                return (
+                  <tr key={entry._id || globalIdx}>
+                    <td>{entry.purchaseDate ? formatDate(entry.purchaseDate) : ''}</td>
+                    <td>{entry.grams}</td>
+                    <td>{entry.price}</td>
+                    <td>{entry.comments}</td>
+                    <td>
+                      {deleteIdx === globalIdx ? (
+                        <>
+                          <IconButton
+                            icon={<span role="img" aria-label="confirm">✔️</span>}
+                            title="Confirm Delete"
+                            onClick={() => handleDelete(globalIdx)}
+                            style={{ background: '#059669', border: '1.5px solid #059669', color: '#fff' }}
+                          />
+                          <IconButton
+                            icon={<span role="img" aria-label="cancel">❌</span>}
+                            title="Cancel"
+                            onClick={() => setDeleteIdx(null)}
+                            style={{ background: '#dc2626', border: '1.5px solid #dc2626', color: '#fff' }}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <IconButton
+                            icon={<span role="img" aria-label="edit" style={{ fontSize: '1rem' }}>✏️</span>}
+                            title="Edit"
+                            onClick={() => handleEdit(globalIdx)}
+                            style={{ background: '#6366f1', border: '1.5px solid #6366f1', color: '#fff', marginRight: 6, width: 28, height: 28, minWidth: 28, minHeight: 28, padding: 2 }}
+                          />
+                          <IconButton
+                            icon={<span role="img" aria-label="delete" style={{ fontSize: '1rem' }}>🗑️</span>}
+                            title="Delete"
+                            onClick={() => setDeleteIdx(globalIdx)}
+                            style={{ background: '#dc2626', border: '1.5px solid #dc2626', color: '#fff', width: 28, height: 28, minWidth: 28, minHeight: 28, padding: 2 }}
+                          />
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
           )}
+      {/* Pagination Controls - Centered below table */}
+      <tr>
+        <td colSpan={5} style={{ paddingTop: 18 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16 }}>
+            <button
+              onClick={() => setPage(page - 1)}
+              disabled={page === 1}
+              style={{ padding: '0.4rem 1.2rem', borderRadius: 6, border: 'none', background: page === 1 ? '#e5e7eb' : '#6366f1', color: page === 1 ? '#64748b' : '#fff', fontWeight: 600, fontSize: '1rem', cursor: page === 1 ? 'not-allowed' : 'pointer' }}
+            >Previous</button>
+            <span style={{ fontWeight: 600, color: '#334155', fontSize: '1rem' }}>Page {page} of {Math.max(1, Math.ceil(entries.length / rowsPerPage))}</span>
+            <button
+              onClick={() => setPage(page + 1)}
+              disabled={page >= Math.ceil(entries.length / rowsPerPage)}
+              style={{ padding: '0.4rem 1.2rem', borderRadius: 6, border: 'none', background: page >= Math.ceil(entries.length / rowsPerPage) ? '#e5e7eb' : '#6366f1', color: page >= Math.ceil(entries.length / rowsPerPage) ? '#64748b' : '#fff', fontWeight: 600, fontSize: '1rem', cursor: page >= Math.ceil(entries.length / rowsPerPage) ? 'not-allowed' : 'pointer' }}
+            >Next</button>
+          </div>
+        </td>
+      </tr>
         </tbody>
       </table>
     </div>
@@ -285,3 +313,13 @@ function GoldData() {
 }
 
 export default GoldData;
+
+// Format date as dd-MMM-yy
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  if (isNaN(d)) return '';
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = d.toLocaleString('en-US', { month: 'short' });
+  const year = d.getFullYear().toString().slice(-2);
+  return `${day}-${month}-${year}`;
+}
