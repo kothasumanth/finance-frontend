@@ -28,6 +28,9 @@ export async function fetchUserFundSummary(userId) {
       profitLoss: 0,
       balanceUnits: 0,
       nav: navs[meta._id],
+      ActiveOrPassive: meta.ActiveOrPassive || '',
+      IndexOrManaged: meta.IndexOrManaged || '',
+      CapType: meta.CapType || ''
     };
   }
   for (const entry of entries) {

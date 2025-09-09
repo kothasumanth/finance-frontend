@@ -124,6 +124,27 @@ function MutualFundDashboard() {
                   </span>
                 </th>
                 <th>
+                  A/P
+                  <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: 4 }}>
+                    <button onClick={() => handleSort('ActiveOrPassive')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▲</button>
+                    <button onClick={() => handleSort('ActiveOrPassive')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▼</button>
+                  </span>
+                </th>
+                <th>
+                  I/M
+                  <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: 4 }}>
+                    <button onClick={() => handleSort('IndexOrManaged')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▲</button>
+                    <button onClick={() => handleSort('IndexOrManaged')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▼</button>
+                  </span>
+                </th>
+                <th>
+                  Cap
+                  <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: 4 }}>
+                    <button onClick={() => handleSort('CapType')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▲</button>
+                    <button onClick={() => handleSort('CapType')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▼</button>
+                  </span>
+                </th>
+                <th>
                   Invested
                   <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: 4 }}>
                     <button onClick={() => handleSort('invested')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▲</button>
@@ -157,6 +178,9 @@ function MutualFundDashboard() {
               {sortedSummary.map(fund => (
                 <tr key={fund.fundName}>
                   <td>{fund.fundName}</td>
+                  <td style={{ fontSize: '0.95em', minWidth: 70 }}>{fund.ActiveOrPassive || ''}</td>
+                  <td style={{ fontSize: '0.95em', minWidth: 70 }}>{fund.IndexOrManaged || ''}</td>
+                  <td style={{ fontSize: '0.95em', minWidth: 70 }}>{fund.CapType || ''}</td>
                   <td>{fund.invested.toFixed(2)}</td>
                   <td>{fund.todayValue.toFixed(2)}</td>
                   <td style={{color: fund.profitLoss >= 0 ? '#059669' : '#dc2626', fontWeight: 600}}>{fund.profitLoss.toFixed(2)}</td>

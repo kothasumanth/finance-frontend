@@ -12,6 +12,12 @@ function MutualFundMetadata() {
   const [fundName, setFundName] = useState('')
   const [googleValue, setGoogleValue] = useState('')
   const [editGoogleValue, setEditGoogleValue] = useState('')
+  const [activeOrPassive, setActiveOrPassive] = useState('')
+  const [indexOrManaged, setIndexOrManaged] = useState('')
+  const [capType, setCapType] = useState('')
+  const [editActiveOrPassive, setEditActiveOrPassive] = useState('')
+  const [editIndexOrManaged, setEditIndexOrManaged] = useState('')
+  const [editCapType, setEditCapType] = useState('')
   const [page, setPage] = useState(1)
 
   useEffect(() => {
@@ -34,6 +40,9 @@ function MutualFundMetadata() {
     setEditId(null)
     setFundName('')
     setGoogleValue('')
+    setActiveOrPassive('')
+    setIndexOrManaged('')
+    setCapType('')
     setShowPopup(true)
   }
 
@@ -41,16 +50,34 @@ function MutualFundMetadata() {
     setEditId(meta._id)
     setFundName(meta.MutualFundName)
     setEditGoogleValue(meta.GoogleValue)
+    setEditActiveOrPassive(meta.ActiveOrPassive || '')
+    setEditIndexOrManaged(meta.IndexOrManaged || '')
+    setEditCapType(meta.CapType || '')
     setShowPopup(false)
   }
 
   const handleSave = () => {
     const method = editId ? 'PUT' : 'POST'
     const url = editId ? `http://localhost:3000/mutualfund-metadata/${editId}` : 'http://localhost:3000/mutualfund-metadata'
+    const body = editId
+      ? {
+          MutualFundName: fundName,
+          GoogleValue: editGoogleValue,
+          ActiveOrPassive: editActiveOrPassive,
+          IndexOrManaged: editIndexOrManaged,
+          CapType: editCapType
+        }
+      : {
+          MutualFundName: fundName,
+          GoogleValue: googleValue,
+          ActiveOrPassive: activeOrPassive,
+          IndexOrManaged: indexOrManaged,
+          CapType: capType
+        }
     fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ MutualFundName: fundName, GoogleValue: editId ? editGoogleValue : googleValue })
+      body: JSON.stringify(body)
     })
       .then(res => {
         if (!res.ok) throw new Error('Failed to save metadata')
@@ -66,6 +93,12 @@ function MutualFundMetadata() {
         setFundName('')
         setEditGoogleValue('')
         setGoogleValue('')
+        setActiveOrPassive('')
+        setIndexOrManaged('')
+        setCapType('')
+        setEditActiveOrPassive('')
+        setEditIndexOrManaged('')
+        setEditCapType('')
         setShowPopup(false)
       })
       .catch(err => alert(err.message))
@@ -160,12 +193,66 @@ function MutualFundMetadata() {
                 }}
               />
             </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1.2rem' }}>
+              <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Active/Passive:</span>
+              <input value={activeOrPassive} onChange={e => setActiveOrPassive(e.target.value)}
+                style={{
+                  fontWeight: 600,
+                  color: '#2563eb',
+                  fontSize: '1rem',
+                  border: '1.5px solid #059669',
+                  borderRadius: 6,
+                  padding: '0.3rem 1.1rem',
+                  fontFamily: 'monospace',
+                  background: '#f0f9ff',
+                  outline: 'none',
+                  minWidth: 180
+                }}
+              />
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1.2rem' }}>
+              <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Index/Managed:</span>
+              <input value={indexOrManaged} onChange={e => setIndexOrManaged(e.target.value)}
+                style={{
+                  fontWeight: 600,
+                  color: '#2563eb',
+                  fontSize: '1rem',
+                  border: '1.5px solid #059669',
+                  borderRadius: 6,
+                  padding: '0.3rem 1.1rem',
+                  fontFamily: 'monospace',
+                  background: '#f0f9ff',
+                  outline: 'none',
+                  minWidth: 180
+                }}
+              />
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1.2rem' }}>
+              <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Cap Type:</span>
+              <input value={capType} onChange={e => setCapType(e.target.value)}
+                style={{
+                  fontWeight: 600,
+                  color: '#2563eb',
+                  fontSize: '1rem',
+                  border: '1.5px solid #059669',
+                  borderRadius: 6,
+                  padding: '0.3rem 1.1rem',
+                  fontFamily: 'monospace',
+                  background: '#f0f9ff',
+                  outline: 'none',
+                  minWidth: 180
+                }}
+              />
+            </label>
             <div style={{ display: 'flex', gap: '1.2rem', marginTop: '0.5rem' }}>
               <IconButton icon={"💾"} title="Save" onClick={handleSave} />
               <IconButton icon={"✖️"} title="Cancel" onClick={() => {
                 setShowPopup(false);
                 setFundName('');
                 setGoogleValue('');
+                setActiveOrPassive('');
+                setIndexOrManaged('');
+                setCapType('');
               }} />
             </div>
           </div>
@@ -179,7 +266,10 @@ function MutualFundMetadata() {
             <thead>
               <tr>
                 <th>Mutual Fund Name</th>
-                <th>Google Value</th>
+                <th>Value</th>
+                <th>Act/Passive</th>
+                <th>Index/Managed</th>
+                <th>Cap</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -225,14 +315,65 @@ function MutualFundMetadata() {
                           />
                         </td>
                         <td>
+                          <input value={editActiveOrPassive} onChange={e => setEditActiveOrPassive(e.target.value)}
+                            style={{
+                              fontWeight: 600,
+                              color: '#2563eb',
+                              fontSize: '1rem',
+                              border: '1.5px solid #059669',
+                              borderRadius: 6,
+                              padding: '0.3rem 1.1rem',
+                              fontFamily: 'monospace',
+                              background: '#f0f9ff',
+                              outline: 'none',
+                              minWidth: 180
+                            }}
+                          />
+                        </td>
+                        <td>
+                          <input value={editIndexOrManaged} onChange={e => setEditIndexOrManaged(e.target.value)}
+                            style={{
+                              fontWeight: 600,
+                              color: '#2563eb',
+                              fontSize: '1rem',
+                              border: '1.5px solid #059669',
+                              borderRadius: 6,
+                              padding: '0.3rem 1.1rem',
+                              fontFamily: 'monospace',
+                              background: '#f0f9ff',
+                              outline: 'none',
+                              minWidth: 180
+                            }}
+                          />
+                        </td>
+                        <td>
+                          <input value={editCapType} onChange={e => setEditCapType(e.target.value)}
+                            style={{
+                              fontWeight: 600,
+                              color: '#2563eb',
+                              fontSize: '1rem',
+                              border: '1.5px solid #059669',
+                              borderRadius: 6,
+                              padding: '0.3rem 1.1rem',
+                              fontFamily: 'monospace',
+                              background: '#f0f9ff',
+                              outline: 'none',
+                              minWidth: 180
+                            }}
+                          />
+                        </td>
+                        <td>
                           <IconButton icon={"💾"} title="Save" onClick={handleSave} />
-                          <IconButton icon={"✖️"} title="Cancel" onClick={() => { setEditId(null); setFundName(''); setEditGoogleValue(''); }} />
+                          <IconButton icon={"✖️"} title="Cancel" onClick={() => { setEditId(null); setFundName(''); setEditGoogleValue(''); setEditActiveOrPassive(''); setEditIndexOrManaged(''); setEditCapType(''); }} />
                         </td>
                       </>
                     ) : (
                       <>
                         <td>{meta.MutualFundName}</td>
                         <td>{meta.GoogleValue}</td>
+                        <td>{meta.ActiveOrPassive}</td>
+                        <td>{meta.IndexOrManaged}</td>
+                        <td>{meta.CapType}</td>
                         <td>
                           <IconButton icon={"✏️"} title="Edit" onClick={() => handleEdit(meta)} />
                           <IconButton icon={"🗑️"} title="Delete" onClick={() => handleDelete(meta._id)} />
