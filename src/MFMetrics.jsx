@@ -96,9 +96,9 @@ export default function MFMetrics() {
                     if (capType) {
                         // Store the total percentage for this cap type
                         formattedPercentages[`${capType}_total`] = item.capTotal;
-                        // Store the Active/Passive split percentages
-                        formattedPercentages[`${capType}_A`] = item.splitDetails.activePercentage;
-                        formattedPercentages[`${capType}_P`] = item.splitDetails.passivePercentage;
+                        // Store the Active/Passive split percentages with correct keys
+                        formattedPercentages[`${capType}_active`] = item.splitDetails.activePercentage;
+                        formattedPercentages[`${capType}_passive`] = item.splitDetails.passivePercentage;
                     }
                 });
                 
@@ -187,7 +187,7 @@ export default function MFMetrics() {
                         {uniqueCapTypes.length > 0 && (
                             <>
                                 <tr>
-                                    <td rowSpan="5" style={{
+                                    <td style={{
                                         width: '120px',
                                         padding: '0.75rem 1rem',
                                         fontWeight: 600,
@@ -213,21 +213,17 @@ export default function MFMetrics() {
                                     ))}
                                 </tr>
                                 <tr>
-                                    {uniqueCapTypes.map((capType, index) => (
-                                        <td colSpan="1" style={{
-                                            padding: '0.5rem',
-                                            textAlign: 'center',
-                                            color: '#4b5563',
-                                            fontWeight: 600,
-                                            fontSize: '0.9rem',
-                                            background: '#f8fafc',
-                                            borderBottom: '1px solid #e5e7eb'
-                                        }}>
-                                            Actual
-                                        </td>
-                                    ))}
-                                </tr>
-                                <tr>
+                                    <td style={{
+                                        padding: '0.5rem',
+                                        textAlign: 'left',
+                                        color: '#4b5563',
+                                        fontWeight: 600,
+                                        fontSize: '0.9rem',
+                                        background: '#f8fafc',
+                                        borderBottom: '1px solid #e5e7eb'
+                                    }}>
+                                        Actual
+                                    </td>
                                     {uniqueCapTypes.map((capType, index) => {
                                         const capTypeObj = capTypes.find(ct => ct.name === capType);
                                         if (!capTypeObj) return <td key={index}>0.00</td>;
@@ -251,6 +247,17 @@ export default function MFMetrics() {
                                     })}
                                 </tr>
                                 <tr>
+                                    <td style={{
+                                        padding: '0.5rem',
+                                        textAlign: 'left',
+                                        color: '#4b5563',
+                                        fontWeight: 600,
+                                        fontSize: '0.9rem',
+                                        background: '#f8fafc',
+                                        borderBottom: '1px solid #e5e7eb'
+                                    }}>
+                                        Actual %
+                                    </td>
                                     {uniqueCapTypes.map((capType, index) => {
                                         const capTypeObj = capTypes.find(ct => ct.name === capType);
                                         if (!capTypeObj) return <td key={index}>0.00%</td>;
@@ -282,21 +289,17 @@ export default function MFMetrics() {
                                     })}
                                 </tr>
                                 <tr>
-                                    {uniqueCapTypes.map((capType, index) => (
-                                        <td colSpan="1" style={{
-                                            padding: '0.5rem',
-                                            textAlign: 'center',
-                                            color: '#4b5563',
-                                            fontWeight: 600,
-                                            fontSize: '0.9rem',
-                                            background: '#f8fafc',
-                                            borderBottom: '1px solid #e5e7eb'
-                                        }}>
-                                            Expected
-                                        </td>
-                                    ))}
-                                </tr>
-                                <tr>
+                                    <td style={{
+                                        padding: '0.5rem',
+                                        textAlign: 'left',
+                                        color: '#4b5563',
+                                        fontWeight: 600,
+                                        fontSize: '0.9rem',
+                                        background: '#f8fafc',
+                                        borderBottom: '1px solid #e5e7eb'
+                                    }}>
+                                        Expected
+                                    </td>
                                     {uniqueCapTypes.map((capType, index) => {
                                         const totalInvestment = fundSummary.reduce((sum, f) => sum + parseFloat(f.invested || 0), 0);
                                         const expectedPercent = parseFloat(expectedPercentages[`${capType}_total`] || '0');
@@ -317,6 +320,17 @@ export default function MFMetrics() {
                                     })}
                                 </tr>
                                 <tr>
+                                    <td style={{
+                                        padding: '0.5rem',
+                                        textAlign: 'left',
+                                        color: '#4b5563',
+                                        fontWeight: 600,
+                                        fontSize: '0.9rem',
+                                        background: '#f8fafc',
+                                        borderBottom: '1px solid #e5e7eb'
+                                    }}>
+                                        Expected %
+                                    </td>
                                     {uniqueCapTypes.map((capType, index) => {
                                         const expectedPercent = parseFloat(expectedPercentages[`${capType}_total`] || '0');
                                         return (
@@ -339,7 +353,8 @@ export default function MFMetrics() {
                                         fontWeight: 600,
                                         fontSize: '1.1rem',
                                         color: '#4b5563',
-                                        textAlign: 'left'
+                                        textAlign: 'left',
+                                        background: '#f8fafc'
                                     }}>
                                         Active/Passive
                                     </td>
@@ -350,7 +365,7 @@ export default function MFMetrics() {
                                                     <tr>
                                                         {uniqueActivePassive.map((ap, idx) => (
                                                             <td key={idx} style={{
-                                                                padding: '0.75rem 0.5rem',
+                                                                padding: '0.5rem',
                                                                 textAlign: 'center',
                                                                 background: 'linear-gradient(90deg, #fef9c3 0%, #fef08a 100%)',
                                                                 color: '#b45309',
@@ -362,114 +377,171 @@ export default function MFMetrics() {
                                                             </td>
                                                         ))}
                                                     </tr>
-                                                    <tr>
-                                                        <td colSpan={uniqueActivePassive.length} style={{
-                                                            padding: '0.5rem',
-                                                            textAlign: 'left',
-                                                            color: '#4b5563',
-                                                            fontWeight: 600,
-                                                            fontSize: '0.9rem',
-                                                            borderBottom: '1px solid #e5e7eb',
-                                                            background: '#f8fafc'
-                                                        }}>
-                                                            Invested
-                                                        </td>
-                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    ))}
+                                </tr>
+                                <tr>
+                                    <td style={{
+                                        padding: '0.75rem 1rem',
+                                        fontWeight: 600,
+                                        fontSize: '0.9rem',
+                                        color: '#4b5563',
+                                        textAlign: 'left',
+                                        background: '#f8fafc'
+                                    }}>
+                                        Actual
+                                    </td>
+                                    {uniqueCapTypes.map((capType) => (
+                                        <td key={capType} style={{ padding: 0 }}>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                                <tbody>
                                                     <tr>
                                                         {uniqueActivePassive.map((ap, idx) => {
                                                             const value = getInvestmentForCapTypeAndAP(capType, ap);
                                                             return (
                                                                 <td key={idx} style={{
-                                                                    padding: '0.5rem',
+                                                                    padding: '0.75rem 1rem',
                                                                     textAlign: 'center',
                                                                     color: '#2563eb',
                                                                     fontWeight: 600,
-                                                                    fontSize: '0.9rem',
+                                                                    fontSize: '1.1rem',
                                                                     borderLeft: idx > 0 ? '1px solid #e5e7eb' : 'none',
-                                                                    borderBottom: '1px solid #e5e7eb',
-                                                                    background: '#f0f9ff'
+                                                                    background: '#f0f9ff',
+                                                                    width: '50%'
                                                                 }}>
                                                                     {value.toFixed(2)}
                                                                 </td>
                                                             );
                                                         })}
                                                     </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    ))}
+                                </tr>
+                                <tr>
+                                    <td style={{
+                                        padding: '0.75rem 1rem',
+                                        fontWeight: 600,
+                                        fontSize: '0.9rem',
+                                        color: '#4b5563',
+                                        textAlign: 'left',
+                                        background: '#f8fafc'
+                                    }}>
+                                        Actual %
+                                    </td>
+                                    {uniqueCapTypes.map((capType) => (
+                                        <td key={capType} style={{ padding: 0 }}>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                                <tbody>
                                                     <tr>
                                                         {uniqueActivePassive.map((ap, idx) => {
                                                             const value = getInvestmentForCapTypeAndAP(capType, ap);
-                                                            // Calculate total investment for this CapType
                                                             const capTypeTotal = uniqueActivePassive.reduce((sum, activePassive) => {
                                                                 return sum + getInvestmentForCapTypeAndAP(capType, activePassive);
                                                             }, 0);
-                                                            // Calculate percentage within this CapType
                                                             const percentage = capTypeTotal > 0 ? (value / capTypeTotal) * 100 : 0;
                                                             return (
                                                                 <td key={idx} style={{
-                                                                    padding: '0.5rem',
+                                                                    padding: '0.75rem 1rem',
                                                                     textAlign: 'center',
                                                                     color: '#059669',
                                                                     fontWeight: 600,
-                                                                    fontSize: '0.9rem',
+                                                                    fontSize: '1.1rem',
                                                                     borderLeft: idx > 0 ? '1px solid #e5e7eb' : 'none',
                                                                     background: '#f0fdf4',
-                                                                    borderBottom: '1px solid #e5e7eb'
+                                                                    width: '50%'
                                                                 }}>
                                                                     {percentage.toFixed(2)}%
                                                                 </td>
                                                             );
                                                         })}
                                                     </tr>
-                                                    <tr>
-                                                        <td colSpan={uniqueActivePassive.length} style={{
-                                                            padding: '0.5rem',
-                                                            textAlign: 'left',
-                                                            color: '#4b5563',
-                                                            fontWeight: 600,
-                                                            fontSize: '0.9rem',
-                                                            borderBottom: '1px solid #e5e7eb',
-                                                            background: '#f8fafc'
-                                                        }}>
-                                                            Expected
-                                                        </td>
-                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    ))}
+                                </tr>
+                                <tr>
+                                    <td style={{
+                                        padding: '0.75rem 1rem',
+                                        fontWeight: 600,
+                                        fontSize: '0.9rem',
+                                        color: '#4b5563',
+                                        textAlign: 'left',
+                                        background: '#f8fafc'
+                                    }}>
+                                        Expected
+                                    </td>
+                                    {uniqueCapTypes.map((capType) => (
+                                        <td key={capType} style={{ padding: 0 }}>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                                <tbody>
                                                     <tr>
                                                         {uniqueActivePassive.map((ap, idx) => {
-                                                            const expectedPercent = parseFloat(expectedPercentages[`${capType}_${ap}`] || '0');
+                                                            const expectedPercent = ap === 'A' 
+                                                                ? expectedPercentages[`${capType}_active`] 
+                                                                : expectedPercentages[`${capType}_passive`];
                                                             const totalInvestmentInType = uniqueActivePassive.reduce((sum, activePassive) => {
                                                                 return sum + getInvestmentForCapTypeAndAP(capType, activePassive);
                                                             }, 0);
-                                                            const expectedAmount = (totalInvestmentInType * expectedPercent) / 100;
+                                                            const expectedAmount = totalInvestmentInType * (parseFloat(expectedPercent || '0') / 100);
                                                             
                                                             return (
                                                                 <td key={idx} style={{
-                                                                    padding: '0.5rem',
+                                                                    padding: '0.75rem 1rem',
                                                                     textAlign: 'center',
                                                                     color: '#dc2626',
                                                                     fontWeight: 600,
-                                                                    fontSize: '0.9rem',
+                                                                    fontSize: '1.1rem',
                                                                     borderLeft: idx > 0 ? '1px solid #e5e7eb' : 'none',
                                                                     background: '#fee2e2',
-                                                                    borderBottom: '1px solid #e5e7eb'
+                                                                    width: '50%'
                                                                 }}>
                                                                     {expectedAmount.toFixed(2)}
                                                                 </td>
                                                             );
                                                         })}
                                                     </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    ))}
+                                </tr>
+                                <tr>
+                                    <td style={{
+                                        padding: '0.75rem 1rem',
+                                        fontWeight: 600,
+                                        fontSize: '0.9rem',
+                                        color: '#4b5563',
+                                        textAlign: 'left',
+                                        background: '#f8fafc'
+                                    }}>
+                                        Expected %
+                                    </td>
+                                    {uniqueCapTypes.map((capType) => (
+                                        <td key={capType} style={{ padding: 0 }}>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                                <tbody>
                                                     <tr>
                                                         {uniqueActivePassive.map((ap, idx) => {
-                                                            const expectedPercent = parseFloat(expectedPercentages[`${capType}_${ap}`] || '0');
+                                                            const expectedPercent = ap === 'A' 
+                                                                ? expectedPercentages[`${capType}_active`] 
+                                                                : expectedPercentages[`${capType}_passive`];
                                                             return (
                                                                 <td key={idx} style={{
-                                                                    padding: '0.5rem',
+                                                                    padding: '0.75rem 1rem',
                                                                     textAlign: 'center',
                                                                     color: '#dc2626',
                                                                     fontWeight: 600,
-                                                                    fontSize: '0.9rem',
+                                                                    fontSize: '1.1rem',
                                                                     borderLeft: idx > 0 ? '1px solid #e5e7eb' : 'none',
-                                                                    background: '#fee2e2'
+                                                                    background: '#fee2e2',
+                                                                    width: '50%'
                                                                 }}>
-                                                                    {expectedPercent.toFixed(2)}%
+                                                                    {parseFloat(expectedPercent || '0').toFixed(2)}%
                                                                 </td>
                                                             );
                                                         })}
