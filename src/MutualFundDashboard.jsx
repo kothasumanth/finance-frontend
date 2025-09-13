@@ -57,6 +57,9 @@ function MutualFundDashboard() {
             <button style={{background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'}} onClick={() => navigate(`/user/${userId}/view-mf-data`)}>
               View MF Data
             </button>
+            <button style={{background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'}} onClick={() => navigate(`/user/${userId}/mf-metrics`)}>
+              Metrics
+            </button>
           </div>
         </div>
         {/* Overall summary section, right-aligned */}

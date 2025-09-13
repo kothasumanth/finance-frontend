@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'
 import './App.css'
 import MutualFundDashboard from './MutualFundDashboard'
+import MFMetrics from './MFMetrics'
 import MutualFundEntries from './MutualFundEntries'
 import MutualFundMetadata from './MutualFundMetadata'
 import ViewMutualFundData from './ViewMutualFundData'
@@ -52,6 +53,7 @@ function App() {
         <Route path="/user/:userId/eps-dashboard" element={<EpsDashboard />} />
         <Route path="/user/:userId/eps-details" element={<EpsDetails />} />
         <Route path="/user/:userId/gold" element={<GoldData />} />
+        <Route path="/user/:userId/mf-metrics" element={<MFMetrics />} />
       </Routes>
     </Router>
   )
