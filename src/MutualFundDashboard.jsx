@@ -1,19 +1,27 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { fetchUserFundSummary } from './api/fetchUserFundSummary'
+import { fetchCapTypes } from './api/capTypes'
 
 function MutualFundDashboard() {
   const { userId } = useParams()
   const navigate = useNavigate()
   const [fundSummary, setFundSummary] = useState([])
+  const [capTypes, setCapTypes] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [sortConfig, setSortConfig] = useState({ key: 'fundName', direction: 'asc' })
 
   useEffect(() => {
     setLoading(true)
-    fetchUserFundSummary(userId)
-      .then(setFundSummary)
+    Promise.all([
+      fetchUserFundSummary(userId),
+      fetchCapTypes()
+    ])
+      .then(([summaryData, capTypesData]) => {
+        setFundSummary(summaryData)
+        setCapTypes(capTypesData)
+      })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }, [userId])
@@ -183,7 +191,7 @@ function MutualFundDashboard() {
                   <td>{fund.fundName}</td>
                   <td style={{ fontSize: '0.95em', minWidth: 70 }}>{fund.ActiveOrPassive || ''}</td>
                   <td style={{ fontSize: '0.95em', minWidth: 70 }}>{fund.IndexOrManaged || ''}</td>
-                  <td style={{ fontSize: '0.95em', minWidth: 70 }}>{fund.CapType || ''}</td>
+                  <td style={{ fontSize: '0.95em', minWidth: 70 }}>{capTypes.find(ct => ct._id === fund.CapType)?.name || ''}</td>
                   <td>{fund.invested.toFixed(2)}</td>
                   <td>{fund.todayValue.toFixed(2)}</td>
                   <td style={{color: fund.profitLoss >= 0 ? '#059669' : '#dc2626', fontWeight: 600}}>{fund.profitLoss.toFixed(2)}</td>

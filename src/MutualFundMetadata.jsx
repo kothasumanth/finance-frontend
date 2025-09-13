@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import IconButton from './IconButton'
+import CapTypesManagement from './CapTypesManagement'
+import { fetchCapTypes } from './api/capTypes'
 
 function MutualFundMetadata() {
   const { userId } = useParams()
@@ -8,7 +10,9 @@ function MutualFundMetadata() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showPopup, setShowPopup] = useState(false)
+  const [showCapTypesModal, setShowCapTypesModal] = useState(false)
   const [editId, setEditId] = useState(null)
+  const [capTypes, setCapTypes] = useState([])
   const [fundName, setFundName] = useState('')
   const [googleValue, setGoogleValue] = useState('')
   const [editGoogleValue, setEditGoogleValue] = useState('')
@@ -21,19 +25,27 @@ function MutualFundMetadata() {
   const [page, setPage] = useState(1)
 
   useEffect(() => {
-    fetch('http://localhost:3000/mutualfund-metadata')
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch metadata')
-        return res.json()
-      })
-      .then(data => {
-        setMetadata(data)
-        setLoading(false)
-      })
-      .catch(err => {
-        setError(err.message)
-        setLoading(false)
-      })
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [metadataRes, capTypesRes] = await Promise.all([
+          fetch('http://localhost:3000/mutualfund-metadata'),
+          fetchCapTypes()
+        ]);
+        
+        if (!metadataRes.ok) throw new Error('Failed to fetch metadata');
+        
+        const metadataData = await metadataRes.json();
+        setMetadata(metadataData);
+        setCapTypes(capTypesRes);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
   }, [])
 
   const handleAdd = () => {
@@ -52,7 +64,11 @@ function MutualFundMetadata() {
     setEditGoogleValue(meta.GoogleValue)
     setEditActiveOrPassive(meta.ActiveOrPassive || '')
     setEditIndexOrManaged(meta.IndexOrManaged || '')
-    setEditCapType(meta.CapType || '')
+    
+    // Find the cap type by name and set its ID
+    const capType = capTypes.find(ct => ct.name === meta.CapType)
+    setEditCapType(capType ? capType._id : '')
+    
     setShowPopup(false)
   }
 
@@ -116,31 +132,48 @@ function MutualFundMetadata() {
 
   return (
     <div className="container colorful-bg" style={{ paddingTop: '1.2rem', maxWidth: 1250, margin: '0 auto' }}>
-      <div style={{ position: 'absolute', top: 10, right: 20 }}>
+      <div style={{ position: 'absolute', top: 10, right: 20, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         <Link to={`/user/${userId}/dashboard`} style={{
           background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', textDecoration: 'none', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'
         }}>MF Dashboard</Link>
+        <button onClick={handleAdd} style={{
+          background: '#6366f1',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 6,
+          padding: '0.5rem 1.2rem',
+          fontWeight: 600,
+          fontSize: '1rem',
+          boxShadow: '0 2px 8px rgba(99,102,241,0.08)',
+          cursor: 'pointer'
+        }}>
+          Add MF MetaData
+        </button>
+        <button onClick={() => setShowCapTypesModal(true)} style={{
+          background: '#6366f1',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 6,
+          padding: '0.5rem 1.2rem',
+          fontWeight: 600,
+          fontSize: '1rem',
+          boxShadow: '0 2px 8px rgba(99,102,241,0.08)',
+          cursor: 'pointer'
+        }}>
+          Cap Types
+        </button>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.2rem' }}>
         <h1 className="colorful-title" style={{ margin: 0, fontSize: '1.5rem' }}>
           Mutual Fund Meta Data
         </h1>
-        <button onClick={handleAdd} style={{
-          marginLeft: '2rem',
-          background: '#6366f1',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 6,
-          padding: '0.35rem 1.1rem',
-          fontWeight: 600,
-          fontSize: '1rem',
-          boxShadow: '0 2px 8px rgba(99,102,241,0.08)',
-          cursor: 'pointer',
-          height: '2.2rem',
-        }}>
-          Add
-        </button>
       </div>
+      
+      {/* Cap Types Management Modal */}
+      <CapTypesManagement 
+        show={showCapTypesModal} 
+        onClose={() => setShowCapTypesModal(false)} 
+      />
       {/* Show Add form below Add button when showPopup is true and not editing */}
       {showPopup && editId === null && (
         <div className="popup" style={{
@@ -159,91 +192,100 @@ function MutualFundMetadata() {
             position: 'relative'
           }}>
             <h2 style={{marginBottom: '1.5rem', color: '#059669'}}>Add Mutual Fund Meta Data</h2>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1.2rem' }}>
-              <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Mutual Fund Name:</span>
-              <input value={fundName} onChange={e => setFundName(e.target.value)}
-                style={{
-                  fontWeight: 600,
-                  color: '#2563eb',
-                  fontSize: '1rem',
-                  border: '1.5px solid #059669',
-                  borderRadius: 6,
-                  padding: '0.3rem 1.1rem',
-                  fontFamily: 'monospace',
-                  background: '#f0f9ff',
-                  outline: 'none',
-                  minWidth: 180
-                }}
-              />
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1.2rem' }}>
-              <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Google Value:</span>
-              <input value={googleValue} onChange={e => setGoogleValue(e.target.value)}
-                style={{
-                  fontWeight: 600,
-                  color: '#2563eb',
-                  fontSize: '1rem',
-                  border: '1.5px solid #059669',
-                  borderRadius: 6,
-                  padding: '0.3rem 1.1rem',
-                  fontFamily: 'monospace',
-                  background: '#f0f9ff',
-                  outline: 'none',
-                  minWidth: 180
-                }}
-              />
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1.2rem' }}>
-              <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Active/Passive:</span>
-              <input value={activeOrPassive} onChange={e => setActiveOrPassive(e.target.value)}
-                style={{
-                  fontWeight: 600,
-                  color: '#2563eb',
-                  fontSize: '1rem',
-                  border: '1.5px solid #059669',
-                  borderRadius: 6,
-                  padding: '0.3rem 1.1rem',
-                  fontFamily: 'monospace',
-                  background: '#f0f9ff',
-                  outline: 'none',
-                  minWidth: 180
-                }}
-              />
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1.2rem' }}>
-              <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Index/Managed:</span>
-              <input value={indexOrManaged} onChange={e => setIndexOrManaged(e.target.value)}
-                style={{
-                  fontWeight: 600,
-                  color: '#2563eb',
-                  fontSize: '1rem',
-                  border: '1.5px solid #059669',
-                  borderRadius: 6,
-                  padding: '0.3rem 1.1rem',
-                  fontFamily: 'monospace',
-                  background: '#f0f9ff',
-                  outline: 'none',
-                  minWidth: 180
-                }}
-              />
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1.2rem' }}>
-              <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Cap Type:</span>
-              <input value={capType} onChange={e => setCapType(e.target.value)}
-                style={{
-                  fontWeight: 600,
-                  color: '#2563eb',
-                  fontSize: '1rem',
-                  border: '1.5px solid #059669',
-                  borderRadius: 6,
-                  padding: '0.3rem 1.1rem',
-                  fontFamily: 'monospace',
-                  background: '#f0f9ff',
-                  outline: 'none',
-                  minWidth: 180
-                }}
-              />
-            </label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', width: '100%' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left' }}>Mutual Fund Name:</span>
+                <input value={fundName} onChange={e => setFundName(e.target.value)}
+                  style={{
+                    fontWeight: 600,
+                    color: '#2563eb',
+                    fontSize: '1rem',
+                    border: '1.5px solid #059669',
+                    borderRadius: 6,
+                    padding: '0.5rem 1rem',
+                    fontFamily: 'monospace',
+                    background: '#f0f9ff',
+                    outline: 'none',
+                    width: '100%'
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left' }}>Google Value:</span>
+                <input value={googleValue} onChange={e => setGoogleValue(e.target.value)}
+                  style={{
+                    fontWeight: 600,
+                    color: '#2563eb',
+                    fontSize: '1rem',
+                    border: '1.5px solid #059669',
+                    borderRadius: 6,
+                    padding: '0.5rem 1rem',
+                    fontFamily: 'monospace',
+                    background: '#f0f9ff',
+                    outline: 'none',
+                    width: '100%'
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left' }}>Active/Passive:</span>
+                <input value={activeOrPassive} onChange={e => setActiveOrPassive(e.target.value)}
+                  style={{
+                    fontWeight: 600,
+                    color: '#2563eb',
+                    fontSize: '1rem',
+                    border: '1.5px solid #059669',
+                    borderRadius: 6,
+                    padding: '0.5rem 1rem',
+                    fontFamily: 'monospace',
+                    background: '#f0f9ff',
+                    outline: 'none',
+                    width: '100%'
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left' }}>Index/Managed:</span>
+                <input value={indexOrManaged} onChange={e => setIndexOrManaged(e.target.value)}
+                  style={{
+                    fontWeight: 600,
+                    color: '#2563eb',
+                    fontSize: '1rem',
+                    border: '1.5px solid #059669',
+                    borderRadius: 6,
+                    padding: '0.5rem 1rem',
+                    fontFamily: 'monospace',
+                    background: '#f0f9ff',
+                    outline: 'none',
+                    width: '100%'
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left' }}>Cap Type:</span>
+                <select 
+                  value={capType} 
+                  onChange={e => setCapType(e.target.value)}
+                  style={{
+                    fontWeight: 600,
+                    color: '#2563eb',
+                    fontSize: '1rem',
+                    border: '1.5px solid #059669',
+                    borderRadius: 6,
+                    padding: '0.5rem 1rem',
+                    fontFamily: 'monospace',
+                    background: '#f0f9ff',
+                    outline: 'none',
+                    width: '100%'
+                  }}
+                >
+                  <option value="">Select Cap Type</option>
+                  {capTypes.map(ct => (
+                    <option key={ct._id} value={ct._id}>{ct.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
             <div style={{ display: 'flex', gap: '1.2rem', marginTop: '0.5rem' }}>
               <IconButton icon={"💾"} title="Save" onClick={handleSave} />
               <IconButton icon={"✖️"} title="Cancel" onClick={() => {
@@ -347,7 +389,9 @@ function MutualFundMetadata() {
                           />
                         </td>
                         <td>
-                          <input value={editCapType} onChange={e => setEditCapType(e.target.value)}
+                          <select 
+                            value={editCapType} 
+                            onChange={e => setEditCapType(e.target.value)}
                             style={{
                               fontWeight: 600,
                               color: '#2563eb',
@@ -360,7 +404,12 @@ function MutualFundMetadata() {
                               outline: 'none',
                               minWidth: 180
                             }}
-                          />
+                          >
+                            <option value="">Select Cap Type</option>
+                            {capTypes.map(ct => (
+                              <option key={ct._id} value={ct._id}>{ct.name}</option>
+                            ))}
+                          </select>
                         </td>
                         <td>
                           <IconButton icon={"💾"} title="Save" onClick={handleSave} />
@@ -373,7 +422,7 @@ function MutualFundMetadata() {
                         <td>{meta.GoogleValue}</td>
                         <td>{meta.ActiveOrPassive}</td>
                         <td>{meta.IndexOrManaged}</td>
-                        <td>{meta.CapType}</td>
+                        <td>{capTypes.find(ct => ct._id === meta.CapType)?.name || meta.CapType}</td>
                         <td>
                           <IconButton icon={"✏️"} title="Edit" onClick={() => handleEdit(meta)} />
                           <IconButton icon={"🗑️"} title="Delete" onClick={() => handleDelete(meta._id)} />
