@@ -187,7 +187,7 @@ export default function MFMetrics() {
                         {uniqueCapTypes.length > 0 && (
                             <>
                                 <tr>
-                                    <td rowSpan="3" style={{
+                                    <td rowSpan="5" style={{
                                         width: '120px',
                                         padding: '0.75rem 1rem',
                                         fontWeight: 600,
@@ -197,7 +197,7 @@ export default function MFMetrics() {
                                         verticalAlign: 'middle',
                                         background: '#f8fafc'
                                     }}>
-                                        Invested
+                                        Cap Wise
                                     </td>
                                     {uniqueCapTypes.map((capType, index) => (
                                         <th key={index} style={{
@@ -213,29 +213,28 @@ export default function MFMetrics() {
                                     ))}
                                 </tr>
                                 <tr>
+                                    {uniqueCapTypes.map((capType, index) => (
+                                        <td colSpan="1" style={{
+                                            padding: '0.5rem',
+                                            textAlign: 'center',
+                                            color: '#4b5563',
+                                            fontWeight: 600,
+                                            fontSize: '0.9rem',
+                                            background: '#f8fafc',
+                                            borderBottom: '1px solid #e5e7eb'
+                                        }}>
+                                            Actual
+                                        </td>
+                                    ))}
+                                </tr>
+                                <tr>
                                     {uniqueCapTypes.map((capType, index) => {
-                                        // First find the cap type ID for the given name
                                         const capTypeObj = capTypes.find(ct => ct.name === capType);
-                                        if (!capTypeObj) {
-                                            console.log(`No cap type found for name: ${capType}`);
-                                            return <td key={index}>0.00</td>;
-                                        }
+                                        if (!capTypeObj) return <td key={index}>0.00</td>;
 
-                                        // Calculate total invested for this cap type using the ID
                                         const totalInvested = fundSummary
                                             .filter(f => f.CapType === capTypeObj._id)
-                                            .reduce((sum, f) => {
-                                                const investment = parseFloat(f.invested || 0);
-                                                console.log(`Adding investment ${investment} for fund:`, {
-                                                    fundName: f.fundName,
-                                                    capType: capType,
-                                                    investment,
-                                                    capTypeId: f.CapType
-                                                });
-                                                return sum + investment;
-                                            }, 0);
-
-                                        console.log(`Total investment for ${capType}:`, totalInvested);
+                                            .reduce((sum, f) => sum + parseFloat(f.invested || 0), 0);
                                         
                                         return (
                                             <td key={index} style={{
@@ -253,44 +252,19 @@ export default function MFMetrics() {
                                 </tr>
                                 <tr>
                                     {uniqueCapTypes.map((capType, index) => {
-                                        // First find the cap type ID for the given name
                                         const capTypeObj = capTypes.find(ct => ct.name === capType);
-                                        if (!capTypeObj) {
-                                            console.log(`No cap type found for name: ${capType}`);
-                                            return <td key={index}>0.00%</td>;
-                                        }
+                                        if (!capTypeObj) return <td key={index}>0.00%</td>;
 
-                                        // Calculate total invested for this cap type using the ID
                                         const totalInvested = fundSummary
                                             .filter(f => f.CapType === capTypeObj._id)
-                                            .reduce((sum, f) => {
-                                                const investment = parseFloat(f.invested || 0);
-                                                console.log(`Adding investment ${investment} for fund in percentage calc:`, {
-                                                    fundName: f.fundName,
-                                                    capType: capType,
-                                                    investment,
-                                                    capTypeId: f.CapType
-                                                });
-                                                return sum + investment;
-                                            }, 0);
+                                            .reduce((sum, f) => sum + parseFloat(f.invested || 0), 0);
                                         
-                                        // Calculate total investment across all funds
                                         const totalAllFunds = fundSummary
-                                            .reduce((sum, f) => {
-                                                const investment = parseFloat(f.invested || 0);
-                                                return sum + investment;
-                                            }, 0);
+                                            .reduce((sum, f) => sum + parseFloat(f.invested || 0), 0);
                                         
-                                        // Calculate percentage
                                         const percentage = totalAllFunds > 0 
                                             ? (totalInvested / totalAllFunds) * 100 
                                             : 0;
-                                        
-                                        console.log(`Percentage for ${capType}:`, {
-                                            totalInvested,
-                                            totalAllFunds,
-                                            percentage
-                                        });
                                         
                                         return (
                                             <td key={index} style={{
@@ -299,9 +273,62 @@ export default function MFMetrics() {
                                                 color: '#059669',
                                                 fontWeight: 600,
                                                 fontSize: '1.1rem',
-                                                background: '#f0fdf4'
+                                                background: '#f0fdf4',
+                                                borderBottom: '1px solid #e5e7eb'
                                             }}>
                                                 {percentage.toFixed(2)}%
+                                            </td>
+                                        );
+                                    })}
+                                </tr>
+                                <tr>
+                                    {uniqueCapTypes.map((capType, index) => (
+                                        <td colSpan="1" style={{
+                                            padding: '0.5rem',
+                                            textAlign: 'center',
+                                            color: '#4b5563',
+                                            fontWeight: 600,
+                                            fontSize: '0.9rem',
+                                            background: '#f8fafc',
+                                            borderBottom: '1px solid #e5e7eb'
+                                        }}>
+                                            Expected
+                                        </td>
+                                    ))}
+                                </tr>
+                                <tr>
+                                    {uniqueCapTypes.map((capType, index) => {
+                                        const totalInvestment = fundSummary.reduce((sum, f) => sum + parseFloat(f.invested || 0), 0);
+                                        const expectedPercent = parseFloat(expectedPercentages[`${capType}_total`] || '0');
+                                        const expectedAmount = (totalInvestment * expectedPercent) / 100;
+                                        
+                                        return (
+                                            <td key={index} style={{
+                                                padding: '0.75rem 1rem',
+                                                textAlign: 'center',
+                                                color: '#dc2626',
+                                                fontWeight: 600,
+                                                fontSize: '1.1rem',
+                                                background: '#fee2e2'
+                                            }}>
+                                                {expectedAmount.toFixed(2)}
+                                            </td>
+                                        );
+                                    })}
+                                </tr>
+                                <tr>
+                                    {uniqueCapTypes.map((capType, index) => {
+                                        const expectedPercent = parseFloat(expectedPercentages[`${capType}_total`] || '0');
+                                        return (
+                                            <td key={index} style={{
+                                                padding: '0.75rem 1rem',
+                                                textAlign: 'center',
+                                                color: '#dc2626',
+                                                fontWeight: 600,
+                                                fontSize: '1.1rem',
+                                                background: '#fee2e2'
+                                            }}>
+                                                {expectedPercent.toFixed(2)}%
                                             </td>
                                         );
                                     })}
@@ -334,6 +361,19 @@ export default function MFMetrics() {
                                                                 {ap}
                                                             </td>
                                                         ))}
+                                                    </tr>
+                                                    <tr>
+                                                        <td colSpan={uniqueActivePassive.length} style={{
+                                                            padding: '0.5rem',
+                                                            textAlign: 'left',
+                                                            color: '#4b5563',
+                                                            fontWeight: 600,
+                                                            fontSize: '0.9rem',
+                                                            borderBottom: '1px solid #e5e7eb',
+                                                            background: '#f8fafc'
+                                                        }}>
+                                                            Invested
+                                                        </td>
                                                     </tr>
                                                     <tr>
                                                         {uniqueActivePassive.map((ap, idx) => {
@@ -371,9 +411,65 @@ export default function MFMetrics() {
                                                                     fontWeight: 600,
                                                                     fontSize: '0.9rem',
                                                                     borderLeft: idx > 0 ? '1px solid #e5e7eb' : 'none',
-                                                                    background: '#f0fdf4'
+                                                                    background: '#f0fdf4',
+                                                                    borderBottom: '1px solid #e5e7eb'
                                                                 }}>
                                                                     {percentage.toFixed(2)}%
+                                                                </td>
+                                                            );
+                                                        })}
+                                                    </tr>
+                                                    <tr>
+                                                        <td colSpan={uniqueActivePassive.length} style={{
+                                                            padding: '0.5rem',
+                                                            textAlign: 'left',
+                                                            color: '#4b5563',
+                                                            fontWeight: 600,
+                                                            fontSize: '0.9rem',
+                                                            borderBottom: '1px solid #e5e7eb',
+                                                            background: '#f8fafc'
+                                                        }}>
+                                                            Expected
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        {uniqueActivePassive.map((ap, idx) => {
+                                                            const expectedPercent = parseFloat(expectedPercentages[`${capType}_${ap}`] || '0');
+                                                            const totalInvestmentInType = uniqueActivePassive.reduce((sum, activePassive) => {
+                                                                return sum + getInvestmentForCapTypeAndAP(capType, activePassive);
+                                                            }, 0);
+                                                            const expectedAmount = (totalInvestmentInType * expectedPercent) / 100;
+                                                            
+                                                            return (
+                                                                <td key={idx} style={{
+                                                                    padding: '0.5rem',
+                                                                    textAlign: 'center',
+                                                                    color: '#dc2626',
+                                                                    fontWeight: 600,
+                                                                    fontSize: '0.9rem',
+                                                                    borderLeft: idx > 0 ? '1px solid #e5e7eb' : 'none',
+                                                                    background: '#fee2e2',
+                                                                    borderBottom: '1px solid #e5e7eb'
+                                                                }}>
+                                                                    {expectedAmount.toFixed(2)}
+                                                                </td>
+                                                            );
+                                                        })}
+                                                    </tr>
+                                                    <tr>
+                                                        {uniqueActivePassive.map((ap, idx) => {
+                                                            const expectedPercent = parseFloat(expectedPercentages[`${capType}_${ap}`] || '0');
+                                                            return (
+                                                                <td key={idx} style={{
+                                                                    padding: '0.5rem',
+                                                                    textAlign: 'center',
+                                                                    color: '#dc2626',
+                                                                    fontWeight: 600,
+                                                                    fontSize: '0.9rem',
+                                                                    borderLeft: idx > 0 ? '1px solid #e5e7eb' : 'none',
+                                                                    background: '#fee2e2'
+                                                                }}>
+                                                                    {expectedPercent.toFixed(2)}%
                                                                 </td>
                                                             );
                                                         })}
