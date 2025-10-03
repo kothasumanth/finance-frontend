@@ -78,39 +78,43 @@ export default function MFMetrics() {
         return total;
     };
 
-    // Load saved expected percentages
+    // Reload expected percentages when modal opens
     useEffect(() => {
-        if (!showExpectedModal) return;
+        if (showExpectedModal && capTypes.length > 0) {
+            const fetchModalExpectedPercentages = async () => {
+                try {
+                    const response = await fetch(`http://localhost:3000/expected-percentages/${userId}`);
+                    if (!response.ok) throw new Error('Failed to fetch expected percentages');
+                    
+                    const data = await response.json();
+                    
+                    // Convert array to expected format
+                    const formattedPercentages = {};
+                    data.forEach(item => {
+                        const capType = capTypes.find(ct => ct._id === item.capTypeId)?.name;
+                        if (capType) {
+                            formattedPercentages[`${capType}_total`] = item.capTotal;
+                            formattedPercentages[`${capType}_A`] = item.splitDetails.activePercentage;
+                            formattedPercentages[`${capType}_P`] = item.splitDetails.passivePercentage;
+                        }
+                    });
+                    
+                    setExpectedPercentages(formattedPercentages);
+                } catch (error) {
+                    console.error('Error loading expected percentages:', error);
+                    const zeroPercentages = {};
+                    capTypes.forEach(ct => {
+                        zeroPercentages[`${ct.name}_total`] = '0';
+                        zeroPercentages[`${ct.name}_A`] = '0';
+                        zeroPercentages[`${ct.name}_P`] = '0';
+                    });
+                    setExpectedPercentages(zeroPercentages);
+                }
+            };
 
-        const fetchExpectedPercentages = async () => {
-            try {
-                const response = await fetch(`http://localhost:3000/expected-percentages/${userId}`);
-                if (!response.ok) throw new Error('Failed to fetch expected percentages');
-                
-                const data = await response.json();
-                
-                // Convert array to expected format
-                const formattedPercentages = {};
-                data.forEach(item => {
-                    const capType = capTypes.find(ct => ct._id === item.capTypeId)?.name;
-                    if (capType) {
-                        // Store the total percentage for this cap type
-                        formattedPercentages[`${capType}_total`] = item.capTotal;
-                        // Store the Active/Passive split percentages with correct keys
-                        formattedPercentages[`${capType}_active`] = item.splitDetails.activePercentage;
-                        formattedPercentages[`${capType}_passive`] = item.splitDetails.passivePercentage;
-                    }
-                });
-                
-                setExpectedPercentages(formattedPercentages);
-            } catch (error) {
-                console.error('Error loading expected percentages:', error);
-                // Don't alert here as this is not critical
-            }
-        };
-
-        fetchExpectedPercentages();
-    }, [userId, showExpectedModal, capTypes]);
+            fetchModalExpectedPercentages();
+        }
+    }, [showExpectedModal, capTypes, userId]);
 
     useEffect(() => {
         setLoading(true);
@@ -124,16 +128,6 @@ export default function MFMetrics() {
                 console.log('Metadata Data:', metadataData);
                 console.log('Cap Types Data:', capTypesData);
                 
-                // Verify cap type relationships
-                summaryData.forEach(fund => {
-                    const capType = capTypesData.find(ct => ct._id === fund.CapType);
-                    console.log(`Fund ${fund.fundName} has CapType:`, {
-                        capTypeId: fund.CapType,
-                        capTypeName: capType?.name,
-                        investment: fund.invested
-                    });
-                });
-                
                 setFundSummary(summaryData);
                 setMetadata(metadataData);
                 setCapTypes(capTypesData);
@@ -141,6 +135,47 @@ export default function MFMetrics() {
             .catch(err => setError(err.message))
             .finally(() => setLoading(false));
     }, [userId]);
+
+    // Separate useEffect to fetch expected percentages whenever capTypes changes
+    useEffect(() => {
+        const fetchExpectedPercentages = async () => {
+            if (!capTypes.length) return;
+
+            try {
+                const response = await fetch(`http://localhost:3000/expected-percentages/${userId}`);
+                if (!response.ok) throw new Error('Failed to fetch expected percentages');
+                
+                const data = await response.json();
+                console.log('Received expected percentages:', data);
+                
+                // Convert array to expected format
+                const formattedPercentages = {};
+                data.forEach(item => {
+                    const capType = capTypes.find(ct => ct._id === item.capTypeId)?.name;
+                    if (capType) {
+                        formattedPercentages[`${capType}_total`] = item.capTotal;
+                        formattedPercentages[`${capType}_A`] = item.splitDetails.activePercentage;
+                        formattedPercentages[`${capType}_P`] = item.splitDetails.passivePercentage;
+                    }
+                });
+                
+                console.log('Formatted expected percentages:', formattedPercentages);
+                setExpectedPercentages(formattedPercentages);
+            } catch (error) {
+                console.error('Error loading expected percentages:', error);
+                // Set all percentages to 0 if there's an error or no data
+                const zeroPercentages = {};
+                capTypes.forEach(ct => {
+                    zeroPercentages[`${ct.name}_total`] = '0';
+                    zeroPercentages[`${ct.name}_A`] = '0';
+                    zeroPercentages[`${ct.name}_P`] = '0';
+                });
+                setExpectedPercentages(zeroPercentages);
+            }
+        };
+
+        fetchExpectedPercentages();
+    }, [userId, capTypes]);
     return (
         <div className="container colorful-bg" style={{ maxWidth: 1250, margin: '0 auto', padding: '2rem' }}>
             <div style={{ position: 'absolute', top: 10, right: 20, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -481,13 +516,14 @@ export default function MFMetrics() {
                                                 <tbody>
                                                     <tr>
                                                         {uniqueActivePassive.map((ap, idx) => {
-                                                            const expectedPercent = ap === 'A' 
-                                                                ? expectedPercentages[`${capType}_active`] 
-                                                                : expectedPercentages[`${capType}_passive`];
-                                                            const totalInvestmentInType = uniqueActivePassive.reduce((sum, activePassive) => {
-                                                                return sum + getInvestmentForCapTypeAndAP(capType, activePassive);
-                                                            }, 0);
-                                                            const expectedAmount = totalInvestmentInType * (parseFloat(expectedPercent || '0') / 100);
+                                                            // Get the total expected amount for this cap type
+                                                            const totalInvestment = fundSummary.reduce((sum, f) => sum + parseFloat(f.invested || 0), 0);
+                                                            const capExpectedPercent = parseFloat(expectedPercentages[`${capType}_total`] || '0');
+                                                            const capExpectedAmount = (totalInvestment * capExpectedPercent) / 100;
+                                                            
+                                                            // Get the A/P split percentage and calculate expected amount
+                                                            const apSplitPercent = parseFloat(expectedPercentages[`${capType}_${ap}`] || '0');
+                                                            const expectedAmount = (capExpectedAmount * apSplitPercent) / 100;
                                                             
                                                             return (
                                                                 <td key={idx} style={{
@@ -527,9 +563,9 @@ export default function MFMetrics() {
                                                 <tbody>
                                                     <tr>
                                                         {uniqueActivePassive.map((ap, idx) => {
-                                                            const expectedPercent = ap === 'A' 
-                                                                ? expectedPercentages[`${capType}_active`] 
-                                                                : expectedPercentages[`${capType}_passive`];
+                                                            // Get the expected A/P split percentage
+                                                            const expectedPercent = parseFloat(expectedPercentages[`${capType}_${ap}`] || '0');
+                                                            
                                                             return (
                                                                 <td key={idx} style={{
                                                                     padding: '0.75rem 1rem',
@@ -541,7 +577,7 @@ export default function MFMetrics() {
                                                                     background: '#fee2e2',
                                                                     width: '50%'
                                                                 }}>
-                                                                    {parseFloat(expectedPercent || '0').toFixed(2)}%
+                                                                    {expectedPercent.toFixed(2)}%
                                                                 </td>
                                                             );
                                                         })}
@@ -643,10 +679,10 @@ export default function MFMetrics() {
                                             min="0"
                                             max="100"
                                             step="0.01"
-                                            value={expectedPercentages[`${capType}_total`] || ''}
+                                            value={expectedPercentages[`${capType}_total`] || '0'}
                                             onChange={(e) => setExpectedPercentages(prev => ({
                                                 ...prev,
-                                                [`${capType}_total`]: e.target.value
+                                                [`${capType}_total`]: e.target.value === '' ? '0' : e.target.value
                                             }))}
                                             style={{
                                                 width: '70px',
@@ -708,10 +744,10 @@ export default function MFMetrics() {
                                                 min="0"
                                                 max="100"
                                                 step="0.01"
-                                                value={expectedPercentages[`${capType}_${ap}`] || ''}
+                                                value={expectedPercentages[`${capType}_${ap}`] || '0'}
                                                 onChange={(e) => setExpectedPercentages(prev => ({
                                                     ...prev,
-                                                    [`${capType}_${ap}`]: e.target.value
+                                                    [`${capType}_${ap}`]: e.target.value === '' ? '0' : e.target.value
                                                 }))}
                                                 style={{
                                                     width: '70px',
@@ -768,21 +804,21 @@ export default function MFMetrics() {
                                             const activePercentage = parseFloat(expectedPercentages[`${capType}_A`] || '0');
                                             const passivePercentage = parseFloat(expectedPercentages[`${capType}_P`] || '0');
 
-                                            // Validate that A/P split sums to 100%
-                                            const totalSplit = activePercentage + passivePercentage;
-                                            if (Math.abs(totalSplit - 100) > 0.01) {
-                                                throw new Error(`Active/Passive split for ${capType} must equal 100%. Current total: ${totalSplit}%`);
+                                            // Validate that A/P split sums to 100% if either percentage is non-zero
+                                            if (activePercentage > 0 || passivePercentage > 0) {
+                                                const totalSplit = activePercentage + passivePercentage;
+                                                if (Math.abs(totalSplit - 100) > 0.01) {
+                                                    throw new Error(`Active/Passive split for ${capType} must equal 100%. Current total: ${totalSplit}%`);
+                                                }
                                             }
 
-                                            // Only include if capTotal is greater than 0
-                                            if (capTotal > 0) {
-                                                percentages.push({
-                                                    capTypeId: capTypeObj._id,
-                                                    capTotal,
-                                                    activePercentage,
-                                                    passivePercentage
-                                                });
-                                            }
+                                            // Always include the entry, even if values are 0
+                                            percentages.push({
+                                                capTypeId: capTypeObj._id,
+                                                capTotal,
+                                                activePercentage,
+                                                passivePercentage
+                                            });
                                         }
 
                                         // Validate total cap type percentages
