@@ -112,12 +112,12 @@ function MutualFundDashboard() {
               })() : ''}
             </span>
           </span>
-          <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
+          {/* <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
             <span>Balance Units:</span>
             <span style={{ color: '#2563eb', textAlign: 'right', minWidth: 70 }}>
               {fundSummary.length > 0 ? fundSummary.reduce((sum, f) => sum + f.balanceUnits, 0).toFixed(2) : ''}
             </span>
-          </span>
+          </span> */}
         </div>
       </div>
       {/* Fund-wise summary table */}
@@ -176,13 +176,13 @@ function MutualFundDashboard() {
                     <button onClick={() => handleSort('profitLoss')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▼</button>
                   </span>
                 </th>
-                <th>
+                {/* <th>
                   Balance Units
                   <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: 4 }}>
                     <button onClick={() => handleSort('balanceUnits')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▲</button>
                     <button onClick={() => handleSort('balanceUnits')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▼</button>
                   </span>
-                </th>
+                </th> */}
               </tr>
             </thead>
             <tbody>
@@ -195,7 +195,7 @@ function MutualFundDashboard() {
                   <td>{fund.invested.toFixed(2)}</td>
                   <td>{fund.todayValue.toFixed(2)}</td>
                   <td style={{color: fund.profitLoss >= 0 ? '#059669' : '#dc2626', fontWeight: 600}}>{fund.profitLoss.toFixed(2)}</td>
-                  <td>{fund.balanceUnits.toFixed(2)}</td>
+                  {/* <td>{fund.balanceUnits.toFixed(2)}</td> */}
                 </tr>
               ))}
             </tbody>
