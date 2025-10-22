@@ -2,6 +2,7 @@ import IconButton from './IconButton';
 import { useEffect, useState } from 'react';
 import { fetchTodayGoldPrice, saveTodayGoldPrice } from './api/goldPrice';
 import { useParams, Link } from 'react-router-dom';
+import UserHeader from './components/UserHeader';
 
 function GoldData() {
   const [deleteIdx, setDeleteIdx] = useState(null);
@@ -94,6 +95,7 @@ function GoldData() {
   // ...existing code...
   return (
     <div className="container colorful-bg" style={{ paddingTop: '1.2rem', maxWidth: 900, margin: '0 auto' }}>
+      <UserHeader userId={userId} />
       <div style={{ position: 'absolute', top: 10, right: 20, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.7rem' }}>
         <Link to={`/user/${userId}/overview`} style={{
           background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', textDecoration: 'none', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'

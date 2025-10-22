@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { fetchUserFundSummary } from './api/fetchUserFundSummary'
 import { fetchCapTypes } from './api/capTypes'
+import UserHeader from './components/UserHeader'
 
 function MutualFundDashboard() {
   const { userId } = useParams()
@@ -49,8 +50,28 @@ function MutualFundDashboard() {
 
   return (
     <div className="container colorful-bg" style={{ maxWidth: 1250, margin: '0 auto' }}>
-      <div style={{ position: 'absolute', top: 10, right: 20 }}>
+      <UserHeader userId={userId} />
+      <div style={{ position: 'absolute', top: 10, right: 20, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
         <button onClick={() => navigate(`/user/${userId}/overview`)}>Overview</button>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.3rem',
+          padding: '0.5rem 1rem',
+          background: '#f8fafc',
+          borderRadius: '6px',
+          border: '1px solid #e5e7eb',
+          fontSize: '0.9rem'
+        }}>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <span title="Index"><b>I</b> - Index</span>
+            <span title="Managed"><b>M</b> - Managed</span>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <span title="Active"><b>A</b> - Active</span>
+            <span title="Passive"><b>P</b> - Passive</span>
+          </div>
+        </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', marginTop: '0.2rem' }}>

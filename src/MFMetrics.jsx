@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { fetchUserFundSummary } from './api/fetchUserFundSummary';
 import { fetchMutualFundMetadata } from './api';
 import { fetchCapTypes } from './api/capTypes';
+import FundDetailsTooltip from './components/FundDetailsTooltip';
+import UserHeader from './components/UserHeader';
 
 export default function MFMetrics() {
     const navigate = useNavigate();
@@ -14,6 +16,12 @@ export default function MFMetrics() {
     const [error, setError] = useState(null);
     const [showExpectedModal, setShowExpectedModal] = useState(false);
     const [expectedPercentages, setExpectedPercentages] = useState({});
+    const [tooltipData, setTooltipData] = useState({
+        x: 0,
+        y: 0,
+        funds: [],
+        visible: false
+    });
 
     // Get unique CapTypes from fundSummary with specific ordering
     const getOrderedCapTypes = () => {
@@ -178,6 +186,7 @@ export default function MFMetrics() {
     }, [userId, capTypes]);
     return (
         <div className="container colorful-bg" style={{ maxWidth: 1250, margin: '0 auto', padding: '2rem' }}>
+            <UserHeader userId={userId} />
             <div style={{ position: 'absolute', top: 10, right: 20, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <button style={{background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'}} onClick={() => navigate(`/user/${userId}/dashboard`)}>
                     MF Dashboard
@@ -444,9 +453,38 @@ export default function MFMetrics() {
                                                                     fontSize: '1.1rem',
                                                                     borderLeft: idx > 0 ? '1px solid #e5e7eb' : 'none',
                                                                     background: '#f0f9ff',
-                                                                    width: '50%'
-                                                                }}>
+                                                                    width: '50%',
+                                                                    position: 'relative',
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                                onMouseEnter={(e) => {
+                                                                    const capTypeObj = capTypes.find(ct => ct.name === capType);
+                                                                    const matchingFunds = fundSummary.filter(f => 
+                                                                        f.CapType === capTypeObj?._id && 
+                                                                        f.ActiveOrPassive === ap
+                                                                    );
+                                                                    setTooltipData({
+                                                                        x: e.clientX,
+                                                                        y: e.clientY,
+                                                                        funds: matchingFunds,
+                                                                        visible: true
+                                                                    });
+                                                                }}
+                                                                onMouseLeave={() => setTooltipData(prev => ({ ...prev, visible: false }))}>
                                                                     {value.toFixed(2)}
+                                                                    {tooltipData.visible && 
+                                                                     tooltipData.funds.some(f => f.CapType === capTypes.find(ct => ct.name === capType)?._id && f.ActiveOrPassive === ap) && (
+                                                                        <div style={{
+                                                                            position: 'fixed',
+                                                                            left: tooltipData.x + 15,
+                                                                            top: tooltipData.y + 15
+                                                                        }}>
+                                                                            <FundDetailsTooltip 
+                                                                                isVisible={true}
+                                                                                funds={tooltipData.funds}
+                                                                            />
+                                                                        </div>
+                                                                    )}
                                                                 </td>
                                                             );
                                                         })}

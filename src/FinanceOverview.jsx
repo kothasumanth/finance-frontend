@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { fetchUserFundSummary } from './api/fetchUserFundSummary';
 import { fetchGoldTodayValue } from './api/fetchGoldTodayValue';
 import EpsDashboard from './epsDashboard';
+import UserHeader from './components/UserHeader';
 
 function FinanceOverview() {
   const { userId } = useParams();
@@ -112,6 +113,7 @@ function FinanceOverview() {
 
   return (
     <>
+      <UserHeader userId={userId} />
       <div style={{ position: 'absolute', top: 10, right: 20, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.7rem' }}>
         <button
           style={{
