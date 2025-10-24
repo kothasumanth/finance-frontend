@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { fetchUserFundSummary } from './api/fetchUserFundSummary'
 import { fetchCapTypes } from './api/capTypes'
 import UserHeader from './components/UserHeader'
+import SIPInfoPopup from './components/SIPInfoPopup'
 
 function MutualFundDashboard() {
   const { userId } = useParams()
@@ -12,6 +13,7 @@ function MutualFundDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [sortConfig, setSortConfig] = useState({ key: 'fundName', direction: 'asc' })
+  const [showSIPPopup, setShowSIPPopup] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -88,6 +90,9 @@ function MutualFundDashboard() {
             </button>
             <button style={{background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'}} onClick={() => navigate(`/user/${userId}/mf-metrics`)}>
               Metrics
+            </button>
+            <button style={{background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'}} onClick={() => setShowSIPPopup(true)}>
+              SIP Info
             </button>
           </div>
         </div>
@@ -223,6 +228,13 @@ function MutualFundDashboard() {
           </table>
         )}
       </div>
+      {showSIPPopup && (
+        <SIPInfoPopup
+          userId={userId}
+          onClose={() => setShowSIPPopup(false)}
+          fundSummary={fundSummary}
+        />
+      )}
     </div>
   )
 }
