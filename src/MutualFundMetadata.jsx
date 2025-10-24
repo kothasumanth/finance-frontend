@@ -309,8 +309,8 @@ function MutualFundMetadata() {
               <tr>
                 <th>Mutual Fund Name</th>
                 <th>Value</th>
-                <th>Act/Passive</th>
-                <th>Index/Managed</th>
+                <th>A/P</th>
+                <th>I/M</th>
                 <th>Cap</th>
                 <th>Actions</th>
               </tr>
@@ -423,9 +423,11 @@ function MutualFundMetadata() {
                         <td>{meta.ActiveOrPassive}</td>
                         <td>{meta.IndexOrManaged}</td>
                         <td>{capTypes.find(ct => ct._id === meta.CapType)?.name || meta.CapType}</td>
-                        <td>
-                          <IconButton icon={"✏️"} title="Edit" onClick={() => handleEdit(meta)} />
-                          <IconButton icon={"🗑️"} title="Delete" onClick={() => handleDelete(meta._id)} />
+                        <td style={{ whiteSpace: 'nowrap', width: '1%' }}>
+                          <div style={{ display: 'flex', gap: '0.3rem', justifyContent: 'flex-start' }}>
+                            <IconButton icon={"✏️"} title="Edit" onClick={() => handleEdit(meta)} />
+                            <IconButton icon={"🗑️"} title="Delete" onClick={() => handleDelete(meta._id)} />
+                          </div>
                         </td>
                       </>
                     )}
