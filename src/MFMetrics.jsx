@@ -12,6 +12,7 @@ export default function MFMetrics() {
     const [fundSummary, setFundSummary] = useState([]);
     const [metadata, setMetadata] = useState([]);
     const [capTypes, setCapTypes] = useState([]);
+    const [sipInfo, setSipInfo] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showExpectedModal, setShowExpectedModal] = useState(false);
@@ -86,6 +87,38 @@ export default function MFMetrics() {
         return total;
     };
 
+    // Calculate total monthly SIP amounts for a specific CapType and Active/Passive
+    const getSipMonthlyForCapTypeAndAP = (capTypeName, activePassive) => {
+        if (!sipInfo || sipInfo.length === 0) return 0;
+
+        const capTypeId = capTypes.find(ct => ct.name === capTypeName)?._id;
+        if (!capTypeId) return 0;
+
+        const frequencyFactor = (freq) => {
+            const f = (freq || '').toString().toLowerCase();
+            if (f.includes('monthly')) return 1;
+            if (f.includes('daily')) return 20;
+            if (f.includes('bi') || f.includes('fortnight')) return 2;
+            if (f.includes('weekly')) return 4;
+            return 0;
+        };
+
+        return sipInfo.reduce((sum, sip) => {
+            // sip.mfMetadataId may be an object or an id
+            const metaId = sip.mfMetadataId && (sip.mfMetadataId._id || sip.mfMetadataId);
+            const meta = metadata.find(m => m._id === metaId);
+            if (!meta) return sum;
+
+            if (meta.CapType === capTypeId && meta.ActiveOrPassive === activePassive) {
+                const amt = parseFloat(sip.amount) || 0;
+                const factor = frequencyFactor(sip.frequency);
+                return sum + amt * factor;
+            }
+
+            return sum;
+        }, 0);
+    };
+
     // Reload expected percentages when modal opens
     useEffect(() => {
         if (showExpectedModal && capTypes.length > 0) {
@@ -129,16 +162,20 @@ export default function MFMetrics() {
         Promise.all([
             fetchUserFundSummary(userId),
             fetchMutualFundMetadata(),
-            fetchCapTypes()
+            fetchCapTypes(),
+            // fetch SIP info for this user to compute SIP/Mth
+            fetch(`http://localhost:3000/sip-info/${userId}`).then(r => r.ok ? r.json() : [])
         ])
-            .then(([summaryData, metadataData, capTypesData]) => {
+            .then(([summaryData, metadataData, capTypesData, sipData]) => {
                 console.log('Fund Summary Data:', summaryData);
                 console.log('Metadata Data:', metadataData);
                 console.log('Cap Types Data:', capTypesData);
+                console.log('SIP Data:', sipData);
                 
                 setFundSummary(summaryData);
                 setMetadata(metadataData);
                 setCapTypes(capTypesData);
+                setSipInfo(sipData || []);
             })
             .catch(err => setError(err.message))
             .finally(() => setLoading(false));
@@ -390,6 +427,45 @@ export default function MFMetrics() {
                                             </td>
                                         );
                                     })}
+                                </tr>
+                                <tr>
+                                    <td style={{
+                                        padding: '0.75rem 1rem',
+                                        fontWeight: 600,
+                                        fontSize: '0.9rem',
+                                        color: '#4b5563',
+                                        textAlign: 'left',
+                                        background: '#f8fafc'
+                                    }}>
+                                        SIP/Mth
+                                    </td>
+                                    {uniqueCapTypes.map((capType) => (
+                                        <td key={capType} style={{ padding: 0 }}>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                                <tbody>
+                                                    <tr>
+                                                        {uniqueActivePassive.map((ap, idx) => {
+                                                            const sipValue = getSipMonthlyForCapTypeAndAP(capType, ap);
+                                                            return (
+                                                                <td key={idx} style={{
+                                                                    padding: '0.75rem 1rem',
+                                                                    textAlign: 'center',
+                                                                    color: '#7c3aed',
+                                                                    fontWeight: 600,
+                                                                    fontSize: '1.1rem',
+                                                                    borderLeft: idx > 0 ? '1px solid #e5e7eb' : 'none',
+                                                                    background: '#faf5ff',
+                                                                    width: '50%'
+                                                                }}>
+                                                                    {sipValue.toFixed(2)}
+                                                                </td>
+                                                            );
+                                                        })}
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    ))}
                                 </tr>
                                 <tr>
                                     <td style={{

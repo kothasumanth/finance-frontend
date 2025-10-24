@@ -104,6 +104,33 @@ function SIPInfoPopup({ userId, onClose, fundSummary }) {
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
 
+    // Calculate total per month based on frequency mapping:
+    // Monthly -> amount * 1
+    // Weekly -> amount * 4
+    // BiWeekly (or biweekly/fortnight/etc) -> amount * 2
+    // Daily -> amount * 20
+    const totalPerMonth = sipInfo.reduce((sum, sip) => {
+        const amt = Number(sip.amount) || 0;
+        const freq = (sip.frequency || '').toLowerCase();
+        let factor = 0;
+
+        if (freq.includes('monthly')) {
+            factor = 1;
+        } else if (freq.includes('daily')) {
+            factor = 20;
+        } else if (freq.includes('bi') || freq.includes('fortnight')) {
+            // covers 'BiWeekly', 'Biweekly', 'bi-weekly', 'bi weekly'
+            factor = 2;
+        } else if (freq.includes('weekly')) {
+            factor = 4;
+        } else {
+            // unknown frequency -> treat as 0 contribution
+            factor = 0;
+        }
+
+        return sum + amt * factor;
+    }, 0);
+
     return (
         <div style={{
             position: 'fixed',
@@ -217,6 +244,10 @@ function SIPInfoPopup({ userId, onClose, fundSummary }) {
 
                 <div style={{ marginTop: '2rem' }}>
                     <h4 style={{ marginBottom: '1rem', color: '#4b5563' }}>Existing SIP Information</h4>
+                    <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#374151', fontWeight: 600 }}>Total/Month:</span>
+                        <span style={{ color: '#111827', fontWeight: 700 }}>{totalPerMonth.toFixed(2)}</span>
+                    </div>
                     {loading ? (
                         <p>Loading...</p>
                     ) : error ? (
