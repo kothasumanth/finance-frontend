@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function FundDetailsTooltip({ isVisible, funds }) {
+export default function SIPDetailsTooltip({ isVisible, funds }) {
     if (!isVisible || !funds || funds.length === 0) return null;
 
     return (
@@ -16,10 +16,11 @@ export default function FundDetailsTooltip({ isVisible, funds }) {
             maxWidth: '720px',
             maxHeight: '60vh',
             fontSize: '0.9rem',
-            overflowY: 'auto'
+            overflowY: 'auto',
+            marginBottom: '8px' // Add margin to avoid touching the trigger element
         }}>
             <h4 style={{ margin: '0 0 0.5rem 0', color: '#4b5563', borderBottom: '1px solid #e5e7eb', paddingBottom: '0.5rem' }}>
-                Fund Details
+                SIP Details
             </h4>
             <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
                 {funds.map((fund, index) => (
@@ -35,9 +36,9 @@ export default function FundDetailsTooltip({ isVisible, funds }) {
                             fontSize: '0.85rem',
                             marginTop: '0.25rem'
                         }}>
-                            <span>Invested:</span>
-                            <span style={{ fontWeight: 500, color: '#2563eb' }}>
-                                ₹{fund.invested.toFixed(2)}
+                            <span>SIP Amount ({fund.frequency}):</span>
+                            <span style={{ fontWeight: 500, color: '#7c3aed' }}>
+                                ₹{fund.sipAmount.toFixed(2)}
                             </span>
                         </div>
                     </div>
@@ -51,9 +52,19 @@ export default function FundDetailsTooltip({ isVisible, funds }) {
                 fontSize: '0.85rem'
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#4b5563', fontWeight: 500 }}>
-                    <span>Total Invested:</span>
-                    <span style={{ color: '#2563eb' }}>
-                        ₹{funds.reduce((sum, fund) => sum + fund.invested, 0).toFixed(2)}
+                    <span>Total Monthly SIP:</span>
+                    <span style={{ color: '#7c3aed' }}>
+                        ₹{funds.reduce((sum, fund) => {
+                            const factor = (() => {
+                                const f = (fund.frequency || '').toString().toLowerCase();
+                                if (f.includes('monthly')) return 1;
+                                if (f.includes('daily')) return 20;
+                                if (f.includes('bi') || f.includes('fortnight')) return 2;
+                                if (f.includes('weekly')) return 4;
+                                return 0;
+                            })();
+                            return sum + (fund.sipAmount * factor);
+                        }, 0).toFixed(2)}
                     </span>
                 </div>
             </div>

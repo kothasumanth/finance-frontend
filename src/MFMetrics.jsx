@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import FundDetailsTooltip from './components/FundDetailsTooltip';
+import SIPDetailsTooltip from './components/SIPDetailsTooltip';
+import UserHeader from './components/UserHeader';
 import { fetchUserFundSummary } from './api/fetchUserFundSummary';
 import { fetchMutualFundMetadata } from './api';
 import { fetchCapTypes } from './api/capTypes';
-import FundDetailsTooltip from './components/FundDetailsTooltip';
-import UserHeader from './components/UserHeader';
 
 export default function MFMetrics() {
     const navigate = useNavigate();
@@ -21,11 +22,45 @@ export default function MFMetrics() {
         x: 0,
         y: 0,
         funds: [],
-        visible: false
+        visible: false,
+        type: 'fund' // 'fund' or 'sip'
     });
 
-    // Get unique CapTypes from fundSummary with specific ordering
-    const getOrderedCapTypes = () => {
+    // Compute tooltip position so it doesn't overflow the viewport.
+    // If there's not enough space below the cursor, position the tooltip above it.
+    const computeTooltipPosition = (x, y) => {
+        // Returns { left, top, placeAbove }
+        if (typeof window === 'undefined') return { left: x + 15, top: y + 15, placeAbove: false };
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        // tooltip visual constraints (match tooltip components)
+        const tooltipMinWidth = 360;
+        const tooltipMinHeight = 240; // Minimum height to show content
+        const tooltipMaxHeight = Math.floor(vh * 0.6);
+
+        const padding = 16; // Padding from viewport edges
+        const verticalOffset = 8; // Gap between tooltip and cursor
+
+        // prefer showing to the right of cursor, but keep inside viewport
+        const left = Math.max(padding, Math.min(vw - tooltipMinWidth - padding, x + 15));
+
+        const spaceBelow = vh - y - verticalOffset;
+        const spaceAbove = y - verticalOffset;
+
+        // Decide whether to place above based on available space and minimum height requirements
+        const placeAbove = spaceBelow < tooltipMinHeight && spaceAbove >= tooltipMinHeight;
+
+        // If placing above, position the bottom of the tooltip at the cursor Y position
+        // If placing below, position the top of the tooltip at the cursor Y position
+        const top = placeAbove ? 
+            Math.max(padding, y - tooltipMaxHeight - verticalOffset) : 
+            Math.min(vh - tooltipMaxHeight - padding, y + verticalOffset);
+
+        return { left, top, placeAbove };
+    };
+
+    const uniqueCapTypes = useMemo(() => {
         // Get unique cap types from fund summary
         const uniqueTypes = [...new Set(fundSummary.map(f => {
             // Find the cap type name using the ID
@@ -44,80 +79,62 @@ export default function MFMetrics() {
             if (bIndex !== -1) return 1;
             return a.localeCompare(b);
         });
-    };
+    }, [fundSummary, capTypes]);
     
-    const uniqueCapTypes = getOrderedCapTypes();
+    const uniqueActivePassive = useMemo(() => {
+        // Get unique Active/Passive values in specific order (Passive first)
+        return [...new Set(metadata.map(m => m.ActiveOrPassive).filter(Boolean))]
+            .sort((a, b) => {
+                // Ensure Passive comes before Active
+                if (a.toLowerCase().includes('passive')) return -1;
+                if (b.toLowerCase().includes('passive')) return 1;
+                return a.localeCompare(b);
+            });
+    }, [metadata]);
     
-    // Get unique Active/Passive values in specific order (Passive first)
-    const uniqueActivePassive = [...new Set(metadata.map(m => m.ActiveOrPassive).filter(Boolean))]
-        .sort((a, b) => {
-            // Ensure Passive comes before Active
-            if (a.toLowerCase().includes('passive')) return -1;
-            if (b.toLowerCase().includes('passive')) return 1;
-            return a.localeCompare(b);
-        });
-    
-    // Calculate investment for specific CapType and ActivePassive combination
-    const getInvestmentForCapTypeAndAP = (capTypeName, activePassive) => {
+    const getInvestmentForCapTypeAndAP = useCallback((capTypeName, activePassive) => {
         // First find the cap type ID for the given name
         const capTypeId = capTypes.find(ct => ct.name === capTypeName)?._id;
-        if (!capTypeId) {
-            console.log(`No cap type ID found for name: ${capTypeName}`);
-            return 0;
-        }
+        if (!capTypeId) return 0;
 
         // Find all funds with this cap type and active/passive status
-        const matchingFunds = fundSummary.filter(fund => {
-            const matchesCapType = fund.CapType === capTypeId;
-            const matchesAP = fund.ActiveOrPassive === activePassive;
-            if (matchesCapType && matchesAP) {
-                console.log(`Found matching fund for ${capTypeName}/${activePassive}:`, fund);
-            }
-            return matchesCapType && matchesAP;
-        });
+        const matchingFunds = fundSummary.filter(fund => 
+            fund.CapType === capTypeId && fund.ActiveOrPassive === activePassive
+        );
 
         // Sum up the investments
-        const total = matchingFunds.reduce((sum, fund) => {
-            const investment = parseFloat(fund.invested || 0);
-            console.log(`Adding investment ${investment} for fund:`, fund.fundName);
-            return sum + investment;
-        }, 0);
+        return matchingFunds.reduce((sum, fund) => 
+            sum + parseFloat(fund.invested || 0), 0
+        );
+    }, [fundSummary, capTypes]);
 
-        console.log(`Total investment for ${capTypeName}/${activePassive}:`, total);
-        return total;
-    };
+    const frequencyFactor = useCallback((freq) => {
+        const f = (freq || '').toString().toLowerCase();
+        if (f.includes('monthly')) return 1;
+        if (f.includes('daily')) return 20;
+        if (f.includes('bi') || f.includes('fortnight')) return 2;
+        if (f.includes('weekly')) return 4;
+        return 0;
+    }, []);
 
-    // Calculate total monthly SIP amounts for a specific CapType and Active/Passive
-    const getSipMonthlyForCapTypeAndAP = (capTypeName, activePassive) => {
-        if (!sipInfo || sipInfo.length === 0) return 0;
+    const getSipMonthlyForCapTypeAndAP = useCallback((capTypeName, activePassive) => {
+        if (!sipInfo?.length) return 0;
 
         const capTypeId = capTypes.find(ct => ct.name === capTypeName)?._id;
         if (!capTypeId) return 0;
 
-        const frequencyFactor = (freq) => {
-            const f = (freq || '').toString().toLowerCase();
-            if (f.includes('monthly')) return 1;
-            if (f.includes('daily')) return 20;
-            if (f.includes('bi') || f.includes('fortnight')) return 2;
-            if (f.includes('weekly')) return 4;
-            return 0;
-        };
-
         return sipInfo.reduce((sum, sip) => {
-            // sip.mfMetadataId may be an object or an id
             const metaId = sip.mfMetadataId && (sip.mfMetadataId._id || sip.mfMetadataId);
             const meta = metadata.find(m => m._id === metaId);
-            if (!meta) return sum;
-
-            if (meta.CapType === capTypeId && meta.ActiveOrPassive === activePassive) {
+            
+            if (meta?.CapType === capTypeId && meta?.ActiveOrPassive === activePassive) {
                 const amt = parseFloat(sip.amount) || 0;
                 const factor = frequencyFactor(sip.frequency);
                 return sum + amt * factor;
             }
-
             return sum;
         }, 0);
-    };
+    }, [sipInfo, metadata, capTypes, frequencyFactor]);
 
     // Reload expected percentages when modal opens
     useEffect(() => {
@@ -222,7 +239,7 @@ export default function MFMetrics() {
         fetchExpectedPercentages();
     }, [userId, capTypes]);
     return (
-        <div className="container colorful-bg" style={{ maxWidth: 1250, margin: '0 auto', padding: '2rem' }}>
+        <div className="container colorful-bg" style={{ maxWidth: 1250, margin: '0 auto', paddingTop: '3.5rem', position: 'relative' }}>
             <UserHeader userId={userId} />
             <div style={{ position: 'absolute', top: 10, right: 20, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <button style={{background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'}} onClick={() => navigate(`/user/${userId}/dashboard`)}>
@@ -232,7 +249,7 @@ export default function MFMetrics() {
                     Expected%
                 </button>
             </div>
-            <h2 className="colorful-title">Mutual Fund Metrics</h2>
+            <h2 className="colorful-title" style={{ marginTop: 0, marginBottom: '1.5rem' }}>Mutual Fund Metrics</h2>
             {loading ? (
                 <p>Loading metrics...</p>
             ) : error ? (
@@ -428,45 +445,7 @@ export default function MFMetrics() {
                                         );
                                     })}
                                 </tr>
-                                <tr>
-                                    <td style={{
-                                        padding: '0.75rem 1rem',
-                                        fontWeight: 600,
-                                        fontSize: '0.9rem',
-                                        color: '#4b5563',
-                                        textAlign: 'left',
-                                        background: '#f8fafc'
-                                    }}>
-                                        SIP/Mth
-                                    </td>
-                                    {uniqueCapTypes.map((capType) => (
-                                        <td key={capType} style={{ padding: 0 }}>
-                                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                                <tbody>
-                                                    <tr>
-                                                        {uniqueActivePassive.map((ap, idx) => {
-                                                            const sipValue = getSipMonthlyForCapTypeAndAP(capType, ap);
-                                                            return (
-                                                                <td key={idx} style={{
-                                                                    padding: '0.75rem 1rem',
-                                                                    textAlign: 'center',
-                                                                    color: '#7c3aed',
-                                                                    fontWeight: 600,
-                                                                    fontSize: '1.1rem',
-                                                                    borderLeft: idx > 0 ? '1px solid #e5e7eb' : 'none',
-                                                                    background: '#faf5ff',
-                                                                    width: '50%'
-                                                                }}>
-                                                                    {sipValue.toFixed(2)}
-                                                                </td>
-                                                            );
-                                                        })}
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </td>
-                                    ))}
-                                </tr>
+                                {/* SIP/Mth row moved to end of table (rendered later) */}
                                 <tr>
                                     <td style={{
                                         padding: '0.75rem 1rem',
@@ -543,24 +522,32 @@ export default function MFMetrics() {
                                                                         x: e.clientX,
                                                                         y: e.clientY,
                                                                         funds: matchingFunds,
-                                                                        visible: true
+                                                                        visible: true,
+                                                                        type: 'fund'
                                                                     });
                                                                 }}
                                                                 onMouseLeave={() => setTooltipData(prev => ({ ...prev, visible: false }))}>
                                                                     {value.toFixed(2)}
-                                                                    {tooltipData.visible && 
-                                                                     tooltipData.funds.some(f => f.CapType === capTypes.find(ct => ct.name === capType)?._id && f.ActiveOrPassive === ap) && (
-                                                                        <div style={{
-                                                                            position: 'fixed',
-                                                                            left: tooltipData.x + 15,
-                                                                            top: tooltipData.y + 15
-                                                                        }}>
-                                                                            <FundDetailsTooltip 
-                                                                                isVisible={true}
-                                                                                funds={tooltipData.funds}
-                                                                            />
-                                                                        </div>
-                                                                    )}
+                                                                    {tooltipData.visible &&
+                                                                     tooltipData.funds.some(f => f.CapType === capTypes.find(ct => ct.name === capType)?._id && f.ActiveOrPassive === ap) &&
+                                                                     (() => {
+                                                                         const pos = computeTooltipPosition(tooltipData.x, tooltipData.y);
+                                                                         return (
+                                                                             <div style={{
+                                                                                 position: 'fixed',
+                                                                                 left: pos.left,
+                                                                                 top: pos.top,
+                                                                                 transform: pos.placeAbove ? 'translateY(-100%)' : 'none',
+                                                                                 zIndex: 1100 // ensure this tooltip appears above SIP/Mth cells
+                                                                             }}>
+                                                                                 <FundDetailsTooltip 
+                                                                                     isVisible={true}
+                                                                                     funds={tooltipData.funds}
+                                                                                 />
+                                                                             </div>
+                                                                         );
+                                                                     })()
+                                                                    }
                                                                 </td>
                                                             );
                                                         })}
@@ -692,6 +679,95 @@ export default function MFMetrics() {
                                                                     width: '50%'
                                                                 }}>
                                                                     {expectedPercent.toFixed(2)}%
+                                                                </td>
+                                                            );
+                                                        })}
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    ))}
+                                </tr>
+                                {/* Insert SIP/Mth row here so it appears at the end of the metric rows */}
+                                <tr>
+                                    <td style={{
+                                        padding: '0.75rem 1rem',
+                                        fontWeight: 600,
+                                        fontSize: '0.9rem',
+                                        color: '#4b5563',
+                                        textAlign: 'left',
+                                        background: '#f8fafc'
+                                    }}>
+                                        SIP/Mth
+                                    </td>
+                                    {uniqueCapTypes.map((capType) => (
+                                        <td key={capType} style={{ padding: 0 }}>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                                <tbody>
+                                                    <tr>
+                                                        {uniqueActivePassive.map((ap, idx) => {
+                                                            const sipValue = getSipMonthlyForCapTypeAndAP(capType, ap);
+                                                            return (
+                                                                <td key={idx} style={{
+                                                                    padding: '0.75rem 1rem',
+                                                                    textAlign: 'center',
+                                                                    color: '#7c3aed',
+                                                                    fontWeight: 600,
+                                                                    fontSize: '1.1rem',
+                                                                    borderLeft: idx > 0 ? '1px solid #e5e7eb' : 'none',
+                                                                    background: '#faf5ff',
+                                                                    width: '50%',
+                                                                    position: 'relative',
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                                onMouseEnter={(e) => {
+                                                                    const capTypeObj = capTypes.find(ct => ct.name === capType);
+                                                                    if (!capTypeObj) return;
+
+                                                                    // Find SIP info for funds matching this cap type and active/passive status
+                                                                    const matchingSips = sipInfo.filter(sip => {
+                                                                        const metaId = sip.mfMetadataId && (sip.mfMetadataId._id || sip.mfMetadataId);
+                                                                        const meta = metadata.find(m => m._id === metaId);
+                                                                        return meta?.CapType === capTypeObj._id && meta?.ActiveOrPassive === ap;
+                                                                    }).map(sip => {
+                                                                        const metaId = sip.mfMetadataId && (sip.mfMetadataId._id || sip.mfMetadataId);
+                                                                        const meta = metadata.find(m => m._id === metaId);
+                                                                        return {
+                                                                            fundName: meta?.MutualFundName || meta?.fundName || 'Unknown Fund',
+                                                                            sipAmount: parseFloat(sip.amount) || 0,
+                                                                            frequency: sip.frequency
+                                                                        };
+                                                                    });
+
+                                                                    setTooltipData({
+                                                                        x: e.clientX,
+                                                                        y: e.clientY,
+                                                                        funds: matchingSips,
+                                                                        visible: true,
+                                                                        type: 'sip'
+                                                                    });
+                                                                }}
+                                                                onMouseLeave={() => setTooltipData(prev => ({ ...prev, visible: false }))}>
+                                                                    {sipValue.toFixed(2)}
+                                                                    {tooltipData.visible && tooltipData.type === 'sip' &&
+                                                                     (() => {
+                                                                         const pos = computeTooltipPosition(tooltipData.x, tooltipData.y);
+                                                                         return (
+                                                                             <div style={{
+                                                                                 position: 'fixed',
+                                                                                 left: pos.left,
+                                                                                 top: pos.top,
+                                                                                 transform: pos.placeAbove ? 'translateY(-100%)' : 'none',
+                                                                                 zIndex: 1200
+                                                                             }}>
+                                                                                 <SIPDetailsTooltip 
+                                                                                     isVisible={true}
+                                                                                     funds={tooltipData.funds}
+                                                                                 />
+                                                                             </div>
+                                                                         );
+                                                                     })()
+                                                                    }
                                                                 </td>
                                                             );
                                                         })}
