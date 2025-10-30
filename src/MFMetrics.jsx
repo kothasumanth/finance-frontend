@@ -239,9 +239,9 @@ export default function MFMetrics() {
         fetchExpectedPercentages();
     }, [userId, capTypes]);
     return (
-        <div className="container colorful-bg" style={{ maxWidth: 1250, margin: '0 auto', paddingTop: '3.5rem', position: 'relative' }}>
+        <div className="container colorful-bg" style={{ maxWidth: 1250, margin: '0 auto', paddingTop: '1.2rem' }}>
             <UserHeader userId={userId} />
-            <div style={{ position: 'absolute', top: 10, right: 20, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ position: 'fixed', top: 10, right: 20, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <button style={{background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'}} onClick={() => navigate(`/user/${userId}/dashboard`)}>
                     MF Dashboard
                 </button>
