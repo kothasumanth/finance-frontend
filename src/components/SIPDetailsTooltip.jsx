@@ -5,7 +5,7 @@ export default function SIPDetailsTooltip({ isVisible, funds }) {
 
     return (
         <div style={{
-            position: 'absolute',
+            position: 'fixed',
             backgroundColor: 'white',
             border: '1px solid #e5e7eb',
             borderRadius: '8px',
@@ -17,7 +17,7 @@ export default function SIPDetailsTooltip({ isVisible, funds }) {
             maxHeight: '60vh',
             fontSize: '0.9rem',
             overflowY: 'auto',
-            marginBottom: '8px' // Add margin to avoid touching the trigger element
+            // fixed positioning will be controlled by the parent wrapper which sets left/top
         }}>
             <div style={{ 
                 display: 'flex', 

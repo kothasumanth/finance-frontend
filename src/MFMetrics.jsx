@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import FundDetailsTooltip from './components/FundDetailsTooltip';
 import SIPDetailsTooltip from './components/SIPDetailsTooltip';
 import UserHeader from './components/UserHeader';
+import StatusPill from './components/StatusPill';
+import ProgressBar from './components/ProgressBar';
 import { fetchUserFundSummary } from './api/fetchUserFundSummary';
 import { fetchMutualFundMetadata } from './api';
 import { fetchCapTypes } from './api/capTypes';
@@ -18,6 +20,15 @@ export default function MFMetrics() {
     const [error, setError] = useState(null);
     const [showExpectedModal, setShowExpectedModal] = useState(false);
     const [expectedPercentages, setExpectedPercentages] = useState({});
+    const [totalSIPAmount, setTotalSIPAmount] = useState(0); // computed from sipInfo
+
+    const calculateExpectedSIP = (capType, activePassive) => {
+        const totalExpectedPercent = parseFloat(expectedPercentages[`${capType}_total`] || '0');
+        const capTypeAmount = (totalSIPAmount * totalExpectedPercent) / 100;
+        const splitPercent = parseFloat(expectedPercentages[`${capType}_${activePassive}`] || '0');
+        return (capTypeAmount * splitPercent) / 100;
+    };
+
     const [tooltipData, setTooltipData] = useState({
         x: 0,
         y: 0,
@@ -198,6 +209,22 @@ export default function MFMetrics() {
             .finally(() => setLoading(false));
     }, [userId]);
 
+    // Compute total monthly SIP amount from sipInfo using frequencyFactor
+    useEffect(() => {
+        if (!sipInfo || sipInfo.length === 0) {
+            setTotalSIPAmount(0);
+            return;
+        }
+
+        const total = sipInfo.reduce((sum, sip) => {
+            const amt = parseFloat(sip.amount) || 0;
+            const factor = frequencyFactor(sip.frequency);
+            return sum + amt * factor;
+        }, 0);
+
+        setTotalSIPAmount(total);
+    }, [sipInfo, frequencyFactor]);
+
     // Separate useEffect to fetch expected percentages whenever capTypes changes
     useEffect(() => {
         const fetchExpectedPercentages = async () => {
@@ -258,28 +285,16 @@ export default function MFMetrics() {
                 <table className="user-table colorful-table" style={{ margin: '2rem 0' }}>
                     <tbody>
                         <tr>
-                            <th colSpan={Math.max(uniqueCapTypes.length + 1, 1)} style={{
-                                background: 'linear-gradient(90deg, #fef9c3 0%, #fef08a 100%)',
-                                color: '#b45309',
-                                fontWeight: 700,
-                                fontSize: '1.08rem',
-                                padding: '0.5rem 1rem',
-                                textAlign: 'center'
-                            }}>Amount</th>
-                        </tr>
-                        <tr>
                             <td colSpan={Math.max(uniqueCapTypes.length + 1, 1)} style={{
-                                color: '#2563eb',
-                                fontWeight: 600,
-                                fontSize: '1.1rem',
-                                padding: '0.75rem 1rem',
-                                borderBottom: '2px solid #e5e7eb',
-                                textAlign: 'center'
+                                background: 'linear-gradient(90deg, #fef9c3 0%, #fef08a 100%)',
+                                padding: '0.5rem 1rem',
+                                textAlign: 'center',
+                                borderBottom: '2px solid #e5e7eb'
                             }}>
-                                {fundSummary.length > 0 
-                                    ? fundSummary.reduce((sum, f) => sum + f.invested, 0).toFixed(2) 
-                                    : '0.00'
-                                }
+                                <span style={{ color: '#b45309', fontWeight: 700, fontSize: '1.08rem', marginRight: '0.5rem' }}>Amount:</span>
+                                <span style={{ color: '#2563eb', fontWeight: 600, fontSize: '1.1rem' }}>
+                                    {fundSummary.length > 0 ? fundSummary.reduce((sum, f) => sum + parseFloat(f.invested || 0), 0).toFixed(2) : '0.00'}
+                                </span>
                             </td>
                         </tr>
                         {uniqueCapTypes.length > 0 && (
@@ -330,6 +345,14 @@ export default function MFMetrics() {
                                             .filter(f => f.CapType === capTypeObj._id)
                                             .reduce((sum, f) => sum + parseFloat(f.invested || 0), 0);
                                         
+                                        // Determine expected amount for this cap type to decide status
+                                        const totalInvestmentAll = fundSummary.reduce((sum, f) => sum + parseFloat(f.invested || 0), 0);
+                                        const expectedPercentForCap = parseFloat(expectedPercentages[`${capType}_total`] || '0');
+                                        const expectedAmountForCap = (totalInvestmentAll * expectedPercentForCap) / 100;
+                                        const isCapOver = totalInvested > expectedAmountForCap;
+                                        const capStatusColor = isCapOver ? '#dc2626' : '#059669';
+
+                                        const progressMax = Math.max(expectedAmountForCap, 1);
                                         return (
                                             <td key={index} style={{
                                                 padding: '0.75rem 1rem',
@@ -337,55 +360,26 @@ export default function MFMetrics() {
                                                 color: '#2563eb',
                                                 fontWeight: 600,
                                                 fontSize: '1.1rem',
-                                                background: '#f0f9ff'
+                                                background: '#f0f9ff',
+                                                verticalAlign: 'middle'
                                             }}>
-                                                {totalInvested.toFixed(2)}
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'baseline', gap: 8 }}>
+                                                        <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>{totalInvested.toFixed(2)}</div>
+                                                        <div style={{ fontSize: '0.85rem', color: '#374151' }}>{((totalInvested / Math.max(totalInvestmentAll,1)) * 100).toFixed(2)}%</div>
+                                                    </div>
+                                                    <div style={{ width: 120 }}>
+                                                        <ProgressBar value={totalInvested} max={progressMax} height={8} />
+                                                    </div>
+                                                    <div>
+                                                        <StatusPill status={isCapOver ? 'over' : 'ok'} />
+                                                    </div>
+                                                </div>
                                             </td>
                                         );
                                     })}
                                 </tr>
-                                <tr>
-                                    <td style={{
-                                        padding: '0.5rem',
-                                        textAlign: 'left',
-                                        color: '#4b5563',
-                                        fontWeight: 600,
-                                        fontSize: '0.9rem',
-                                        background: '#f8fafc',
-                                        borderBottom: '1px solid #e5e7eb'
-                                    }}>
-                                        Actual %
-                                    </td>
-                                    {uniqueCapTypes.map((capType, index) => {
-                                        const capTypeObj = capTypes.find(ct => ct.name === capType);
-                                        if (!capTypeObj) return <td key={index}>0.00%</td>;
-
-                                        const totalInvested = fundSummary
-                                            .filter(f => f.CapType === capTypeObj._id)
-                                            .reduce((sum, f) => sum + parseFloat(f.invested || 0), 0);
-                                        
-                                        const totalAllFunds = fundSummary
-                                            .reduce((sum, f) => sum + parseFloat(f.invested || 0), 0);
-                                        
-                                        const percentage = totalAllFunds > 0 
-                                            ? (totalInvested / totalAllFunds) * 100 
-                                            : 0;
-                                        
-                                        return (
-                                            <td key={index} style={{
-                                                padding: '0.75rem 1rem',
-                                                textAlign: 'center',
-                                                color: '#059669',
-                                                fontWeight: 600,
-                                                fontSize: '1.1rem',
-                                                background: '#f0fdf4',
-                                                borderBottom: '1px solid #e5e7eb'
-                                            }}>
-                                                {percentage.toFixed(2)}%
-                                            </td>
-                                        );
-                                    })}
-                                </tr>
+                                {/* Removed duplicate "Actual %" row — percentages are shown inline in the Actual row now */}
                                 <tr>
                                     <td style={{
                                         padding: '0.5rem',
@@ -402,49 +396,34 @@ export default function MFMetrics() {
                                         const totalInvestment = fundSummary.reduce((sum, f) => sum + parseFloat(f.invested || 0), 0);
                                         const expectedPercent = parseFloat(expectedPercentages[`${capType}_total`] || '0');
                                         const expectedAmount = (totalInvestment * expectedPercent) / 100;
-                                        
+
+                                        // determine color relative to actual invested
+                                        const capTypeObj = capTypes.find(ct => ct.name === capType);
+                                        const actualInvested = capTypeObj ? fundSummary
+                                            .filter(f => f.CapType === capTypeObj._id)
+                                            .reduce((s, f) => s + parseFloat(f.invested || 0), 0) : 0;
+                                        const isOver = actualInvested > expectedAmount;
+                                        const amountColor = isOver ? '#dc2626' : '#059669';
+
                                         return (
                                             <td key={index} style={{
                                                 padding: '0.75rem 1rem',
                                                 textAlign: 'center',
-                                                color: '#dc2626',
+                                                color: amountColor,
                                                 fontWeight: 600,
                                                 fontSize: '1.1rem',
-                                                background: '#fee2e2'
+                                                background: '#fee2e2',
+                                                verticalAlign: 'middle'
                                             }}>
-                                                {expectedAmount.toFixed(2)}
+                                                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 8 }}>
+                                                            <div style={{ fontSize: '1.05rem', fontWeight: 700 }}>{expectedAmount.toFixed(2)}</div>
+                                                            <div style={{ fontSize: '0.85rem', color: '#374151' }}>{expectedPercent.toFixed(2)}%</div>
+                                                        </div>
                                             </td>
                                         );
                                     })}
                                 </tr>
-                                <tr>
-                                    <td style={{
-                                        padding: '0.5rem',
-                                        textAlign: 'left',
-                                        color: '#4b5563',
-                                        fontWeight: 600,
-                                        fontSize: '0.9rem',
-                                        background: '#f8fafc',
-                                        borderBottom: '1px solid #e5e7eb'
-                                    }}>
-                                        Expected %
-                                    </td>
-                                    {uniqueCapTypes.map((capType, index) => {
-                                        const expectedPercent = parseFloat(expectedPercentages[`${capType}_total`] || '0');
-                                        return (
-                                            <td key={index} style={{
-                                                padding: '0.75rem 1rem',
-                                                textAlign: 'center',
-                                                color: '#dc2626',
-                                                fontWeight: 600,
-                                                fontSize: '1.1rem',
-                                                background: '#fee2e2'
-                                            }}>
-                                                {expectedPercent.toFixed(2)}%
-                                            </td>
-                                        );
-                                    })}
-                                </tr>
+                                {/* Cap Wise Expected % row removed — percentages are shown inline in the Expected row */}
                                 {/* SIP/Mth row moved to end of table (rendered later) */}
                                 <tr>
                                     <td style={{
@@ -526,6 +505,10 @@ export default function MFMetrics() {
                                                                         type: 'fund'
                                                                     });
                                                                 }}
+                                                                onMouseMove={(e) => {
+                                                                    // Update tooltip coordinates as mouse moves so tooltip follows cursor
+                                                                    setTooltipData(prev => ({ ...prev, x: e.clientX, y: e.clientY }));
+                                                                }}
                                                                 onMouseLeave={() => setTooltipData(prev => ({ ...prev, visible: false }))}>
                                                                     {value.toFixed(2)}
                                                                     {tooltipData.visible &&
@@ -548,6 +531,18 @@ export default function MFMetrics() {
                                                                          );
                                                                      })()
                                                                     }
+                                                                    {/* Status label for Actual AP vs Expected */}
+                                                                    <div style={{ marginTop: 6 }}>
+                                                                        <StatusPill status={(() => {
+                                                                            const apExpectedPercent = parseFloat(expectedPercentages[`${capType}_${ap}`] || '0');
+                                                                            const capExpectedPercentForCap = parseFloat(expectedPercentages[`${capType}_total`] || '0');
+                                                                            const totalInvestmentAll = fundSummary.reduce((sum, f) => sum + parseFloat(f.invested || 0), 0);
+                                                                            const capExpectedAmount = (totalInvestmentAll * capExpectedPercentForCap) / 100;
+                                                                            const apExpectedAmount = (capExpectedAmount * apExpectedPercent) / 100;
+                                                                            const actualAP = getInvestmentForCapTypeAndAP(capType, ap);
+                                                                            return actualAP > apExpectedAmount ? 'over' : 'ok';
+                                                                        })()} />
+                                                                    </div>
                                                                 </td>
                                                             );
                                                         })}
@@ -621,23 +616,28 @@ export default function MFMetrics() {
                                                             const totalInvestment = fundSummary.reduce((sum, f) => sum + parseFloat(f.invested || 0), 0);
                                                             const capExpectedPercent = parseFloat(expectedPercentages[`${capType}_total`] || '0');
                                                             const capExpectedAmount = (totalInvestment * capExpectedPercent) / 100;
-                                                            
+
                                                             // Get the A/P split percentage and calculate expected amount
                                                             const apSplitPercent = parseFloat(expectedPercentages[`${capType}_${ap}`] || '0');
                                                             const expectedAmount = (capExpectedAmount * apSplitPercent) / 100;
-                                                            
+
+                                                            // Actual for this capType/AP
+                                                            const actualAP = getInvestmentForCapTypeAndAP(capType, ap);
+                                                            const isOverAP = actualAP > expectedAmount;
+                                                            const apColor = isOverAP ? '#dc2626' : '#059669';
+
                                                             return (
                                                                 <td key={idx} style={{
                                                                     padding: '0.75rem 1rem',
                                                                     textAlign: 'center',
-                                                                    color: '#dc2626',
+                                                                    color: apColor,
                                                                     fontWeight: 600,
                                                                     fontSize: '1.1rem',
                                                                     borderLeft: idx > 0 ? '1px solid #e5e7eb' : 'none',
                                                                     background: '#fee2e2',
                                                                     width: '50%'
                                                                 }}>
-                                                                    {expectedAmount.toFixed(2)}
+                                                                    <div>{expectedAmount.toFixed(2)}</div>
                                                                 </td>
                                                             );
                                                         })}
@@ -698,7 +698,7 @@ export default function MFMetrics() {
                                         textAlign: 'left',
                                         background: '#f8fafc'
                                     }}>
-                                        SIP/Mth
+                                        SIP/Mth Actual
                                     </td>
                                     {uniqueCapTypes.map((capType) => (
                                         <td key={capType} style={{ padding: 0 }}>
@@ -739,6 +739,7 @@ export default function MFMetrics() {
                                                                         };
                                                                     });
 
+                                                                    // Use mouse coordinates so the tooltip appears at the hover point
                                                                     setTooltipData({
                                                                         x: e.clientX,
                                                                         y: e.clientY,
@@ -751,13 +752,14 @@ export default function MFMetrics() {
                                                                     {sipValue.toFixed(2)}
                                                                     {tooltipData.visible && tooltipData.type === 'sip' &&
                                                                      (() => {
-                                                                         const pos = computeTooltipPosition(tooltipData.x, tooltipData.y);
+                                                                         // Position the SIP tooltip directly at mouse coordinates with a small offset
+                                                                         const left = (tooltipData.x || 0) + 12;
+                                                                         const top = (tooltipData.y || 0) + 12;
                                                                          return (
                                                                              <div style={{
                                                                                  position: 'fixed',
-                                                                                 left: pos.left,
-                                                                                 top: pos.top,
-                                                                                 transform: pos.placeAbove ? 'translateY(-100%)' : 'none',
+                                                                                 left,
+                                                                                 top,
                                                                                  zIndex: 1200
                                                                              }}>
                                                                                  <SIPDetailsTooltip 
@@ -768,6 +770,51 @@ export default function MFMetrics() {
                                                                          );
                                                                      })()
                                                                     }
+                                                                        <div style={{ marginTop: 6 }}>
+                                                                            <StatusPill status={sipValue > calculateExpectedSIP(capType, ap) ? 'over' : 'ok'} />
+                                                                        </div>
+                                                                </td>
+                                                            );
+                                                        })}
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    ))}
+                                </tr>
+                                <tr>
+                                    <td style={{
+                                        padding: '0.75rem 1rem',
+                                        fontWeight: 600,
+                                        fontSize: '0.9rem',
+                                        color: '#4b5563',
+                                        textAlign: 'left',
+                                        background: '#f8fafc'
+                                    }}>
+                                        SIP/Mth Expected
+                                    </td>
+                                    {uniqueCapTypes.map((capType) => (
+                                        <td key={capType} style={{ padding: 0 }}>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                                <tbody>
+                                                    <tr>
+                                                        {uniqueActivePassive.map((ap, idx) => {
+                                                            const expectedSIPAmount = calculateExpectedSIP(capType, ap);
+                                                            const actualSip = getSipMonthlyForCapTypeAndAP(capType, ap);
+                                                            const isOver = actualSip > expectedSIPAmount;
+                                                            const sipColor = isOver ? '#dc2626' : '#059669';
+                                                            return (
+                                                                <td key={idx} style={{
+                                                                    padding: '0.75rem 1rem',
+                                                                    textAlign: 'center',
+                                                                    color: sipColor,
+                                                                    fontWeight: 600,
+                                                                    fontSize: '1.1rem',
+                                                                    borderLeft: idx > 0 ? '1px solid #e5e7eb' : 'none',
+                                                                    background: '#fee2e2',
+                                                                    width: '50%'
+                                                                }}>
+                                                                    <div>{expectedSIPAmount.toFixed(2)}</div>
                                                                 </td>
                                                             );
                                                         })}

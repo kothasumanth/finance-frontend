@@ -21,9 +21,7 @@ function MutualFundEntries() {
   const [error, setError] = useState(null)
   const [showPopup, setShowPopup] = useState(false)
   const [fundName, setFundName] = useState('')
-  const [date, setDate] = useState('')
-  const [investType, setInvestType] = useState('Invest')
-  const [amount, setAmount] = useState('')
+  const [multiEntries, setMultiEntries] = useState([]) // Array to store multiple entries
   const [editId, setEditId] = useState(null)
   const [editFundName, setEditFundName] = useState('')
   const [editDate, setEditDate] = useState('')
@@ -57,28 +55,44 @@ function MutualFundEntries() {
   const handleAdd = () => {
     setShowPopup(true)
     setFundName(fundOptions.length > 0 ? fundOptions[0]._id : '')
-    setDate('')
-    setInvestType('Invest')
-    setAmount('')
+    setMultiEntries([{ date: '', investType: 'Invest', amount: '' }])
   }
 
   const handleSave = () => {
-    fetch('http://localhost:3000/mutual-funds', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, fundName, purchaseDate: date, investType, amount: parseFloat(amount) })
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to add entry')
-        return res.json()
-      })
-      .then((newEntry) => {
-        setEntries([...entries, newEntry])
+    // Save all entries for the selected mutual fund
+    const entriesToSave = multiEntries
+      .filter(entry => entry.date && entry.amount) // Only save entries with date and amount
+      .map(entry => ({
+        userId,
+        fundName,
+        purchaseDate: entry.date,
+        investType: entry.investType,
+        amount: parseFloat(entry.amount)
+      }))
+
+    if (entriesToSave.length === 0) {
+      alert('Please fill in at least one entry with date and amount')
+      return
+    }
+
+    // Save all entries
+    Promise.all(
+      entriesToSave.map(entry =>
+        fetch('http://localhost:3000/mutual-funds', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(entry)
+        }).then(res => {
+          if (!res.ok) throw new Error('Failed to add entry')
+          return res.json()
+        })
+      )
+    )
+      .then((newEntries) => {
+        setEntries([...entries, ...newEntries])
         setShowPopup(false)
         setFundName('')
-        setDate('')
-        setInvestType('Invest')
-        setAmount('')
+        setMultiEntries([])
       })
       .catch((err) => {
         alert(err.message)
@@ -199,8 +213,10 @@ function MutualFundEntries() {
             borderRadius: 12,
             boxShadow: '0 4px 32px rgba(0,0,0,0.13)',
             padding: '2.2rem 2.5rem 1.5rem 2.5rem',
-            minWidth: 420,
+            minWidth: 500,
             maxWidth: '90vw',
+            maxHeight: '80vh',
+            overflowY: 'auto',
             display: 'flex', flexDirection: 'column', alignItems: 'center',
             position: 'relative'
           }}>
@@ -233,68 +249,116 @@ function MutualFundEntries() {
                   </select>
                 </div>
               </div>
-              {/* Date, Invest Type, Amount row */}
-              <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '1.2rem', marginTop: 0 }}>
-                {/* Date */}
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-                  <span style={{ flex: '0 0 70px', fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left', paddingRight: 8 }}>Date:</span>
-                  <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{
-                    fontWeight: 600,
-                    color: '#2563eb',
-                    fontSize: '1rem',
-                    border: '1.5px solid #059669',
-                    borderRadius: 6,
-                    padding: '0.3rem 1.1rem',
-                    fontFamily: 'monospace',
-                    background: '#f0f9ff',
-                    outline: 'none',
-                    minWidth: 110,
-                    textAlign: 'right',
-                    flex: 1
-                  }} />
-                </div>
-                {/* Invest Type */}
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-                  <span style={{ flex: '0 0 90px', fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left', paddingRight: 8 }}>Invest Type:</span>
-                  <select value={investType} onChange={e => setInvestType(e.target.value)}
-                    style={{
-                      fontWeight: 600,
-                      color: '#2563eb',
-                      fontSize: '1rem',
-                      border: '1.5px solid #059669',
-                      borderRadius: 6,
-                      padding: '0.3rem 1.1rem',
-                      fontFamily: 'monospace',
-                      background: '#f0f9ff',
-                      outline: 'none',
-                      minWidth: 110,
-                      textAlign: 'left',
-                      flex: 1
-                    }}>
-                    <option value="Invest">Invest</option>
-                    <option value="Redeem">Redeem</option>
-                  </select>
-                </div>
-                {/* Amount */}
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-                  <span style={{ flex: '0 0 70px', fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left', paddingRight: 8 }}>Amount:</span>
-                  <input type="number" value={amount} onChange={e => setAmount(e.target.value)} min="0" step="0.01" style={{
-                    fontWeight: 600,
-                    color: '#2563eb',
-                    fontSize: '1rem',
-                    border: '1.5px solid #059669',
-                    borderRadius: 6,
-                    padding: '0.3rem 1.1rem',
-                    fontFamily: 'monospace',
-                    background: '#f0f9ff',
-                    outline: 'none',
-                    minWidth: 110,
-                    textAlign: 'right',
-                    flex: 1
-                  }} />
-                </div>
+
+              {/* Multiple entries section */}
+              <div style={{ marginTop: '1rem', borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}>
+                {multiEntries.map((entry, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '0.8rem', marginBottom: '0.8rem' }}>
+                    {/* Date */}
+                    <div style={{ flex: 1.2, display: 'flex', flexDirection: 'column' }}>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#059669', marginBottom: '0.3rem' }}>Date</label>
+                      <input type="date" value={entry.date} onChange={e => {
+                        const newEntries = [...multiEntries]
+                        newEntries[idx].date = e.target.value
+                        setMultiEntries(newEntries)
+                      }} style={{
+                        fontWeight: 600,
+                        color: '#2563eb',
+                        fontSize: '0.95rem',
+                        border: '1.5px solid #059669',
+                        borderRadius: 6,
+                        padding: '0.3rem 0.8rem',
+                        fontFamily: 'monospace',
+                        background: '#f0f9ff',
+                        outline: 'none',
+                        textAlign: 'right'
+                      }} />
+                    </div>
+                    {/* Invest Type */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#059669', marginBottom: '0.3rem' }}>Type</label>
+                      <select value={entry.investType} onChange={e => {
+                        const newEntries = [...multiEntries]
+                        newEntries[idx].investType = e.target.value
+                        setMultiEntries(newEntries)
+                      }}
+                        style={{
+                          fontWeight: 600,
+                          color: '#2563eb',
+                          fontSize: '0.95rem',
+                          border: '1.5px solid #059669',
+                          borderRadius: 6,
+                          padding: '0.3rem 0.8rem',
+                          fontFamily: 'monospace',
+                          background: '#f0f9ff',
+                          outline: 'none',
+                          textAlign: 'left'
+                        }}>
+                        <option value="Invest">Invest</option>
+                        <option value="Redeem">Redeem</option>
+                      </select>
+                    </div>
+                    {/* Amount */}
+                    <div style={{ flex: 1.2, display: 'flex', flexDirection: 'column' }}>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#059669', marginBottom: '0.3rem' }}>Amount</label>
+                      <input type="number" value={entry.amount} onChange={e => {
+                        const newEntries = [...multiEntries]
+                        newEntries[idx].amount = e.target.value
+                        setMultiEntries(newEntries)
+                      }} min="0" step="0.01" style={{
+                        fontWeight: 600,
+                        color: '#2563eb',
+                        fontSize: '0.95rem',
+                        border: '1.5px solid #059669',
+                        borderRadius: 6,
+                        padding: '0.3rem 0.8rem',
+                        fontFamily: 'monospace',
+                        background: '#f0f9ff',
+                        outline: 'none',
+                        textAlign: 'right'
+                      }} />
+                    </div>
+                    {/* Delete button for this entry */}
+                    {multiEntries.length > 1 && (
+                      <button type="button" onClick={() => {
+                        setMultiEntries(multiEntries.filter((_, i) => i !== idx))
+                      }} style={{
+                        background: '#ef4444',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 4,
+                        padding: '0.4rem 0.8rem',
+                        fontWeight: 600,
+                        fontSize: '0.9rem',
+                        cursor: 'pointer',
+                        marginTop: '1.5rem'
+                      }}>
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
-              <div style={{ display: 'flex', gap: '1.2rem', justifyContent: 'center', marginTop: '0.5rem' }}>
+
+              {/* Add entry button */}
+              <button type="button" onClick={() => {
+                setMultiEntries([...multiEntries, { date: '', investType: 'Invest', amount: '' }])
+              }} style={{
+                marginTop: '0.5rem',
+                background: '#10b981',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                padding: '0.35rem 1.1rem',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                alignSelf: 'flex-start'
+              }}>
+                + Add Entry
+              </button>
+
+              <div style={{ display: 'flex', gap: '1.2rem', justifyContent: 'center', marginTop: '1rem' }}>
                 <IconButton icon={"💾"} title="Save" type="submit" />
                 <IconButton icon={"✖️"} title="Cancel" onClick={() => setShowPopup(false)} />
               </div>
