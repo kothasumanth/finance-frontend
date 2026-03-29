@@ -24,6 +24,16 @@ The app will be available at [http://localhost:5173](http://localhost:5173) by d
 ### 3. Connect to the backend
 Make sure the Finance Copilot backend (Node.js + Express + MongoDB) is running and accessible. By default, the frontend expects the backend API to be available at `http://localhost:3000`.
 
+## Database Backup & Restore
+Backup and restore functionality is managed from the **backend**. See [backend README](../finance-backend/README.md#backup--restore) for details.
+
+Quick commands:
+```powershell
+# From finance-backend folder
+npm run backup    # Create database backup
+npm run restore   # Restore from backup
+```
+
 ## Deploy as a Local Web App (Recommended for Local Use)
 
 You can run the Finance Copilot app as a local web app, so you don't have to manually start the frontend and backend every time. This is useful for persistent access on your machine.
