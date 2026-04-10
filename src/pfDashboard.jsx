@@ -8,6 +8,14 @@ function PfDashboard() {
   const [showSetupPFPopup, setShowSetupPFPopup] = useState(false);
   const [setupPFStartDate, setSetupPFStartDate] = useState('');
   const [setupPFLoading, setSetupPFLoading] = useState(false);
+  
+  // ROI Setup state
+  const [showPopup, setShowPopup] = useState(false);
+  const [interestRows, setInterestRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editRow, setEditRow] = useState(null);
+  const [form, setForm] = useState({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' });
+  const [pfTypes, setPfTypes] = useState([]);
 
   // PF yearwise summary state
   const [pfYearwise, setPfYearwise] = useState([]);
@@ -61,6 +69,25 @@ function PfDashboard() {
   }, [userId, showSetupPFPopup, deletePFLoading]);
 
   useEffect(() => {
+    if (showPopup) {
+      setLoading(true);
+      Promise.all([
+        fetch('http://localhost:3000/pf-interest').then(res => res.json()),
+        fetch('http://localhost:3000/pf-types').then(res => res.json())
+      ])
+        .then(([interestData, pfTypesData]) => {
+          setPfTypes(pfTypesData);
+          // Filter interest data to only PF type (not PPF or other types)
+          const pfType = pfTypesData.find(t => t.name === 'PF');
+          const filteredInterestRows = pfType ? interestData.filter(row => row.pfType === pfType._id) : [];
+          setInterestRows(filteredInterestRows);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    }
+  }, [showPopup]);
+
+  useEffect(() => {
     // Calculate summary for right panel
     if (pfYearwise && pfYearwise.length > 0) {
       const totalDeposits = pfYearwise.reduce((sum, y) => sum + y.amountDeposited, 0);
@@ -73,7 +100,72 @@ function PfDashboard() {
   }, [pfYearwise]);
 
   // Placeholder handlers for now
-  const handleOpenPopup = () => {};
+  const handleOpenPopup = () => {
+    setShowPopup(true);
+    setEditRow(null);
+    setForm({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' });
+  };
+
+  const handleClosePopup = () => {
+    setShowPopup(false);
+    setEditRow(null);
+    setForm({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' });
+  };
+
+  const handleEdit = (idx) => {
+    setEditRow(idx);
+    setForm({
+      startDate: interestRows[idx]?.startDate?.slice(0, 10) || '',
+      endDate: interestRows[idx]?.endDate?.slice(0, 10) || '',
+      rateOfInterest: interestRows[idx]?.rateOfInterest?.toString() || '',
+      pfType: interestRows[idx]?.pfType || '',
+    });
+  };
+
+  const handleDelete = (idx) => {
+    if (window.confirm('Delete this record?')) {
+      fetch(`http://localhost:3000/pf-interest/${interestRows[idx]._id}`, { method: 'DELETE' })
+        .then(() => {
+          setInterestRows(rows => rows.filter((_, i) => i !== idx));
+        });
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSave = () => {
+    // Validation: startDate must be next day of previous endDate for new rows
+    if (interestRows.length > 0 && editRow === interestRows.length) {
+      const prevEnd = new Date(interestRows[interestRows.length - 1].endDate);
+      const newStart = new Date(form.startDate);
+      prevEnd.setDate(prevEnd.getDate() + 1);
+      if (prevEnd.toISOString().slice(0, 10) !== form.startDate) {
+        alert('Start date must be next day of previous end date.');
+        return;
+      }
+    }
+    const method = editRow != null && editRow < interestRows.length ? 'PUT' : 'POST';
+    const url = method === 'POST' ? 'http://localhost:3000/pf-interest' : `http://localhost:3000/pf-interest/${interestRows[editRow]._id}`;
+    fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        startDate: form.startDate,
+        endDate: form.endDate,
+        rateOfInterest: parseFloat(form.rateOfInterest),
+        pfType: form.pfType,
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (method === 'POST') setInterestRows(rows => [...rows, data]);
+        else setInterestRows(rows => rows.map((r, i) => i === editRow ? data : r));
+        setEditRow(null);
+        setForm({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' });
+      });
+  };
 
   const handleSetupPFClick = () => {
     setShowSetupPFPopup(true);
@@ -141,11 +233,74 @@ function PfDashboard() {
             <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }} onClick={() => navigate(`/user/${userId}/pf-details`)}>PF Details</button>
             {/* <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}>VPF</button> */}
             {/* <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}>PPF</button> */}
-            {/* <button className="pf-dashboard-btn" style={{ minWidth: 140, marginLeft: '2rem', background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(16,185,129,0.08)' }} onClick={handleOpenPopup}>Setup Interest</button> */}
+            <button className="pf-dashboard-btn" style={{ minWidth: 140, marginLeft: '2rem', background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(16,185,129,0.08)' }} onClick={handleOpenPopup}>Setup Interest</button>
             <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(245,158,66,0.08)' }} onClick={handleSetupPFClick}>Setup PF</button>
             <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(239,68,68,0.08)' }} onClick={handleDeletePF} disabled={deletePFLoading}>{deletePFLoading ? 'Deleting...' : 'Delete PF'}</button>
           </div>
         </div>
+        {showPopup && (
+          <div className="popup-bg" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.2)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="popup" style={{ background: '#fff', borderRadius: 8, padding: 24, minWidth: 420, boxShadow: '0 2px 16px rgba(0,0,0,0.12)' }}>
+              <h2 style={{ marginTop: 0 }}>ROI Setup</h2>
+              {loading ? <div>Loading...</div> : (
+                <>
+                  <table style={{ width: '100%', marginBottom: 16 }}>
+                    <thead>
+                      <tr>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>ROI</th>
+                        <th>PF Type</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {interestRows.map((row, idx) => (
+                        <tr key={row._id}>
+                          <td>{idx === editRow ? <input type="date" name="startDate" value={form.startDate} onChange={handleInputChange} /> : row.startDate?.slice(0, 10)}</td>
+                          <td>{idx === editRow ? <input type="date" name="endDate" value={form.endDate} onChange={handleInputChange} /> : row.endDate?.slice(0, 10)}</td>
+                          <td>{idx === editRow ? <input type="number" step="0.01" name="rateOfInterest" value={form.rateOfInterest} onChange={handleInputChange} /> : row.rateOfInterest}</td>
+                          <td>{idx === editRow ? <select name="pfType" value={form.pfType} onChange={handleInputChange}><option value="">Select PF Type</option>{pfTypes.map(pt => <option key={pt._id} value={pt._id}>{pt.name}</option>)}</select> : pfTypes.find(pt => pt._id === row.pfType)?.name || '-'}</td>
+                          <td>
+                            {idx === editRow ? (
+                              <>
+                                <button onClick={handleSave} style={{ marginRight: 8 }}>Save</button>
+                                <button onClick={() => { setEditRow(null); setForm({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' }); }}>Cancel</button>
+                              </>
+                            ) : idx === interestRows.length - 1 && (
+                              <>
+                                <button onClick={() => handleEdit(idx)} style={{ marginRight: 8 }}>Edit</button>
+                                <button onClick={() => handleDelete(idx)} style={{ marginRight: 8 }}>Delete</button>
+                              </>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                      {/* Add new row or edit last row */}
+                      {(editRow === interestRows.length || interestRows.length === 0) && (
+                        <tr>
+                          <td><input type="date" name="startDate" value={form.startDate} onChange={handleInputChange} /></td>
+                          <td><input type="date" name="endDate" value={form.endDate} onChange={handleInputChange} /></td>
+                          <td><input type="number" step="0.01" name="rateOfInterest" value={form.rateOfInterest} onChange={handleInputChange} /></td>
+                          <td><select name="pfType" value={form.pfType} onChange={handleInputChange}><option value="">Select PF Type</option>{pfTypes.map(pt => <option key={pt._id} value={pt._id}>{pt.name}</option>)}</select></td>
+                          <td>
+                            <button onClick={handleSave} style={{ marginRight: 8 }}>Save</button>
+                            <button onClick={handleClosePopup}>Cancel</button>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                  {/* Add button to enter new record */}
+                  {editRow === null && (
+                    <button onClick={() => { setEditRow(interestRows.length); setForm({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' }); }} style={{ fontSize: 14, padding: '2px 10px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: 4, marginBottom: 8 }}>Add</button>
+                  )}
+                </>
+              )}
+              <button onClick={handleClosePopup} style={{ float: 'right', marginTop: 8 }}>Close</button>
+            </div>
+          </div>
+        )}
         {/* Setup PF Popup */}
         {showSetupPFPopup && (
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

@@ -66,21 +66,29 @@ function PpfDetails() {
         const types = await typesRes.json();
         const ppfType = types.find(t => t.name === 'PPF');
         if (!ppfType) throw new Error('PPF type not found');
+        
+        // Fetch PPF entries
         const res = await fetch(`http://localhost:3000/pfentry/user/${userId}/type/${ppfType._id}`);
         let data = await res.json();
+        
         if (Array.isArray(data) && data.length > 0) {
-          const ids = [...new Set(data.map(e => e.pfInterestId).filter(Boolean))];
-          let roiMap = {};
-          if (ids.length > 0) {
-            const roiRes = await fetch('http://localhost:3000/pf-interest');
-            const roiData = await roiRes.json();
-            ids.forEach(id => {
-              const found = roiData.find(r => r._id === id);
-              if (found) roiMap[id] = found.rateOfInterest;
+          // Fetch all ROI records for PPF type
+          const roiRes = await fetch('http://localhost:3000/pf-interest');
+          const allRoiData = await roiRes.json();
+          const ppfRoiData = allRoiData.filter(roi => roi.pfType === ppfType._id);
+          
+          // Map entries to ROI by finding matching date range
+          data = data.map(e => {
+            const entryDate = new Date(e.date);
+            const matchingRoi = ppfRoiData.find(roi => {
+              const startDate = new Date(roi.startDate);
+              const endDate = new Date(roi.endDate);
+              return entryDate >= startDate && entryDate <= endDate;
             });
-          }
-          data = data.map(e => ({ ...e, roi: roiMap[e.pfInterestId] ?? '' }));
+            return { ...e, roi: matchingRoi?.rateOfInterest ?? '' };
+          });
         }
+        
         setEntries(data);
         const fyGroups = groupEntriesByFinancialYear(data);
         setGroups(fyGroups);
