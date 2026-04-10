@@ -214,7 +214,30 @@ function MutualFundDashboard() {
             <tbody>
               {sortedSummary.map(fund => (
                 <tr key={fund.fundName}>
-                  <td>{fund.fundName}</td>
+                  <td>
+                    <button
+                      onClick={() => navigate(`/user/${userId}/mf-details/${encodeURIComponent(fund.fundName)}`)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#2563eb',
+                        textDecoration: 'underline',
+                        cursor: 'pointer',
+                        fontSize: 'inherit',
+                        padding: 0,
+                        fontWeight: 500,
+                        fontFamily: 'inherit'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.color = '#1d4ed8'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.color = '#2563eb'
+                      }}
+                    >
+                      {fund.fundName}
+                    </button>
+                  </td>
                   <td style={{ fontSize: '0.95em', minWidth: 70 }}>{fund.ActiveOrPassive || ''}</td>
                   <td style={{ fontSize: '0.95em', minWidth: 70 }}>{fund.IndexOrManaged || ''}</td>
                   <td style={{ fontSize: '0.95em', minWidth: 70 }}>{capTypes.find(ct => ct._id === fund.CapType)?.name || ''}</td>

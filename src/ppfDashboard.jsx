@@ -9,7 +9,8 @@ function PfDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editRow, setEditRow] = useState(null); // index of row being edited or added
-  const [form, setForm] = useState({ startDate: '', endDate: '', rateOfInterest: '' });
+  const [form, setForm] = useState({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' });
+  const [pfTypes, setPfTypes] = useState([]);
   const [showPPFStartPopup, setShowPPFStartPopup] = useState(false);
   const [ppfStartDate, setPPFStartDate] = useState('');
   const [ppfLoading, setPPFLoading] = useState(false);
@@ -28,10 +29,16 @@ function PfDashboard() {
   useEffect(() => {
     if (showPopup) {
       setLoading(true);
-      fetch('http://localhost:3000/pf-interest')
-        .then(res => res.json())
-        .then(data => {
-          setInterestRows(data);
+      Promise.all([
+        fetch('http://localhost:3000/pf-interest').then(res => res.json()),
+        fetch('http://localhost:3000/pf-types').then(res => res.json())
+      ])
+        .then(([interestData, pfTypesData]) => {
+          setPfTypes(pfTypesData);
+          // Filter interest data to only PPF type (not PF or other types)
+          const ppfType = pfTypesData.find(t => t.name === 'PPF');
+          const filteredInterestRows = ppfType ? interestData.filter(row => row.pfType === ppfType._id) : [];
+          setInterestRows(filteredInterestRows);
           setLoading(false);
         })
         .catch(() => setLoading(false));
@@ -101,13 +108,13 @@ function PfDashboard() {
   const handleOpenPopup = () => {
     setShowPopup(true);
     setEditRow(null);
-    setForm({ startDate: '', endDate: '', rateOfInterest: '' });
+    setForm({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' });
   };
 
   const handleClosePopup = () => {
     setShowPopup(false);
     setEditRow(null);
-    setForm({ startDate: '', endDate: '', rateOfInterest: '' });
+    setForm({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' });
   };
 
   const handleEdit = (idx) => {
@@ -116,6 +123,7 @@ function PfDashboard() {
       startDate: interestRows[idx]?.startDate?.slice(0, 10) || '',
       endDate: interestRows[idx]?.endDate?.slice(0, 10) || '',
       rateOfInterest: interestRows[idx]?.rateOfInterest?.toString() || '',
+      pfType: interestRows[idx]?.pfType || '',
     });
   };
 
@@ -152,6 +160,7 @@ function PfDashboard() {
         startDate: form.startDate,
         endDate: form.endDate,
         rateOfInterest: parseFloat(form.rateOfInterest),
+        pfType: form.pfType,
       })
     })
       .then(res => res.json())
@@ -159,7 +168,7 @@ function PfDashboard() {
         if (method === 'POST') setInterestRows(rows => [...rows, data]);
         else setInterestRows(rows => rows.map((r, i) => i === editRow ? data : r));
         setEditRow(null);
-        setForm({ startDate: '', endDate: '', rateOfInterest: '' });
+        setForm({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' });
       });
   };
 
@@ -280,6 +289,7 @@ function PfDashboard() {
                         <th>Start Date</th>
                         <th>End Date</th>
                         <th>ROI</th>
+                        <th>PF Type</th>
                         <th></th>
                       </tr>
                     </thead>
@@ -289,11 +299,12 @@ function PfDashboard() {
                           <td>{idx === editRow ? <input type="date" name="startDate" value={form.startDate} onChange={handleInputChange} /> : row.startDate?.slice(0, 10)}</td>
                           <td>{idx === editRow ? <input type="date" name="endDate" value={form.endDate} onChange={handleInputChange} /> : row.endDate?.slice(0, 10)}</td>
                           <td>{idx === editRow ? <input type="number" step="0.01" name="rateOfInterest" value={form.rateOfInterest} onChange={handleInputChange} /> : row.rateOfInterest}</td>
+                          <td>{idx === editRow ? <select name="pfType" value={form.pfType} onChange={handleInputChange}><option value="">Select PF Type</option>{pfTypes.map(pt => <option key={pt._id} value={pt._id}>{pt.name}</option>)}</select> : pfTypes.find(pt => pt._id === row.pfType)?.name || '-'}</td>
                           <td>
                             {idx === editRow ? (
                               <>
                                 <button onClick={handleSave} style={{ marginRight: 8 }}>Save</button>
-                                <button onClick={() => { setEditRow(null); setForm({ startDate: '', endDate: '', rateOfInterest: '' }); }}>Cancel</button>
+                                <button onClick={() => { setEditRow(null); setForm({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' }); }}>Cancel</button>
                               </>
                             ) : idx === interestRows.length - 1 && (
                               <>
@@ -310,6 +321,7 @@ function PfDashboard() {
                           <td><input type="date" name="startDate" value={form.startDate} onChange={handleInputChange} /></td>
                           <td><input type="date" name="endDate" value={form.endDate} onChange={handleInputChange} /></td>
                           <td><input type="number" step="0.01" name="rateOfInterest" value={form.rateOfInterest} onChange={handleInputChange} /></td>
+                          <td><select name="pfType" value={form.pfType} onChange={handleInputChange}><option value="">Select PF Type</option>{pfTypes.map(pt => <option key={pt._id} value={pt._id}>{pt.name}</option>)}</select></td>
                           <td>
                             <button onClick={handleSave} style={{ marginRight: 8 }}>Save</button>
                             <button onClick={handleClosePopup}>Cancel</button>
@@ -320,7 +332,7 @@ function PfDashboard() {
                   </table>
                   {/* Add button to enter new record */}
                   {editRow === null && (
-                    <button onClick={() => { setEditRow(interestRows.length); setForm({ startDate: '', endDate: '', rateOfInterest: '' }); }} style={{ fontSize: 14, padding: '2px 10px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: 4, marginBottom: 8 }}>Add</button>
+                    <button onClick={() => { setEditRow(interestRows.length); setForm({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' }); }} style={{ fontSize: 14, padding: '2px 10px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: 4, marginBottom: 8 }}>Add</button>
                   )}
                 </>
               )}
