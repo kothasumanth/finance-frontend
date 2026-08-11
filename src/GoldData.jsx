@@ -21,11 +21,11 @@ function GoldData() {
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
   const [editRow, setEditRow] = useState(null);
-  const [form, setForm] = useState({ purchaseDate: '', grams: '', price: '', comments: '' });
+  const [form, setForm] = useState({ purchaseDate: '', grams: '', price: '', karat: 24, comments: '' });
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showGoldPriceModal, setShowGoldPriceModal] = useState(false);
-  const [goldPriceInput, setGoldPriceInput] = useState('');
+  const [goldPriceInput, setGoldPriceInput] = useState({ price24k: '', price22k: '', price18k: '' });
   const [todayGoldPrice, setTodayGoldPrice] = useState(null);
 
   const { userId } = useParams();
@@ -40,9 +40,9 @@ function GoldData() {
   };
   const handleGoldPriceSave = async () => {
     try {
-      await saveTodayGoldPrice(goldPriceInput);
+      await saveTodayGoldPrice(goldPriceInput.price24k, goldPriceInput.price22k, goldPriceInput.price18k);
       setShowGoldPriceModal(false);
-      setGoldPriceInput('');
+      setGoldPriceInput({ price24k: '', price22k: '', price18k: '' });
       fetchGoldPriceValue();
     } catch (e) {
       alert('Failed to save gold price');
@@ -62,7 +62,14 @@ function GoldData() {
 
   const handleEdit = (idx) => {
     setEditRow(idx);
-    setForm(entries[idx] || { purchaseDate: '', grams: '', price: '', comments: '' });
+    const entry = entries[idx] || {};
+    setForm({
+      purchaseDate: entry.purchaseDate || '',
+      grams: entry.grams || '',
+      price: entry.price || '',
+      karat: entry.karat || 24,
+      comments: entry.comments || ''
+    });
     setShowModal(true);
   };
 
@@ -71,7 +78,13 @@ function GoldData() {
   };
 
   const handleSave = async () => {
-    const payload = { ...form, userId };
+    const payload = {
+      ...form,
+      userId,
+      grams: Number(form.grams) || 0,
+      price: Number(form.price) || 0,
+      karat: Number(form.karat) || 24
+    };
     if (editRow !== null && entries[editRow]?._id) payload._id = entries[editRow]._id;
     const res = await fetch('http://localhost:3000/gold-entries', {
       method: 'POST',
@@ -81,14 +94,14 @@ function GoldData() {
     if (res.ok) {
       await fetchGoldEntries();
       setEditRow(null);
-      setForm({ purchaseDate: '', grams: '', price: '', comments: '' });
+      setForm({ purchaseDate: '', grams: '', price: '', karat: 24, comments: '' });
       setShowModal(false);
     }
   };
 
   const handleAdd = () => {
     setEditRow(null);
-    setForm({ purchaseDate: '', grams: '', price: '', comments: '' });
+    setForm({ purchaseDate: '', grams: '', price: '', karat: 24, comments: '' });
     setShowModal(true);
   };
 
@@ -117,32 +130,19 @@ function GoldData() {
       <div style={{ marginTop: 0, marginBottom: 8, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
         <button onClick={() => setShowGoldPriceModal(true)} style={{ background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(245,158,66,0.08)', cursor: 'pointer', marginTop: '1.2rem' }}>Enter Today Gold Price</button>
         <div style={{ fontWeight: 600, color: '#b45309', fontSize: '1.08rem', marginTop: 2 }}>
-          Today Gold Price: <span style={{ color: '#059669', fontWeight: 700 }}>{todayGoldPrice !== null ? todayGoldPrice : '-'}</span>
-        </div>
-      </div>
-      {/* Modal for Gold Price */}
-      {showGoldPriceModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', borderRadius: 10, boxShadow: '0 2px 16px #fbbf24', padding: '2rem', minWidth: 320, display: 'flex', flexDirection: 'column', gap: '1.2rem', position: 'relative' }}>
-            <h2 style={{ color: '#b45309', margin: 0, textAlign: 'center' }}>Enter Today's Gold Price</h2>
-            <input type="number" value={goldPriceInput} onChange={e => setGoldPriceInput(e.target.value)} placeholder="Enter price" style={{ padding: '0.5rem', borderRadius: 6, border: '1.5px solid #cbd5e1', fontSize: '1.1rem' }} />
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '1.2rem', marginTop: 10 }}>
-              <button onClick={handleGoldPriceSave} style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}>Save</button>
-              <button onClick={() => { setShowGoldPriceModal(false); setGoldPriceInput(''); }} style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}>Cancel</button>
-            </div>
+          Today Gold Price:
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 6 }}>
+            <span style={{ color: '#059669', fontWeight: 700 }}>24K: {todayGoldPrice?.price24k ?? '-'}</span>
+            <span style={{ color: '#059669', fontWeight: 700 }}>22K: {todayGoldPrice?.price22k ?? '-'}</span>
+            <span style={{ color: '#059669', fontWeight: 700 }}>18K: {todayGoldPrice?.price18k ?? '-'}</span>
           </div>
         </div>
-      )}
-      </div>      
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.2rem', gap: 24 }}>
-        <h1 className="colorful-title" style={{ fontSize: '2.1rem', marginTop: '0.5rem', marginBottom: 0, textAlign: 'left', fontWeight: 800 }}>Gold Details</h1>
-        {/* Summary Section - Centered */}
-        <div style={{ minWidth: 320, maxWidth: 400, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginLeft: 32 }}>
+        <div style={{ marginTop: 16, minWidth: 320, maxWidth: 420, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
           <span style={{
             fontWeight: 700,
             color: '#b45309',
             fontSize: '1.08rem',
-            marginBottom: '0.2rem',
+            marginBottom: '0.4rem',
             background: 'linear-gradient(90deg, #fef9c3 0%, #fef08a 100%)',
             borderRadius: 8,
             boxShadow: '0 1px 4px rgba(202,138,4,0.08)',
@@ -151,51 +151,83 @@ function GoldData() {
             textAlign: 'center',
             width: '100%'
           }}>Summary</span>
-          {/* Row 1: Total Grams | Avg Grams Price */}
-          {/* 2x2 Table: Total Grams | Avg Gm Price, Total Price | Today Value */}
-          <div style={{ display: 'flex', width: '100%', fontSize: '1rem', marginTop: 8, gap: 32 }}>
-            {/* Left column */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 180 }}>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <span style={{ fontWeight: 600, textAlign: 'left', minWidth: 100 }}>Total Grams:</span>
-                <span style={{ color: '#2563eb', minWidth: 70, textAlign: 'left', background: 'none', fontWeight: 600, display: 'inline-block' }}>{entries && entries.length > 0 ? entries.reduce((sum, e) => sum + (parseFloat(e.grams) || 0), 0).toFixed(2) : '0.00'}</span>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <span style={{ fontWeight: 600, textAlign: 'left', minWidth: 100 }}>Total Price:</span>
-                <span style={{ color: '#2563eb', minWidth: 70, textAlign: 'left', background: 'none', fontWeight: 600, display: 'inline-block' }}>{entries && entries.length > 0 ? entries.reduce((sum, e) => sum + (parseFloat(e.price) || 0), 0).toFixed(2) : '0.00'}</span>
-              </div>
-            </div>
-            {/* Right column */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 180 }}>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <span style={{ fontWeight: 600, textAlign: 'left', minWidth: 120 }}>Avg Gm Price:</span>
-                <span style={{ color: '#059669', minWidth: 70, textAlign: 'left', background: 'none', fontWeight: 600, display: 'inline-block' }}>
-                  {(() => {
-                    const totalGrams = entries && entries.length > 0 ? entries.reduce((sum, e) => sum + (parseFloat(e.grams) || 0), 0) : 0;
-                    const totalPrice = entries && entries.length > 0 ? entries.reduce((sum, e) => sum + (parseFloat(e.price) || 0), 0) : 0;
-                    if (totalGrams === 0) return '0.00';
-                    return (totalPrice / totalGrams).toFixed(2);
-                  })()}
-                </span>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <span style={{ fontWeight: 600, textAlign: 'left', minWidth: 120 }}>Today Value:</span>
-                {(() => {
-                  const totalGrams = entries && entries.length > 0 ? entries.reduce((sum, e) => sum + (parseFloat(e.grams) || 0), 0) : 0;
-                  const totalPrice = entries && entries.length > 0 ? entries.reduce((sum, e) => sum + (parseFloat(e.price) || 0), 0) : 0;
-                  if (!todayGoldPrice || totalGrams === 0) return (
-                    <span style={{ color: '#b45309', minWidth: 70, textAlign: 'left', background: 'none', fontWeight: 700, display: 'inline-block' }}>0.00</span>
-                  );
-                  const todayValue = parseFloat(todayGoldPrice) * totalGrams;
-                  const color = todayValue > totalPrice ? '#059669' : '#dc2626';
-                  return (
-                    <span style={{ color, minWidth: 70, textAlign: 'left', background: 'none', fontWeight: 700, display: 'inline-block' }}>{todayValue.toFixed(2)}</span>
-                  );
-                })()}
-              </div>
+          <div style={{ width: '100%', fontSize: '1rem', marginTop: 8 }}>
+            {(() => {
+              const categoryTotals = [24, 22, 18].map(k => {
+                const entriesForKarat = entries.filter(e => Number(e.karat) === k);
+                const totalGrams = entriesForKarat.reduce((sum, e) => sum + (parseFloat(e.grams) || 0), 0);
+                const totalPrice = entriesForKarat.reduce((sum, e) => sum + (parseFloat(e.price) || 0), 0);
+                const avgPrice = totalGrams ? totalPrice / totalGrams : 0;
+                const todayRate = todayGoldPrice ? parseFloat(todayGoldPrice[`price${k}k`] || 1) : 1;
+                const todayValue = totalGrams * todayRate;
+                return { karat: k, totalGrams, totalPrice, avgPrice, todayValue };
+              });
+              const overallInvested = categoryTotals.reduce((sum, c) => sum + c.totalPrice, 0);
+              const overallTodayValue = categoryTotals.reduce((sum, c) => sum + c.todayValue, 0);
+              return (
+                <div style={{ display: 'grid', gap: 10 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.2fr', gap: 10, alignItems: 'center' }}>
+                    <div style={{ fontWeight: 700 }}>Karat</div>
+                    <div style={{ fontWeight: 700 }}>Total Grams</div>
+                    <div style={{ fontWeight: 700 }}>Avg Price</div>
+                    <div style={{ fontWeight: 700 }}>Today Value</div>
+                    {categoryTotals.map(cat => (
+                      <>
+                        <div key={`label-${cat.karat}`} style={{ fontWeight: 600, padding: '0.55rem 0', borderTop: '1px solid #e2e8f0' }}>{cat.karat}K</div>
+                        <div key={`grams-${cat.karat}`} style={{ padding: '0.55rem 0', borderTop: '1px solid #e2e8f0' }}>{cat.totalGrams.toFixed(2)}</div>
+                        <div key={`avg-${cat.karat}`} style={{ padding: '0.55rem 0', borderTop: '1px solid #e2e8f0' }}>{cat.avgPrice.toFixed(2)}</div>
+                        <div key={`today-${cat.karat}`} style={{ padding: '0.55rem 0', borderTop: '1px solid #e2e8f0' }}>{cat.todayValue.toFixed(2)}</div>
+                      </>
+                    ))}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0.75rem', borderRadius: 10, background: '#fef3c7', fontWeight: 700 }}>
+                    <div>Total Invested: {overallInvested.toFixed(2)}</div>
+                    <div>Total Today Value: {overallTodayValue.toFixed(2)}</div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      </div>
+      {/* Modal for Gold Price */}
+      {showGoldPriceModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', borderRadius: 10, boxShadow: '0 2px 16px #fbbf24', padding: '2rem', minWidth: 320, display: 'flex', flexDirection: 'column', gap: '1.2rem', position: 'relative' }}>
+            <h2 style={{ color: '#b45309', margin: 0, textAlign: 'center' }}>Enter Today's Gold Price</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <input
+              type="number"
+              value={goldPriceInput.price24k}
+              onChange={e => setGoldPriceInput({ ...goldPriceInput, price24k: e.target.value })}
+              placeholder="24K price"
+              style={{ padding: '0.5rem', borderRadius: 6, border: '1.5px solid #cbd5e1', fontSize: '1.1rem' }}
+            />
+            <input
+              type="number"
+              value={goldPriceInput.price22k}
+              onChange={e => setGoldPriceInput({ ...goldPriceInput, price22k: e.target.value })}
+              placeholder="22K price"
+              style={{ padding: '0.5rem', borderRadius: 6, border: '1.5px solid #cbd5e1', fontSize: '1.1rem' }}
+            />
+            <input
+              type="number"
+              value={goldPriceInput.price18k}
+              onChange={e => setGoldPriceInput({ ...goldPriceInput, price18k: e.target.value })}
+              placeholder="18K price"
+              style={{ padding: '0.5rem', borderRadius: 6, border: '1.5px solid #cbd5e1', fontSize: '1.1rem' }}
+            />
+          </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '1.2rem', marginTop: 10 }}>
+              <button onClick={handleGoldPriceSave} style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}>Save</button>
+              <button onClick={() => { setShowGoldPriceModal(false); setGoldPriceInput({ price24k: '', price22k: '', price18k: '' }); }} style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}>Cancel</button>
             </div>
           </div>
         </div>
+      )}
+      </div>
+      <div style={{ marginBottom: '1.2rem' }}>
+        <h1 className="colorful-title" style={{ fontSize: '2.1rem', marginTop: '0.5rem', marginBottom: '0.75rem', textAlign: 'left', fontWeight: 800 }}>Gold Details</h1>
       </div>
       {/* Modal for Add/Edit */}
       {showModal && (
@@ -213,12 +245,19 @@ function GoldData() {
             <label style={{ display: 'flex', flexDirection: 'column', fontWeight: 600 }}>Price
               <input type="number" name="price" value={form.price} onChange={handleChange} style={{ padding: '0.4rem', borderRadius: 6, border: '1.5px solid #cbd5e1', marginTop: 4 }} />
             </label>
+            <label style={{ display: 'flex', flexDirection: 'column', fontWeight: 600 }}>Karat
+              <select name="karat" value={form.karat} onChange={handleChange} style={{ padding: '0.4rem', borderRadius: 6, border: '1.5px solid #cbd5e1', marginTop: 4 }}>
+                <option value={24}>24</option>
+                <option value={22}>22</option>
+                <option value={18}>18</option>
+              </select>
+            </label>
             <label style={{ display: 'flex', flexDirection: 'column', fontWeight: 600 }}>Comments
               <input type="text" name="comments" value={form.comments} onChange={handleChange} style={{ padding: '0.4rem', borderRadius: 6, border: '1.5px solid #cbd5e1', marginTop: 4 }} />
             </label>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '1.2rem', marginTop: 10 }}>
               <button onClick={handleSave} style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}>Save</button>
-              <button onClick={() => { setShowModal(false); setEditRow(null); setForm({ purchaseDate: '', grams: '', price: '', comments: '' }); }} style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => { setShowModal(false); setEditRow(null); setForm({ purchaseDate: '', grams: '', price: '', karat: 24, comments: '' }); }} style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}>Cancel</button>
             </div>
           </div>
         </div>
@@ -229,16 +268,17 @@ function GoldData() {
             <th>Purchase Date</th>
             <th>Grams</th>
             <th>Price</th>
+            <th>Karat</th>
             <th>Comments</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {loading ? (
-            <tr><td colSpan={5}>Loading...</td></tr>
+            <tr><td colSpan={6}>Loading...</td></tr>
           ) : entries.length === 0 ? (
             <tr>
-              <td colSpan={5} style={{ textAlign: 'center' }}>
+              <td colSpan={6} style={{ textAlign: 'center' }}>
                 No entries found.
               </td>
             </tr>
@@ -252,6 +292,7 @@ function GoldData() {
                     <td>{entry.purchaseDate ? formatDate(entry.purchaseDate) : ''}</td>
                     <td>{entry.grams}</td>
                     <td>{entry.price}</td>
+                    <td>{entry.karat || 24}</td>
                     <td>{entry.comments}</td>
                     <td>
                       {deleteIdx === globalIdx ? (
@@ -292,7 +333,7 @@ function GoldData() {
           )}
       {/* Pagination Controls - Centered below table */}
       <tr>
-        <td colSpan={5} style={{ paddingTop: 18 }}>
+        <td colSpan={6} style={{ paddingTop: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16 }}>
             <button
               onClick={() => setPage(page - 1)}
