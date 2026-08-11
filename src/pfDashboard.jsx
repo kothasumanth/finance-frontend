@@ -236,6 +236,29 @@ function PfDashboard() {
             <button className="pf-dashboard-btn" style={{ minWidth: 140, marginLeft: '2rem', background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(16,185,129,0.08)' }} onClick={handleOpenPopup}>Setup Interest</button>
             <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(245,158,66,0.08)' }} onClick={handleSetupPFClick}>Setup PF</button>
             <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(239,68,68,0.08)' }} onClick={handleDeletePF} disabled={deletePFLoading}>{deletePFLoading ? 'Deleting...' : 'Delete PF'}</button>
+            <button className="pf-dashboard-btn" style={{ minWidth: 180, background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem' }} onClick={async () => {
+              if (!window.confirm('Recalculate all PF entries for all users?')) return;
+              try {
+                const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+                const pfTypes = await pfTypesRes.json();
+                const pfType = pfTypes.find(t => t.name === 'PF');
+                if (!pfType) { alert('PF type not found'); return; }
+                const res = await fetch('http://localhost:3000/pfentry/recalculate-all', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ pfTypeId: pfType._id })
+                });
+                if (res.ok) {
+                  alert('Recalculation complete for PF entries!');
+                  window.location.reload();
+                } else {
+                  const err = await res.json();
+                  alert(err.error || 'Error recalculating PF entries');
+                }
+              } catch (err) {
+                alert('Error recalculating PF entries');
+              }
+            }}>Recalculate All PF Entries</button>
           </div>
         </div>
         {showPopup && (

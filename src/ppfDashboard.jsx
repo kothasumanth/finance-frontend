@@ -366,19 +366,31 @@ function PfDashboard() {
         )}
         {/* Move Recalculate All PF Entries button up, remove 'coming soon' text */}
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', marginBottom: '1.5rem' }}>
-          <button
+            <button
             style={{ background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}
             onClick={async () => {
-              if (!window.confirm('Recalculate all PF entries for all users and PF types?')) return;
-              const res = await fetch('http://localhost:3000/pfentry/recalculate-all', { method: 'POST' });
-              if (res.ok) {
-                alert('Recalculation complete!');
-              } else {
-                const err = await res.json();
-                alert(err.error || 'Error recalculating PF entries');
+              if (!window.confirm('Recalculate all PPF entries for all users?')) return;
+              try {
+                const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+                const pfTypes = await pfTypesRes.json();
+                const ppfType = pfTypes.find(t => t.name === 'PPF');
+                if (!ppfType) { alert('PPF type not found'); return; }
+                const res = await fetch('http://localhost:3000/pfentry/recalculate-all', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ pfTypeId: ppfType._id })
+                });
+                if (res.ok) {
+                  alert('Recalculation complete for PPF entries!');
+                } else {
+                  const err = await res.json();
+                  alert(err.error || 'Error recalculating PPF entries');
+                }
+              } catch (err) {
+                alert('Error recalculating PPF entries');
               }
             }}
-          >Recalculate All PF Entries</button>
+          >Recalculate All PPF Entries</button>
         </div>
         {/* PPF Yearwise Summary Table */}
         <div style={{ width: '100%', marginTop: 24, marginBottom: 8 }}>

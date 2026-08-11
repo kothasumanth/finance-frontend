@@ -58,6 +58,12 @@ function PfDetails() {
   const [editId, setEditId] = useState(null);
   const [editForm, setEditForm] = useState({ date: '', amountDeposited: '' });
 
+  const formatAmount = (v) => {
+    const num = v === undefined || v === null ? 0 : Number(v);
+    if (Number.isNaN(num)) return '0.00';
+    return num.toFixed(2);
+  };
+
   useEffect(() => {
     async function fetchEntries() {
       setLoading(true);
@@ -230,6 +236,7 @@ function PfDetails() {
               Next Year
             </button>
           </div>
+          
           <table className="user-table colorful-table ppf-table" style={{ tableLayout: 'fixed', width: '100%', minWidth: 700 }}>
             <colgroup>
               <col style={{ width: '110px' }} /> {/* Date */}
@@ -258,8 +265,8 @@ function PfDetails() {
                     <>
                       <td><input type="date" name="date" value={editForm.date} onChange={handleEditChange} /></td>
                       <td><input type="number" name="amountDeposited" value={editForm.amountDeposited} onChange={handleEditChange} /></td>
-                      <td>{entry.lowestBalance ?? 0}</td>
-                      <td>{entry.balance ?? 0}</td>
+                      <td>{formatAmount(entry.lowestBalance)}</td>
+                      <td>{formatAmount(entry.balance)}</td>
                       <td>{(() => {
                         const roi = entry.roi || 0;
                         const amount = parseFloat(editForm.amountDeposited) || 0;
@@ -280,8 +287,8 @@ function PfDetails() {
                     <>
                       <td>{entry.date ? formatDateDDMMMYY(entry.date) : ''}</td>
                       <td>{entry.amountDeposited ?? 0}</td>
-                      <td>{entry.lowestBalance ?? 0}</td>
-                      <td>{entry.balance ?? 0}</td>
+                      <td>{formatAmount(entry.lowestBalance)}</td>
+                      <td>{formatAmount(entry.balance)}</td>
                       <td>{entry.monthInterest}</td>
                       <td>{entry.roi !== undefined ? entry.roi : ''}</td>
                       <td><button onClick={() => handleEdit(entry)}>Edit</button></td>
