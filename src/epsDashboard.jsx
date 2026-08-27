@@ -12,6 +12,14 @@ function EpsDashboard() {
   const [showSetupEpsPopup, setShowSetupEpsPopup] = useState(false);
   const [setupEpsStartDate, setSetupEpsStartDate] = useState('');
 
+  // ROI Setup state (like PF page)
+  const [showInterestPopup, setShowInterestPopup] = useState(false);
+  const [interestRows, setInterestRows] = useState([]);
+  const [interestLoading, setInterestLoading] = useState(true);
+  const [interestEditRow, setInterestEditRow] = useState(null);
+  const [interestForm, setInterestForm] = useState({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' });
+  const [pfTypes, setPfTypes] = useState([]);
+
   // Add state for yearwise summary
   const [epsYearwise, setEpsYearwise] = useState([]);
   const [epsYearwiseLoading, setEpsYearwiseLoading] = useState(true);
@@ -152,6 +160,84 @@ function EpsDashboard() {
     }
   }
 
+  useEffect(() => {
+    if (showInterestPopup) {
+      setInterestLoading(true);
+      Promise.all([
+        fetch('http://localhost:3000/pf-interest').then(res => res.json()),
+        fetch('http://localhost:3000/pf-types').then(res => res.json())
+      ]).then(([interestData, pfTypesData]) => {
+        setPfTypes(pfTypesData);
+        const epsType = pfTypesData.find(t => t.name === 'EPS');
+        const filtered = epsType ? interestData.filter(row => row.pfType === epsType._id) : [];
+        setInterestRows(filtered);
+        setInterestLoading(false);
+      }).catch(() => setInterestLoading(false));
+    }
+  }, [showInterestPopup]);
+
+  const handleOpenInterestPopup = () => {
+    setShowInterestPopup(true);
+    setInterestEditRow(null);
+    setInterestForm({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' });
+  };
+
+  const handleCloseInterestPopup = () => {
+    setShowInterestPopup(false);
+    setInterestEditRow(null);
+    setInterestForm({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' });
+  };
+
+  const handleInterestEdit = (idx) => {
+    setInterestEditRow(idx);
+    setInterestForm({
+      startDate: interestRows[idx]?.startDate?.slice(0,10) || '',
+      endDate: interestRows[idx]?.endDate?.slice(0,10) || '',
+      rateOfInterest: interestRows[idx]?.rateOfInterest?.toString() || '',
+      pfType: interestRows[idx]?.pfType || ''
+    });
+  };
+
+  const handleInterestDelete = (idx) => {
+    if (!window.confirm('Delete this record?')) return;
+    fetch(`http://localhost:3000/pf-interest/${interestRows[idx]._id}`, { method: 'DELETE' })
+      .then(() => setInterestRows(rows => rows.filter((_, i) => i !== idx)));
+  };
+
+  const handleInterestInputChange = (e) => {
+    setInterestForm({ ...interestForm, [e.target.name]: e.target.value });
+  };
+
+  const handleInterestSave = () => {
+    // Validation: startDate must be next day of previous endDate for new rows
+    if (interestRows.length > 0 && interestEditRow === interestRows.length) {
+      const prevEnd = new Date(interestRows[interestRows.length - 1].endDate);
+      const newStart = new Date(interestForm.startDate);
+      prevEnd.setDate(prevEnd.getDate() + 1);
+      if (prevEnd.toISOString().slice(0,10) !== interestForm.startDate) {
+        alert('Start date must be next day of previous end date.');
+        return;
+      }
+    }
+    const method = interestEditRow != null && interestEditRow < interestRows.length ? 'PUT' : 'POST';
+    const url = method === 'POST' ? 'http://localhost:3000/pf-interest' : `http://localhost:3000/pf-interest/${interestRows[interestEditRow]._id}`;
+    fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        startDate: interestForm.startDate,
+        endDate: interestForm.endDate,
+        rateOfInterest: parseFloat(interestForm.rateOfInterest),
+        pfType: interestForm.pfType || (pfTypes.find(pt => pt.name === 'EPS')?._id || '')
+      })
+    }).then(res => res.json()).then(data => {
+      if (method === 'POST') setInterestRows(rows => [...rows, data]);
+      else setInterestRows(rows => rows.map((r,i) => i===interestEditRow?data:r));
+      setInterestEditRow(null);
+      setInterestForm({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' });
+    });
+  };
+
   async function handleSetupEpsSave() {
     setActionLoading(true);
     try {
@@ -200,6 +286,13 @@ function EpsDashboard() {
             EPS Details
           </button>
           <button
+            style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}
+            onClick={handleOpenInterestPopup}
+            disabled={loading || actionLoading}
+          >
+            Setup Interest
+          </button>
+          <button
             style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}
             onClick={() => { setShowSetupEpsPopup(true); setSetupEpsStartDate(''); }}
             disabled={loading || actionLoading}
@@ -212,6 +305,39 @@ function EpsDashboard() {
             disabled={loading || actionLoading}
           >
             {actionLoading ? 'Deleting...' : 'Delete EPS'}
+          </button>
+          <button
+            style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}
+            onClick={async () => {
+              if (!window.confirm('Recalculate all EPS entries for all users?')) return;
+              setActionLoading(true);
+              try {
+                const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+                const pfTypes = await pfTypesRes.json();
+                const epsType = pfTypes.find(t => t.name === 'EPS');
+                if (!epsType) { alert('EPS type not found'); setActionLoading(false); return; }
+                const res = await fetch('http://localhost:3000/pfentry/recalculate-all', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ pfTypeId: epsType._id })
+                });
+                if (res.ok) {
+                  alert('Recalculation complete for EPS entries!');
+                  await fetchEpsEntries();
+                  await fetchEpsYearwise();
+                } else {
+                  const err = await res.json();
+                  alert(err.error || 'Error recalculating EPS entries');
+                }
+              } catch (err) {
+                alert('Error recalculating EPS entries');
+              } finally {
+                setActionLoading(false);
+              }
+            }}
+            disabled={loading || actionLoading}
+          >
+            Recalculate All EPS Entries
           </button>
         </div>
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.2rem' }}>
@@ -288,6 +414,67 @@ function EpsDashboard() {
       </div>
 
       {/* Setup EPS Popup */}
+      {showInterestPopup && (
+        <div className="popup-bg" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.2)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="popup" style={{ background: '#fff', borderRadius: 8, padding: 24, minWidth: 420, boxShadow: '0 2px 16px rgba(0,0,0,0.12)' }}>
+            <h2 style={{ marginTop: 0 }}>ROI Setup (EPS)</h2>
+            {interestLoading ? <div>Loading...</div> : (
+              <>
+                <table style={{ width: '100%', marginBottom: 16 }}>
+                  <thead>
+                    <tr>
+                      <th>Start Date</th>
+                      <th>End Date</th>
+                      <th>ROI</th>
+                      <th>PF Type</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {interestRows.map((row, idx) => (
+                      <tr key={row._id}>
+                        <td>{idx === interestEditRow ? <input type="date" name="startDate" value={interestForm.startDate} onChange={handleInterestInputChange} /> : row.startDate?.slice(0,10)}</td>
+                        <td>{idx === interestEditRow ? <input type="date" name="endDate" value={interestForm.endDate} onChange={handleInterestInputChange} /> : row.endDate?.slice(0,10)}</td>
+                        <td>{idx === interestEditRow ? <input type="number" step="0.01" name="rateOfInterest" value={interestForm.rateOfInterest} onChange={handleInterestInputChange} /> : row.rateOfInterest}</td>
+                        <td>{idx === interestEditRow ? <select name="pfType" value={interestForm.pfType} onChange={handleInterestInputChange}><option value="">Select PF Type</option>{pfTypes.map(pt => <option key={pt._id} value={pt._id}>{pt.name}</option>)}</select> : pfTypes.find(pt => pt._id === row.pfType)?.name || '-'}</td>
+                        <td>
+                          {idx === interestEditRow ? (
+                            <>
+                              <button onClick={handleInterestSave} style={{ marginRight: 8 }}>Save</button>
+                              <button onClick={() => { setInterestEditRow(null); setInterestForm({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' }); }}>Cancel</button>
+                            </>
+                          ) : idx === interestRows.length - 1 && (
+                            <>
+                              <button onClick={() => handleInterestEdit(idx)} style={{ marginRight: 8 }}>Edit</button>
+                              <button onClick={() => handleInterestDelete(idx)} style={{ marginRight: 8 }}>Delete</button>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {(interestEditRow === interestRows.length || interestRows.length === 0) && (
+                      <tr>
+                        <td><input type="date" name="startDate" value={interestForm.startDate} onChange={handleInterestInputChange} /></td>
+                        <td><input type="date" name="endDate" value={interestForm.endDate} onChange={handleInterestInputChange} /></td>
+                        <td><input type="number" step="0.01" name="rateOfInterest" value={interestForm.rateOfInterest} onChange={handleInterestInputChange} /></td>
+                        <td><select name="pfType" value={interestForm.pfType} onChange={handleInterestInputChange}><option value="">Select PF Type</option>{pfTypes.map(pt => <option key={pt._id} value={pt._id}>{pt.name}</option>)}</select></td>
+                        <td>
+                          <button onClick={handleInterestSave} style={{ marginRight: 8 }}>Save</button>
+                          <button onClick={handleCloseInterestPopup}>Cancel</button>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                {interestEditRow === null && (
+                  <button onClick={() => { setInterestEditRow(interestRows.length); setInterestForm({ startDate: '', endDate: '', rateOfInterest: '', pfType: '' }); }} style={{ fontSize: 14, padding: '2px 10px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: 4, marginBottom: 8 }}>Add</button>
+                )}
+              </>
+            )}
+            <button onClick={handleCloseInterestPopup} style={{ float: 'right', marginTop: 8 }}>Close</button>
+          </div>
+        </div>
+      )}
       {showSetupEpsPopup && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#fff', borderRadius: 10, padding: 32, minWidth: 340, boxShadow: '0 4px 24px rgba(0,0,0,0.13)' }}>

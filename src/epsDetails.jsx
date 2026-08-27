@@ -131,45 +131,57 @@ function EpsDetails() {
   };
 
   const handleEditSave = async (entry) => {
-    const roi = entry.roi || 0;
-    const amount = parseFloat(editForm.amountDeposited) || 0;
-    let monthInterest = 0;
-    const day = editForm.date ? Number(editForm.date.split('-')[2]) : 1;
-    if (day <= 5) {
-      monthInterest = parseFloat((amount * (1/12) * (parseFloat(roi)/100)).toFixed(2));
-    }
-    const res = await fetch(`http://localhost:3000/pfentry/${entry._id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        date: editForm.date,
-        amountDeposited: amount,
-        monthInterest
-      })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success && data.updatedEntries) {
-        let updated = data.updatedEntries;
-        const ids = [...new Set(updated.map(e => e.pfInterestId).filter(Boolean))];
-        let roiMap = {};
-        if (ids.length > 0) {
-          const roiRes = await fetch('http://localhost:3000/pf-interest');
-          const roiData = await roiRes.json();
-          ids.forEach(id => {
-            const found = roiData.find(r => r._id === id);
-            if (found) roiMap[id] = found.rateOfInterest;
-          });
-        }
-        updated = updated.map(e => ({ ...e, roi: roiMap[e.pfInterestId] ?? '' }));
-        setEntries(updated);
-        const fyGroups = groupEntriesByFinancialYear(updated);
-        setGroups(fyGroups);
+    try {
+      const roi = entry.roi || 0;
+      const amount = parseFloat(editForm.amountDeposited) || 0;
+      let monthInterest = 0;
+      const day = editForm.date ? Number(editForm.date.split('-')[2]) : 1;
+      if (day <= 5) {
+        monthInterest = parseFloat((amount * (1/12) * (parseFloat(roi)/100)).toFixed(2));
       }
-      setEditId(null);
-      setEditForm({ date: '', amountDeposited: '' });
-    } else {
-      alert('Error saving changes');
+      const res = await fetch(`http://localhost:3000/pfentry/${entry._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: editForm.date,
+          amountDeposited: amount,
+          monthInterest
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.updatedEntries) {
+          let updated = data.updatedEntries;
+          const ids = [...new Set(updated.map(e => e.pfInterestId).filter(Boolean))];
+          let roiMap = {};
+          if (ids.length > 0) {
+            const roiRes = await fetch('http://localhost:3000/pf-interest');
+            const roiData = await roiRes.json();
+            ids.forEach(id => {
+              const found = roiData.find(r => r._id === id);
+              if (found) roiMap[id] = found.rateOfInterest;
+            });
+          }
+          updated = updated.map(e => ({ ...e, roi: roiMap[e.pfInterestId] ?? '' }));
+          setEntries(updated);
+          const fyGroups = groupEntriesByFinancialYear(updated);
+          setGroups(fyGroups);
+        }
+        setEditId(null);
+        setEditForm({ date: '', amountDeposited: '' });
+      } else {
+        let errBody = null;
+        try {
+          errBody = await res.json();
+        } catch (e) {
+          errBody = { error: res.statusText || 'Server error' };
+        }
+        console.error('Save failed', res.status, errBody);
+        alert('Error saving changes: ' + (errBody.error || JSON.stringify(errBody)));
+      }
+    } catch (err) {
+      console.error('Error in handleEditSave', err);
+      alert('Error saving changes: ' + (err.message || err));
     }
   };
 
