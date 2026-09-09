@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import * as XLSX from 'xlsx'
 import IconButton from './IconButton'
 import UserHeader from './components/UserHeader'
 
@@ -183,6 +184,38 @@ function ViewMutualFundData() {
     return `${day}-${month}-${year}`;
   }
 
+  const handleDownload = () => {
+    if (!selectedFund || selectedFund === 'ALL' || entries.length === 0) return
+
+    const selectedFundName = fundOptions.find(fund => fund._id === selectedFund)?.MutualFundName || 'mutual-fund'
+    const latestNav = Number(mfApiData?.nav)
+    const hasLatestNav = mfApiData?.nav !== undefined && mfApiData?.nav !== '' && Number.isFinite(latestNav)
+    const exportRows = entries
+      .slice()
+      .sort((a, b) => a.purchaseDate.localeCompare(b.purchaseDate))
+      .map(entry => {
+        const hasValue = entry.investType === 'Invest' && entry.balanceUnit !== undefined && entry.balanceUnit !== '' && hasLatestNav
+        const todayValue = hasValue ? Number(entry.balanceUnit) * latestNav : null
+        const profitLoss = hasValue ? todayValue - (parseFloat(entry.amount) || 0) : null
+
+        return {
+          'Purchase Date': formatDateDMY(entry.purchaseDate),
+          'Invest Type': entry.investType || '',
+          'Mutual Fund': entry.fundName?.MutualFundName || selectedFundName,
+          NAV: entry.nav !== undefined && entry.nav !== '' ? Number(entry.nav) : '',
+          'Balance Unit': entry.balanceUnit !== undefined && entry.balanceUnit !== '' ? Number(entry.balanceUnit) : '',
+          Amount: entry.amount ?? '',
+          'Today Value': todayValue ?? '',
+          'P/L': profitLoss ?? ''
+        }
+      })
+
+    const worksheet = XLSX.utils.json_to_sheet(exportRows)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Mutual Fund Data')
+    XLSX.writeFile(workbook, `${selectedFundName.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'mutual-fund'}-data.xlsx`)
+  }
+
   return (
     <div className="container colorful-bg" style={{ paddingTop: '1.2rem', maxWidth: 1250, margin: '0 auto' }}>
       <UserHeader userId={userId} />
@@ -322,6 +355,25 @@ function ViewMutualFundData() {
       </select>
           {/* Remove Date/NAV from here, keep only in label above */}
         </label>
+        <button
+          onClick={handleDownload}
+          disabled={!selectedFund || selectedFund === 'ALL' || entries.length === 0}
+          title={selectedFund === 'ALL' ? 'Select one mutual fund to download its data' : 'Download mutual fund data as XLSX'}
+          style={{
+            marginLeft: '1rem',
+            background: '#0f766e',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 6,
+            padding: '0.5rem 1.2rem',
+            fontWeight: 600,
+            fontSize: '1rem',
+            cursor: selectedFund && selectedFund !== 'ALL' && entries.length > 0 ? 'pointer' : 'not-allowed',
+            opacity: selectedFund && selectedFund !== 'ALL' && entries.length > 0 ? 1 : 0.55
+          }}
+        >
+          Download XLSX
+        </button>
       </div>      
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
