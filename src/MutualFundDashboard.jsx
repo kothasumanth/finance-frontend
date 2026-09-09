@@ -94,6 +94,9 @@ function MutualFundDashboard() {
             <button style={{background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'}} onClick={() => setShowSIPPopup(true)}>
               SIP Info
             </button>
+            <button style={{background: '#0f766e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(15,118,110,0.08)'}} onClick={() => navigate(`/user/${userId}/compare-mf`)}>
+              Compare
+            </button>
           </div>
         </div>
         {/* Overall summary section, right-aligned */}
