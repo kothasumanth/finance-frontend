@@ -1,3 +1,38 @@
+.compare-results-layout {
+  display: grid;
+  grid-template-columns: minmax(230px, 280px) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.compare-summary {
+  position: sticky;
+  top: 1rem;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.compare-table-panel {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+@media (max-width: 800px) {
+  .compare-results-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .compare-summary {
+    position: static;
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .compare-table-panel {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
 html, body, #root {
   height: 100%;
   min-height: 100vh;

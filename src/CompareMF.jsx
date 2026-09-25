@@ -8,6 +8,8 @@ function CompareMF() {
   const [allMetadata, setAllMetadata] = useState([])
   const [selectedPortfolioFund, setSelectedPortfolioFund] = useState('')
   const [selectedComparisonFund, setSelectedComparisonFund] = useState('')
+  const [comparisonFundSearch, setComparisonFundSearch] = useState('')
+  const [showComparisonSuggestions, setShowComparisonSuggestions] = useState(false)
   const [portfolioInvestments, setPortfolioInvestments] = useState([])
   const [comparisonResults, setComparisonResults] = useState([])
   const [loading, setLoading] = useState(false)
@@ -61,6 +63,10 @@ function CompareMF() {
     setSelectedPortfolioFund(fundId)
     setPortfolioInvestments([])
     setComparisonResults([])
+    setComparisonFundSearch('')
+    setSelectedComparisonFund('')
+    setComparisonFundData(null)
+    setShowComparisonSuggestions(false)
     setError(null)
 
     if (!fundId) return
@@ -177,6 +183,25 @@ function CompareMF() {
     }
   }
 
+  const handleComparisonFundSearch = (value) => {
+    setComparisonFundSearch(value)
+    const matchingFund = allMetadata.find(fund =>
+      fund.MutualFundName.toLowerCase() === value.trim().toLowerCase()
+    )
+
+    if (matchingFund) {
+      handleComparisonFundChange(matchingFund._id)
+    } else {
+      setSelectedComparisonFund('')
+      setComparisonResults([])
+      setComparisonFundData(null)
+    }
+  }
+
+  const filteredComparisonFunds = allMetadata
+    .filter(fund => fund.MutualFundName.toLowerCase().includes(comparisonFundSearch.trim().toLowerCase()))
+    .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
+
   const formatDate = (dateStr) => {
     if (!dateStr) return ''
     const d = new Date(dateStr)
@@ -233,33 +258,78 @@ function CompareMF() {
         {/* Comparison Fund Selection */}
         <div style={{ padding: '1.5rem', background: '#fef2f2', borderRadius: 8, border: '1px solid #fecaca' }}>
           <h3 style={{ color: '#dc2626', marginBottom: '1rem', fontWeight: 600 }}>Compare With</h3>
-          <select
-            value={selectedComparisonFund}
-            onChange={(e) => handleComparisonFundChange(e.target.value)}
-            disabled={!selectedPortfolioFund || portfolioInvestments.length === 0}
-            style={{
-              width: '100%',
-              fontWeight: 600,
-              color: '#2563eb',
-              fontSize: '1rem',
-              border: '1.5px solid #059669',
-              borderRadius: 6,
-              padding: '0.5rem 1rem',
-              fontFamily: 'monospace',
-              background: '#fff',
-              outline: 'none',
-              opacity: !selectedPortfolioFund || portfolioInvestments.length === 0 ? 0.5 : 1,
-              cursor: !selectedPortfolioFund || portfolioInvestments.length === 0 ? 'not-allowed' : 'pointer'
-            }}
-          >
-            <option value="">Select a fund to compare</option>
-            {allMetadata
-              .slice()
-              .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
-              .map(fund => (
-                <option key={fund._id} value={fund._id}>{fund.MutualFundName}</option>
-              ))}
-          </select>
+          <div style={{ position: 'relative' }}>
+            <input
+              value={comparisonFundSearch}
+              onChange={(e) => handleComparisonFundSearch(e.target.value)}
+              onFocus={() => setShowComparisonSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowComparisonSuggestions(false), 150)}
+              disabled={!selectedPortfolioFund || portfolioInvestments.length === 0}
+              placeholder="Type to search funds"
+              aria-label="Compare with fund"
+              style={{
+                width: '100%',
+                boxSizing: 'border-box',
+                fontWeight: 600,
+                color: '#2563eb',
+                fontSize: '1rem',
+                border: '1.5px solid #059669',
+                borderRadius: 6,
+                padding: '0.5rem 1rem',
+                fontFamily: 'monospace',
+                background: '#fff',
+                outline: 'none',
+                opacity: !selectedPortfolioFund || portfolioInvestments.length === 0 ? 0.5 : 1,
+                cursor: !selectedPortfolioFund || portfolioInvestments.length === 0 ? 'not-allowed' : 'text'
+              }}
+            />
+            {showComparisonSuggestions && selectedPortfolioFund && portfolioInvestments.length > 0 && (
+              <div style={{
+                position: 'absolute',
+                top: 'calc(100% + 4px)',
+                left: 0,
+                right: 0,
+                maxHeight: 220,
+                overflowY: 'auto',
+                background: '#fff',
+                border: '1px solid #cbd5e1',
+                borderRadius: 6,
+                boxShadow: '0 6px 16px rgba(15, 23, 42, 0.14)',
+                zIndex: 10
+              }}>
+                {filteredComparisonFunds.slice(0, 8).map(fund => (
+                  <button
+                    key={fund._id}
+                    type="button"
+                    onMouseDown={() => {
+                      setComparisonFundSearch(fund.MutualFundName)
+                      setShowComparisonSuggestions(false)
+                      handleComparisonFundChange(fund._id)
+                    }}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      padding: '0.6rem 0.75rem',
+                      border: 'none',
+                      borderBottom: '1px solid #f1f5f9',
+                      background: '#fff',
+                      color: '#1e293b',
+                      textAlign: 'left',
+                      fontSize: '0.9rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {fund.MutualFundName}
+                  </button>
+                ))}
+                {filteredComparisonFunds.length === 0 && (
+                  <div style={{ padding: '0.7rem 0.75rem', color: '#64748b', fontSize: '0.9rem' }}>
+                    No matching funds
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -267,61 +337,11 @@ function CompareMF() {
 
       {/* Side-by-side Comparison Table */}
       {selectedPortfolioFund && portfolioInvestments.length > 0 && (
-        <div style={{ marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.15rem', color: '#059669', marginBottom: '1rem', fontWeight: 600 }}>
-            {portfolioFunds.find(f => f._id === selectedPortfolioFund)?.MutualFundName}
-            {selectedComparisonFund && ` vs ${allMetadata.find(m => m._id === selectedComparisonFund)?.MutualFundName}`}
-          </h2>
-          <table className="user-table colorful-table" style={{ width: '100%' }}>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Amount Invested</th>
-                <th style={{ background: '#d1fae5', color: '#065f46' }}>
-                  {portfolioFunds.find(f => f._id === selectedPortfolioFund)?.MutualFundName} - Today Value
-                </th>
-                {selectedComparisonFund && (
-                  <>
-                    <th style={{ background: '#fee2e2', color: '#991b1b' }}>
-                      {allMetadata.find(m => m._id === selectedComparisonFund)?.MutualFundName} - Today Value
-                    </th>
-                    <th>Difference</th>
-                  </>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {(selectedComparisonFund && comparisonResults.length > 0 ? comparisonResults : portfolioInvestments).map((item, idx) => {
-                const investAmount = item.investAmount || parseFloat(item.amount)
-                const myFundTodayValue = parseFloat(item.portfolioTodayValue) || (portfolioFundData?.nav ? Number(item.balanceUnit) * parseFloat(portfolioFundData.nav) : 0)
-                const comparisonFundTodayValue = item.todayValue ? parseFloat(item.todayValue) : null
-                const difference = comparisonFundTodayValue !== null ? comparisonFundTodayValue - myFundTodayValue : null
-                const differenceColor = difference !== null ? (difference >= 0 ? '#059669' : '#dc2626') : null
-
-                return (
-                  <tr key={idx}>
-                    <td>{formatDate(item.date || item.purchaseDate)}</td>
-                    <td>₹{investAmount.toFixed(2)}</td>
-                    <td style={{ fontWeight: 600, color: '#059669' }}>₹{myFundTodayValue.toFixed(2)}</td>
-                    {selectedComparisonFund && (
-                      <>
-                        <td style={{ fontWeight: 600, color: '#dc2626' }}>₹{comparisonFundTodayValue !== null ? comparisonFundTodayValue : '-'}</td>
-                        <td style={{ fontWeight: 600, color: differenceColor || '#999' }}>
-                          {difference !== null ? `${difference >= 0 ? '+' : ''}₹${difference.toFixed(2)}` : '-'}
-                        </td>
-                      </>
-                    )}
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-
-          {/* Summary Comparison */}
+        <div className="compare-results-layout" style={{ marginBottom: '2rem' }}>
           {selectedComparisonFund && comparisonResults.length > 0 && (
-            <div style={{ marginTop: '2rem', padding: '1.5rem', background: '#f0fdf4', borderRadius: 8, border: '2px solid #86efac' }}>
+            <div className="compare-summary" style={{ padding: '1.5rem', background: '#f0fdf4', borderRadius: 8, border: '2px solid #86efac' }}>
               <h3 style={{ color: '#059669', marginBottom: '1rem', fontWeight: 600 }}>Total Comparison Summary</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ color: '#666', fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.5rem' }}>
                     {portfolioFunds.find(f => f._id === selectedPortfolioFund)?.MutualFundName} Total
@@ -337,7 +357,7 @@ function CompareMF() {
                   <div style={{ color: '#666', fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.5rem' }}>
                     {allMetadata.find(m => m._id === selectedComparisonFund)?.MutualFundName} Total
                   </div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#dc2626' }}>
+                  <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#2563eb' }}>
                     ₹{comparisonResults.reduce((sum, r) => sum + parseFloat(r.todayValue), 0).toFixed(2)}
                   </div>
                 </div>
@@ -364,6 +384,57 @@ function CompareMF() {
               </div>
             </div>
           )}
+
+          <div className="compare-table-panel">
+            <h2 style={{ fontSize: '1.15rem', color: '#059669', marginBottom: '1rem', fontWeight: 600 }}>
+              {portfolioFunds.find(f => f._id === selectedPortfolioFund)?.MutualFundName}
+              {selectedComparisonFund && ` vs ${allMetadata.find(m => m._id === selectedComparisonFund)?.MutualFundName}`}
+            </h2>
+            <table className="user-table colorful-table" style={{ width: '100%' }}>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Amount Invested</th>
+                <th style={{ background: '#d1fae5', color: '#065f46' }}>
+                  Fund 1 - Today Value
+                </th>
+                {selectedComparisonFund && (
+                  <>
+                    <th style={{ background: '#dbeafe', color: '#1e40af' }}>
+                      Fund 2 - Today Value
+                    </th>
+                    <th>Difference</th>
+                  </>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {(selectedComparisonFund && comparisonResults.length > 0 ? comparisonResults : portfolioInvestments).map((item, idx) => {
+                const investAmount = item.investAmount || parseFloat(item.amount)
+                const myFundTodayValue = parseFloat(item.portfolioTodayValue) || (portfolioFundData?.nav ? Number(item.balanceUnit) * parseFloat(portfolioFundData.nav) : 0)
+                const comparisonFundTodayValue = item.todayValue ? parseFloat(item.todayValue) : null
+                const difference = comparisonFundTodayValue !== null ? comparisonFundTodayValue - myFundTodayValue : null
+                const differenceColor = difference !== null ? (difference >= 0 ? '#059669' : '#dc2626') : null
+
+                return (
+                  <tr key={idx}>
+                    <td>{formatDate(item.date || item.purchaseDate)}</td>
+                    <td>₹{investAmount.toFixed(2)}</td>
+                    <td style={{ fontWeight: 600, color: '#059669' }}>₹{myFundTodayValue.toFixed(2)}</td>
+                    {selectedComparisonFund && (
+                      <>
+                        <td style={{ fontWeight: 600, color: '#2563eb' }}>₹{comparisonFundTodayValue !== null ? comparisonFundTodayValue : '-'}</td>
+                        <td style={{ fontWeight: 600, color: differenceColor || '#999' }}>
+                          {difference !== null ? `${difference >= 0 ? '+' : ''}₹${difference.toFixed(2)}` : '-'}
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                )
+              })}
+            </tbody>
+            </table>
+          </div>
         </div>
       )}
 
