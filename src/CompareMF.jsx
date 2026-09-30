@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import UserHeader from './components/UserHeader'
+import './styles/compare.css'
 
 function CompareMF() {
   const { userId } = useParams()
@@ -15,7 +16,6 @@ function CompareMF() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [portfolioFundData, setPortfolioFundData] = useState(null)
-  const [comparisonFundData, setComparisonFundData] = useState(null)
 
   // Fetch all user's MF entries and extract portfolio funds
   useEffect(() => {
@@ -65,7 +65,6 @@ function CompareMF() {
     setComparisonResults([])
     setComparisonFundSearch('')
     setSelectedComparisonFund('')
-    setComparisonFundData(null)
     setShowComparisonSuggestions(false)
     setError(null)
 
@@ -121,58 +120,74 @@ function CompareMF() {
       // Fetch NAV data for comparison fund
       const navRes = await fetch(`http://localhost:3000/mf-api?googleValue=${encodeURIComponent(comparisonMeta.GoogleValue)}`)
       const navData = await navRes.json()
-      setComparisonFundData(navData)
-
-      // For each portfolio investment, simulate what would happen with comparison fund
+      const historyRes = await fetch(`https://api.mfapi.in/mf/${comparisonMeta.GoogleValue}`)
+      if (!historyRes.ok) throw new Error('Failed to fetch comparison fund history')
+      const historyData = await historyRes.json()
+      const history = Array.isArray(historyData.data) ? historyData.data : []
+      const toDateNum = date => {
+        const match = /^(\d{2})-(\d{2})-(\d{4})$/.exec(date || '')
+        if (!match) return NaN
+        const [, day, month, year] = match
+        const timestamp = Date.UTC(Number(year), Number(month) - 1, Number(day))
+        const parsed = new Date(timestamp)
+        if (
+          parsed.getUTCFullYear() !== Number(year) ||
+          parsed.getUTCMonth() !== Number(month) - 1 ||
+          parsed.getUTCDate() !== Number(day)
+        ) return NaN
+        return timestamp
+      }
       const results = []
+      const currentNav = Number(navData.nav)
+
       for (const investment of portfolioInvestments) {
-        // Fetch historical NAV data for comparison fund
-        try {
-          const historyRes = await fetch(`https://api.mfapi.in/mf/${comparisonMeta.GoogleValue}`)
-          const historyData = await historyRes.json()
-          if (!historyData.data || !Array.isArray(historyData.data)) continue
+        const amount = Number(investment.amount)
+        const purchaseDate = /^(\d{4})-(\d{2})-(\d{2})$/.exec(investment.purchaseDate || '')
+        let purchaseTimestamp = NaN
+        if (purchaseDate) {
+          const [, year, month, day] = purchaseDate
+          purchaseTimestamp = Date.UTC(Number(year), Number(month) - 1, Number(day))
+          const parsedDate = new Date(purchaseTimestamp)
+          if (
+            parsedDate.getUTCFullYear() !== Number(year) ||
+            parsedDate.getUTCMonth() !== Number(month) - 1 ||
+            parsedDate.getUTCDate() !== Number(day)
+          ) purchaseTimestamp = NaN
+        }
 
-          // Convert investment date to DD-MM-YYYY format
-          const [yyyy, mm, dd] = investment.purchaseDate.split('-')
-          const investDateFormatted = `${dd}-${mm}-${yyyy}`
-
-          // Find NAV on or closest to investment date
-          let navOnDate = null
-          const navEntry = historyData.data.find(d => d.date === investDateFormatted)
-          if (navEntry) {
-            navOnDate = parseFloat(navEntry.nav)
-          } else {
-            // Find closest earlier date
-            const toDateNum = s => parseInt(s.split('-').reverse().join(''))
-            const investDateNum = toDateNum(investDateFormatted)
-            const earlierEntries = historyData.data.filter(d => toDateNum(d.date) < investDateNum)
-            if (earlierEntries.length > 0) {
-              const closestEarlier = earlierEntries.reduce((a, b) =>
-                toDateNum(a.date) > toDateNum(b.date) ? a : b
-              )
-              navOnDate = parseFloat(closestEarlier.nav)
+        let navOnDate = null
+        let closestEarlierTimestamp = -Infinity
+        if (Number.isFinite(purchaseTimestamp)) {
+          for (const entry of history) {
+            const navTimestamp = toDateNum(entry.date)
+            const entryNav = Number(entry.nav)
+            if (!Number.isFinite(navTimestamp) || !Number.isFinite(entryNav) || entryNav <= 0) continue
+            if (navTimestamp === purchaseTimestamp) {
+              navOnDate = entryNav
+              break
+            }
+            if (navTimestamp < purchaseTimestamp && navTimestamp > closestEarlierTimestamp) {
+              closestEarlierTimestamp = navTimestamp
+              navOnDate = entryNav
             }
           }
-
-          if (navOnDate) {
-            const units = parseFloat(investment.amount) / navOnDate
-            const currentNav = parseFloat(navData.nav)
-            const todayValue = units * currentNav
-
-            const portfolioCurrentValue = Number(investment.balanceUnit) * parseFloat(portfolioFundData.nav)
-            results.push({
-              date: investment.purchaseDate,
-              investAmount: parseFloat(investment.amount),
-              navOnDate,
-              units: units.toFixed(4),
-              todayValue: todayValue.toFixed(2),
-              portfolioTodayValue: portfolioCurrentValue.toFixed(2),
-              gain: (todayValue - parseFloat(investment.amount)).toFixed(2)
-            })
-          }
-        } catch (err) {
-          console.error('Error fetching historical data for investment:', err)
         }
+
+        const usedInvestmentAsValue = !Number.isFinite(navOnDate) || navOnDate <= 0
+        const todayValue = usedInvestmentAsValue ? amount : (amount / navOnDate) * currentNav
+        const portfolioTodayValue = Number(investment.balanceUnit) * Number(portfolioFundData?.nav)
+        if (![amount, todayValue, portfolioTodayValue].every(Number.isFinite)) continue
+
+        results.push({
+          date: investment.purchaseDate,
+          investAmount: amount,
+          navOnDate: usedInvestmentAsValue ? null : navOnDate,
+          units: usedInvestmentAsValue ? '0.0000' : (amount / navOnDate).toFixed(4),
+          todayValue: todayValue.toFixed(2),
+          portfolioTodayValue: portfolioTodayValue.toFixed(2),
+          gain: (todayValue - amount).toFixed(2),
+          usedInvestmentAsValue
+        })
       }
 
       setComparisonResults(results)
@@ -194,7 +209,6 @@ function CompareMF() {
     } else {
       setSelectedComparisonFund('')
       setComparisonResults([])
-      setComparisonFundData(null)
     }
   }
 
@@ -212,23 +226,29 @@ function CompareMF() {
   }
 
   return (
-    <div className="container colorful-bg" style={{ paddingTop: '1.2rem', maxWidth: 1250, margin: '0 auto' }}>
+    <div className="compare-page">
       <UserHeader userId={userId} />
-      <div style={{ position: 'absolute', top: 10, right: 20 }}>
-        <Link to={`/user/${userId}/dashboard`} style={{
-          background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', textDecoration: 'none', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'
-        }}>MF Dashboard</Link>
-      </div>
+      <div className="compare-shell">
+        <header className="compare-topbar">
+          <div className="compare-topbar-actions">
+            <Link className="compare-back-link" to={`/user/${userId}/dashboard`}>Back to dashboard</Link>
+          </div>
+        </header>
 
-      <h1 className="colorful-title" style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Compare Mutual Funds</h1>
+        <section className="compare-hero">
+          <div>
+            <h1>Compare mutual funds</h1>
+          </div>
+          <div className="compare-hero-mark" aria-hidden="true">↗</div>
+        </section>
 
-      {error && <p style={{ color: 'red', marginBottom: '1rem' }}>{error}</p>}
+        {error && <p className="compare-error">{error}</p>}
 
       {/* Selection Section */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+      <div className="compare-selectors">
         {/* Portfolio Fund Selection */}
-        <div style={{ padding: '1.5rem', background: '#f0f9ff', borderRadius: 8, border: '1px solid #bfdbfe' }}>
-          <h3 style={{ color: '#0284c7', marginBottom: '1rem', fontWeight: 600 }}>Your Portfolio Fund</h3>
+        <div className="compare-selector compare-selector-primary">
+          <h3>Your portfolio fund (Holding)</h3>
           <select
             value={selectedPortfolioFund}
             onChange={(e) => handlePortfolioFundChange(e.target.value)}
@@ -256,8 +276,8 @@ function CompareMF() {
         </div>
 
         {/* Comparison Fund Selection */}
-        <div style={{ padding: '1.5rem', background: '#fef2f2', borderRadius: 8, border: '1px solid #fecaca' }}>
-          <h3 style={{ color: '#dc2626', marginBottom: '1rem', fontWeight: 600 }}>Compare With</h3>
+        <div className="compare-selector compare-selector-secondary">
+          <h3>Compare with (Alternative)</h3>
           <div style={{ position: 'relative' }}>
             <input
               value={comparisonFundSearch}
@@ -333,11 +353,11 @@ function CompareMF() {
         </div>
       </div>
 
-      {loading && <p style={{ textAlign: 'center', fontSize: '1rem' }}>Loading comparison data...</p>}
+        {loading && <p className="compare-loading">Updating comparison data...</p>}
 
       {/* Side-by-side Comparison Table */}
       {selectedPortfolioFund && portfolioInvestments.length > 0 && (
-        <div className="compare-results-layout" style={{ marginBottom: '2rem' }}>
+        <div className="compare-results-layout">
           {selectedComparisonFund && comparisonResults.length > 0 && (
             <div className="compare-summary" style={{ padding: '1.5rem', background: '#f0fdf4', borderRadius: 8, border: '2px solid #86efac' }}>
               <h3 style={{ color: '#059669', marginBottom: '1rem', fontWeight: 600 }}>Total Comparison Summary</h3>
@@ -423,7 +443,14 @@ function CompareMF() {
                     <td style={{ fontWeight: 600, color: '#059669' }}>₹{myFundTodayValue.toFixed(2)}</td>
                     {selectedComparisonFund && (
                       <>
-                        <td style={{ fontWeight: 600, color: '#2563eb' }}>₹{comparisonFundTodayValue !== null ? comparisonFundTodayValue : '-'}</td>
+                        <td style={{ fontWeight: 600, color: '#2563eb' }}>
+                          ₹{comparisonFundTodayValue !== null ? comparisonFundTodayValue : '-'}
+                          {item.usedInvestmentAsValue && (
+                            <small style={{ display: 'block', color: '#64748b', fontWeight: 400 }}>
+                              No historical NAV; held at cost
+                            </small>
+                          )}
+                        </td>
                         <td style={{ fontWeight: 600, color: differenceColor || '#999' }}>
                           {difference !== null ? `${difference >= 0 ? '+' : ''}₹${difference.toFixed(2)}` : '-'}
                         </td>
@@ -441,6 +468,7 @@ function CompareMF() {
       {selectedPortfolioFund && portfolioInvestments.length === 0 && (
         <p style={{ textAlign: 'center', color: '#999', fontSize: '1rem' }}>No active investments found for this fund.</p>
       )}
+      </div>
     </div>
   )
 }

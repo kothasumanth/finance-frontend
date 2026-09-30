@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-export default function UserHeader({ userId }) {
+export default function UserHeader({ userId, inline = false }) {
     const [userData, setUserData] = useState(null);
 
     useEffect(() => {
@@ -15,10 +15,10 @@ export default function UserHeader({ userId }) {
     if (!userData) return null;
 
     return (
-        <div style={{
-            position: 'absolute',
-            top: 10,
-            left: 20,
+        <div className={inline ? 'user-header-inline' : ''} style={{
+            position: inline ? 'static' : 'absolute',
+            top: inline ? undefined : 10,
+            left: inline ? undefined : 20,
             background: '#f8fafc',
             padding: '0.5rem 1rem',
             borderRadius: '6px',
