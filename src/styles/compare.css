@@ -33,11 +33,22 @@
 .user-header-inline {
   position: static !important;
   z-index: auto !important;
-  padding: 8px 13px !important;
-  border-color: #d8d2c4 !important;
+  padding: 9px 16px !important;
+  border-color: #b9b2a4 !important;
   border-radius: 999px !important;
-  background: #fffdf8 !important;
+  background: transparent !important;
   font-size: 0.82rem !important;
+}
+
+.user-header-inline > span:first-child {
+  color: #18211f !important;
+}
+
+.user-header-inline > span:last-child {
+  background: none !important;
+  color: #18211f !important;
+  font-weight: 700 !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 
 .compare-back-link {
@@ -100,17 +111,23 @@
   display: grid;
   position: absolute;
   right: 0;
-  width: 92px;
-  height: 92px;
+  width: 64px;
+  height: 64px;
   flex: 0 0 auto;
   place-items: center;
   border-radius: 50%;
   background: #d4e6d7;
   color: #27704c;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 3.4rem;
+  font-size: 2.4rem;
   line-height: 1;
   transform: rotate(-18deg);
+}
+
+.compare-hero-mark-negative {
+  background: #fbe6df;
+  color: #c84d3a;
+  transform: none;
 }
 
 .compare-error {
@@ -351,9 +368,9 @@
 
   .compare-hero-mark {
     position: static;
-    width: 58px;
-    height: 58px;
-    font-size: 2.2rem;
+    width: 46px;
+    height: 46px;
+    font-size: 1.7rem;
   }
 
   .compare-selectors,

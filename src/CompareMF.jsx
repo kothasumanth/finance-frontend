@@ -225,12 +225,19 @@ function CompareMF() {
     return `${day}-${month}-${year}`
   }
 
+  const portfolioSummaryTotal = portfolioInvestments.reduce((sum, investment) => {
+    const nav = portfolioFundData?.nav ? parseFloat(portfolioFundData.nav) : 0
+    return sum + Number(investment.balanceUnit) * nav
+  }, 0)
+  const comparisonSummaryTotal = comparisonResults.reduce((sum, result) => sum + parseFloat(result.todayValue), 0)
+  const comparisonDifference = comparisonSummaryTotal - portfolioSummaryTotal
+
   return (
     <div className="compare-page">
-      <UserHeader userId={userId} />
       <div className="compare-shell">
         <header className="compare-topbar">
           <div className="compare-topbar-actions">
+            <UserHeader userId={userId} inline />
             <Link className="compare-back-link" to={`/user/${userId}/dashboard`}>Back to dashboard</Link>
           </div>
         </header>
@@ -239,7 +246,12 @@ function CompareMF() {
           <div>
             <h1>Compare mutual funds</h1>
           </div>
-          <div className="compare-hero-mark" aria-hidden="true">↗</div>
+          <div
+            className={`compare-hero-mark${selectedComparisonFund && comparisonResults.length > 0 && comparisonDifference < 0 ? ' compare-hero-mark-negative' : ''}`}
+            aria-hidden="true"
+          >
+            {selectedComparisonFund && comparisonResults.length > 0 && comparisonDifference < 0 ? '↓' : '↗'}
+          </div>
         </section>
 
         {error && <p className="compare-error">{error}</p>}
