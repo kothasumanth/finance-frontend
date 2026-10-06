@@ -1,0 +1,36 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e7]: "User:"
+      - generic [ref=e8]: Sumanth
+    - navigation "Mutual fund actions" [ref=e9]:
+      - button "Overview" [ref=e10] [cursor=pointer]
+      - button "Add MF Metadata" [ref=e11] [cursor=pointer]
+      - button "MF Entries" [ref=e12] [cursor=pointer]
+      - button "View MF Data" [ref=e13] [cursor=pointer]
+      - button "Metrics" [ref=e14] [cursor=pointer]
+      - button "SIP Info" [ref=e15] [cursor=pointer]
+      - button "Compare" [ref=e16] [cursor=pointer]
+  - main [ref=e17]:
+    - heading "Mutual Fund Dashboard" [level=1] [ref=e18]
+    - region "Summary for this session" [ref=e19]:
+      - heading "Summary for this session" [level=2] [ref=e20]
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - generic [ref=e23]: Invested
+          - strong [ref=e24]: Loading...
+        - generic [ref=e25]:
+          - generic [ref=e26]: Today Value
+          - strong [ref=e27]: Loading...
+        - generic [ref=e28]:
+          - generic [ref=e29]: P/L
+          - strong [ref=e30]: Loading...
+    - generic [ref=e32]:
+      - generic [ref=e33]:
+        - generic "Fund classifications" [ref=e34]:
+          - generic "Index" [ref=e35]: I Index
+          - generic "Managed" [ref=e36]: M Managed
+          - generic "Active" [ref=e37]: A Active
+          - generic "Passive" [ref=e38]: P Passive
+        - heading "Fund Wise Summary" [level=2] [ref=e39]
+      - paragraph [ref=e40]: Loading summary...

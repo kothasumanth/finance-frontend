@@ -12,11 +12,11 @@ import GoldData from './GoldData'
 import FinanceOverview from './FinanceOverview'
 import PpfDashboard from './PpfDashboard'
 import PpfDetails from './ppfDetails'
-import { fetchMutualFundMetadata } from './api'
 import PfDashboard from './pfDashboard'
 import PfDetails from './pfDetails'
 import EpsDashboard from './epsDashboard'
 import EpsDetails from './epsDetails'
+import { UserSessionSummaryProvider } from './components/UserSessionSummary'
 
 function App() {
   const [users, setUsers] = useState([])
@@ -43,21 +43,23 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home users={users} setUsers={setUsers} loading={loading} error={error} />} />
-        <Route path="/user/:userId/overview" element={<FinanceOverview />} />
-        <Route path="/user/:userId/dashboard" element={<MutualFundDashboard />} />
-        <Route path="/user/:userId/mf-details/:fundName" element={<MutualFundDetails />} />
-        <Route path="/user/:userId/mutual-funds" element={<MutualFundEntries />} />
-        <Route path="/user/:userId/mutualfund-metadata" element={<MutualFundMetadata />} />
-        <Route path="/user/:userId/view-mf-data" element={<ViewMutualFundData />} />
-        <Route path="/user/:userId/compare-mf" element={<CompareMF />} />
-        <Route path="/user/:userId/ppf-dashboard" element={<PpfDashboard />} />
-        <Route path="/user/:userId/ppf-details" element={<PpfDetails />} />
-        <Route path="/user/:userId/pf-dashboard" element={<PfDashboard />} />
-        <Route path="/user/:userId/pf-details" element={<PfDetails />} />
-        <Route path="/user/:userId/eps-dashboard" element={<EpsDashboard />} />
-        <Route path="/user/:userId/eps-details" element={<EpsDetails />} />
-        <Route path="/user/:userId/gold" element={<GoldData />} />
-        <Route path="/user/:userId/mf-metrics" element={<MFMetrics />} />
+        <Route path="/user/:userId" element={<UserSessionSummaryProvider />}>
+          <Route path="overview" element={<FinanceOverview />} />
+          <Route path="dashboard" element={<MutualFundDashboard />} />
+          <Route path="mf-details/:fundName" element={<MutualFundDetails />} />
+          <Route path="mutual-funds" element={<MutualFundEntries />} />
+          <Route path="mutualfund-metadata" element={<MutualFundMetadata />} />
+          <Route path="view-mf-data" element={<ViewMutualFundData />} />
+          <Route path="compare-mf" element={<CompareMF />} />
+          <Route path="ppf-dashboard" element={<PpfDashboard />} />
+          <Route path="ppf-details" element={<PpfDetails />} />
+          <Route path="pf-dashboard" element={<PfDashboard />} />
+          <Route path="pf-details" element={<PfDetails />} />
+          <Route path="eps-dashboard" element={<EpsDashboard />} />
+          <Route path="eps-details" element={<EpsDetails />} />
+          <Route path="gold" element={<GoldData />} />
+          <Route path="mf-metrics" element={<MFMetrics />} />
+        </Route>
       </Routes>
     </Router>
   )

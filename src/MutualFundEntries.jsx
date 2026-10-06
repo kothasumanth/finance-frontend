@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { fetchMutualFundMetadata } from './api'
 import IconButton from './IconButton'
+import { SessionSummary } from './components/UserSessionSummary'
+import { useUserSessionSummary } from './components/userSessionSummaryContext'
 
 // Helper to format date as dd-MMM-yy
 function formatDateDMY(dateStr) {
@@ -16,6 +18,7 @@ function formatDateDMY(dateStr) {
 
 function MutualFundEntries() {
   const { userId } = useParams()
+  const { refreshSummary } = useUserSessionSummary()
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -90,6 +93,7 @@ function MutualFundEntries() {
     )
       .then((newEntries) => {
         setEntries([...entries, ...newEntries])
+        refreshSummary()
         setShowPopup(false)
         setFundName('')
         setMultiEntries([])
@@ -126,6 +130,7 @@ function MutualFundEntries() {
       })
       .then((updatedEntry) => {
         setEntries(entries.map(e => e._id === entry._id ? updatedEntry : e))
+        refreshSummary()
         setEditId(null)
       })
       .catch((err) => {
@@ -141,6 +146,7 @@ function MutualFundEntries() {
       .then((res) => {
         if (!res.ok) throw new Error('Failed to delete entry')
         setEntries(entries.filter(e => e._id !== entry._id))
+        refreshSummary()
       })
       .catch((err) => {
         alert(err.message)
@@ -203,6 +209,7 @@ function MutualFundEntries() {
           Add
         </button>
       </div>
+      <SessionSummary />
       {showPopup && (
         <div className="popup" style={{
           position: 'fixed', left: 0, top: 0, width: '100vw', height: '100vh',

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import * as XLSX from 'xlsx'
-import IconButton from './IconButton'
 import UserHeader from './components/UserHeader'
+import { SessionSummary } from './components/UserSessionSummary'
+import { useUserSessionSummary } from './components/userSessionSummaryContext'
 
 function ViewMutualFundData() {
   const { userId } = useParams()
+  const { refreshSummary } = useUserSessionSummary()
   const [fundOptions, setFundOptions] = useState([])
   const [fundOptionsWithData, setFundOptionsWithData] = useState([])
   const [selectedFund, setSelectedFund] = useState('')
@@ -13,8 +15,6 @@ function ViewMutualFundData() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [mfApiData, setMfApiData] = useState(null)
-  const [mfApiUrl, setMfApiUrl] = useState('')
-  const [mfApiRawResponse, setMfApiRawResponse] = useState('')
   const [page, setPage] = useState(1)
 
   useEffect(() => {
@@ -66,30 +66,23 @@ function ViewMutualFundData() {
   useEffect(() => {
     if (!selectedFund) {
       setMfApiData(null)
-      setMfApiUrl('')
-      setMfApiRawResponse('')
       return
     }
     const fund = fundOptions.find(f => f._id === selectedFund)
     if (!fund || !fund.GoogleValue) {
       setMfApiData(null)
-      setMfApiUrl('')
-      setMfApiRawResponse('')
       return
     }
     const url = `http://localhost:3000/mf-api?googleValue=${encodeURIComponent(fund.GoogleValue)}`
-    setMfApiUrl(url)
     fetch(url)
-      .then(res => res.json().then(data => ({ ok: res.ok, data, raw: JSON.stringify(data) })))
-      .then(({ ok, data, raw }) => {
+      .then(res => res.json())
+      .then(data => {
         setMfApiData(data)
-        setMfApiRawResponse(raw)
         console.log('MF API URL:', url)
         console.log('MF API Response:', data)
       })
       .catch(() => {
         setMfApiData(null)
-        setMfApiRawResponse('')
       })
   }, [selectedFund, fundOptions])
 
@@ -104,7 +97,7 @@ function ViewMutualFundData() {
       const data = await res.json()
       if (!data.data || !Array.isArray(data.data)) return
       apiData = data.data
-    } catch (err) { return }
+    } catch { return }
     // Only process entries with blank nav
     const blankNavEntries = entries.filter(e => !e.nav && e.fundName && (e.fundName._id === selectedFund))
     for (const entry of blankNavEntries) {
@@ -140,6 +133,7 @@ function ViewMutualFundData() {
         setEntries(entries => entries.map(e => e._id === entry._id ? { ...e, nav: navValue, units, balanceUnit: units } : e))
       }
     }
+    await refreshSummary()
   }
 
   const handleReCal = async () => {
@@ -153,6 +147,7 @@ function ViewMutualFundData() {
     fetch(`http://localhost:3000/mutual-funds/${userId}`)
       .then(res => res.json())
       .then(data => setEntries(data.filter(e => e.fundName && e.fundName._id === selectedFund)));
+    await refreshSummary()
   };
 
   const handleForceNull = async () => {
@@ -166,6 +161,7 @@ function ViewMutualFundData() {
     fetch(`http://localhost:3000/mutual-funds/${userId}`)
       .then(res => res.json())
       .then(data => setEntries(data.filter(e => e.fundName && e.fundName._id === selectedFund)));
+    await refreshSummary()
   };
 
   // Reset page to 1 whenever selectedFund changes
@@ -216,165 +212,76 @@ function ViewMutualFundData() {
     XLSX.writeFile(workbook, `${selectedFundName.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'mutual-fund'}-data.xlsx`)
   }
 
+  const invested = entries
+    .filter(entry => entry.investType === 'Invest' && Number(entry.balanceUnit) > 0)
+    .reduce((sum, entry) => sum + (parseFloat(entry.amount) - (parseFloat(entry.principalRedeem) || 0)), 0)
+  const balanceUnits = entries
+    .filter(entry => entry.investType === 'Invest' && Number(entry.balanceUnit) > 0)
+    .reduce((sum, entry) => sum + Number(entry.balanceUnit), 0)
+  const hasLatestNav = mfApiData?.nav !== undefined && mfApiData.nav !== '' && Number.isFinite(Number(mfApiData.nav))
+  const todayValue = hasLatestNav
+    ? entries
+      .filter(entry => entry.investType === 'Invest' && Number(entry.balanceUnit) > 0)
+      .reduce((sum, entry) => sum + (Number(entry.balanceUnit) * Number(mfApiData.nav)), 0)
+    : null
+  const profitLoss = todayValue === null ? null : todayValue - invested
+  const selectedFundName = selectedFund === 'ALL'
+    ? 'All Mutual Funds'
+    : fundOptions.find(fund => fund._id === selectedFund)?.MutualFundName || 'Selected mutual fund'
+
   return (
-    <div className="container colorful-bg" style={{ paddingTop: '1.2rem', maxWidth: 1250, margin: '0 auto' }}>
-      <UserHeader userId={userId} />
-      <div style={{ position: 'absolute', top: 10, right: 20, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.7rem' }}>
-        <Link to={`/user/${userId}/dashboard`} style={{
-          background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', textDecoration: 'none', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'
-        }}>MF Dashboard</Link>
-        <button onClick={handleGetAllNavs} style={{
-          marginLeft: 0,
-          marginTop: '1.2rem',
-          background: '#059669',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 6,
-          padding: '0.5rem 1.2rem',
-          fontWeight: 600,
-          fontSize: '1rem',
-          boxShadow: '0 2px 8px rgba(5,150,105,0.08)',
-          cursor: 'pointer'
-        }}>Get All NAVs</button>
-        <button onClick={handleReCal} style={{
-          marginLeft: 0,
-          marginTop: '0.7rem',
-          background: '#6366f1',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 6,
-          padding: '0.5rem 1.2rem',
-          fontWeight: 600,
-          fontSize: '1rem',
-          boxShadow: '0 2px 8px rgba(99,102,241,0.08)',
-          cursor: 'pointer'
-        }}>ReCal</button>
-        <button onClick={handleForceNull} style={{
-          marginLeft: 0,
-          marginTop: '0.7rem',
-          background: '#dc2626',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 6,
-          padding: '0.5rem 1.2rem',
-          fontWeight: 600,
-          fontSize: '1rem',
-          boxShadow: '0 2px 8px rgba(220,38,38,0.08)',
-          cursor: 'pointer'
-        }}>Force Null NAV/Units</button>
-        <div style={{marginTop: '1.2rem', fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.2rem'}}>
-          <span>Date: <span style={{ color: '#2563eb' }}>{mfApiData && mfApiData.date ? mfApiData.date : ''}</span></span>
-          <span>NAV: <span style={{ color: '#2563eb' }}>{mfApiData && mfApiData.nav ? mfApiData.nav : ''}</span></span>
-          <hr style={{ width: '100%', border: 'none', borderTop: '2.5px dashed #cbd5e1', margin: '0.5rem 0' }} />
-          <span style={{
-            alignSelf: 'center',
-            background: 'linear-gradient(90deg, #fef9c3 0%, #fef08a 100%)',
-            color: '#b45309',
-            borderRadius: 6,
-            padding: '0.2rem 1.2rem',
-            fontWeight: 700,
-            fontSize: '1.08rem',
-            marginBottom: '0.2rem',
-            boxShadow: '0 1px 4px rgba(202,138,4,0.08)'
-          }}>Summary</span>
-          <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
-            <span>Invested:</span>
-            <span style={{ color: '#2563eb', textAlign: 'right', minWidth: 70 }}>{entries && entries.length > 0 ? (() => {
-              // Only include Invest entries with balanceUnit > 0
-              return entries.filter(e => e.investType === 'Invest' && Number(e.balanceUnit) > 0)
-                .reduce((sum, e) => sum + (parseFloat(e.amount) - (parseFloat(e.principalRedeem) || 0)), 0).toFixed(2);
-            })() : ''}</span>
-          </span>
-          <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
-            <span>Today Value:</span>
-            <span style={{ color: '#2563eb', textAlign: 'right', minWidth: 70 }}>{(() => {
-              if (!entries || entries.length === 0 || !mfApiData || !mfApiData.nav) return '';
-              // Only include Invest entries with balanceUnit > 0
-              const totalTodayValue = entries.filter(e => e.investType === 'Invest' && Number(e.balanceUnit) > 0)
-                .reduce((sum, e) => sum + (Number(e.balanceUnit) * Number(mfApiData.nav)), 0);
-              return totalTodayValue.toFixed(2);
-            })()}</span>
-          </span>
-          <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
-            <span>P/L:</span>
-            <span style={{ fontWeight: 700, textAlign: 'right', minWidth: 70, color: (() => {
-              if (!entries || entries.length === 0 || !mfApiData || !mfApiData.nav) return '#2563eb';
-              const invested = entries.filter(e => e.investType === 'Invest' && Number(e.balanceUnit) > 0)
-                .reduce((sum, e) => sum + (parseFloat(e.amount) - (parseFloat(e.principalRedeem) || 0)), 0);
-              const totalTodayValue = entries.filter(e => e.investType === 'Invest' && Number(e.balanceUnit) > 0)
-                .reduce((sum, e) => sum + (Number(e.balanceUnit) * Number(mfApiData.nav)), 0);
-              const profitLoss = totalTodayValue - invested;
-              return profitLoss >= 0 ? '#059669' : '#dc2626';
-            })(),}}>{(() => {
-              if (!entries || entries.length === 0 || !mfApiData || !mfApiData.nav) return '';
-              const invested = entries.filter(e => e.investType === 'Invest' && Number(e.balanceUnit) > 0)
-                .reduce((sum, e) => sum + (parseFloat(e.amount) - (parseFloat(e.principalRedeem) || 0)), 0);
-              const totalTodayValue = entries.filter(e => e.investType === 'Invest' && Number(e.balanceUnit) > 0)
-                .reduce((sum, e) => sum + (Number(e.balanceUnit) * Number(mfApiData.nav)), 0);
-              const profitLoss = totalTodayValue - invested;
-              return profitLoss.toFixed(2);
-            })()}</span>
-          </span>
-          <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
-            <span>Balance Units:</span>
-            <span style={{ color: '#2563eb', textAlign: 'right', minWidth: 70 }}>
-              {entries && entries.length > 0 ? (() => {
-                // Only include Invest entries with balanceUnit > 0
-                const investUnits = entries.filter(e => e.investType === 'Invest' && Number(e.balanceUnit) > 0)
-                  .reduce((sum, e) => sum + Number(e.balanceUnit), 0);
-                return investUnits.toFixed(2);
-              })() : ''}
-            </span>
-          </span>
+    <div className="view-mf-page">
+      <header className="view-mf-topbar">
+        <UserHeader userId={userId} inline />
+        <nav className="view-mf-actions" aria-label="Mutual fund data actions">
+          <Link className="view-mf-action" to={`/user/${userId}/dashboard`}>MF Dashboard</Link>
+          <button className="view-mf-action" onClick={handleGetAllNavs}>Get All NAVs</button>
+          <button className="view-mf-action" onClick={handleReCal}>ReCal</button>
+          <button className="view-mf-action view-mf-action-danger" onClick={handleForceNull}>Force Null NAV/Units</button>
+          <button
+            className="view-mf-action view-mf-action-primary"
+            onClick={handleDownload}
+            disabled={!selectedFund || selectedFund === 'ALL' || entries.length === 0}
+            title={selectedFund === 'ALL' ? 'Select one mutual fund to download its data' : 'Download mutual fund data as XLSX'}
+          >Download XLSX</button>
+        </nav>
+      </header>
+      <main className="view-mf-main">
+        <h1 className="colorful-title view-mf-title">View Mutual Fund Data</h1>
+        <SessionSummary />
+        <section className="view-mf-summary" aria-label="Selected mutual fund summary">
+          <div className="view-mf-summary-heading">
+            <div>
+              <span className="view-mf-summary-label">Selected fund</span>
+              <h2>{selectedFundName}</h2>
+            </div>
+            <div className="view-mf-nav-details">
+              <div><span>Date</span><strong>{mfApiData?.date || '-'}</strong></div>
+              <div><span>Latest NAV</span><strong>{hasLatestNav ? Number(mfApiData.nav).toFixed(5) : '-'}</strong></div>
+            </div>
+          </div>
+          <div className="view-mf-summary-values">
+            <div><span>Invested</span><strong>{entries.length ? invested.toFixed(2) : '-'}</strong></div>
+            <div><span>Today Value</span><strong>{todayValue === null ? '-' : todayValue.toFixed(2)}</strong></div>
+            <div>
+              <span>P/L</span>
+              <strong className={profitLoss === null ? '' : profitLoss >= 0 ? 'is-positive' : 'is-negative'}>
+                {profitLoss === null ? '-' : profitLoss.toFixed(2)}
+              </strong>
+            </div>
+            <div><span>Balance Units</span><strong>{entries.length ? balanceUnits.toFixed(2) : '-'}</strong></div>
+          </div>
+        </section>
+        <div className="view-mf-controls">
+          <label htmlFor="view-mf-select">Select MF</label>
+          <select id="view-mf-select" value={selectedFund} onChange={e => setSelectedFund(e.target.value)}>
+            <option value="ALL">All Mutual Funds</option>
+            {fundOptionsWithData
+              .slice()
+              .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
+              .map(fund => <option key={fund._id} value={fund._id}>{fund.MutualFundName}</option>)}
+          </select>
         </div>
-      </div>
-      <h1 className="colorful-title" style={{ fontSize: '1.5rem', marginTop: '0.5rem', marginBottom: '0.7rem' }}>View Mutual Fund Data</h1>
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1rem' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-          <span style={{ fontWeight: 'bold', color: '#059669', fontSize: '1rem' }}>Select MF:</span>
-      <select value={selectedFund} onChange={e => setSelectedFund(e.target.value)}
-        style={{
-          fontWeight: 600,
-          color: '#2563eb',
-          fontSize: '1rem',
-          border: '1.5px solid #059669',
-          borderRadius: 6,
-          padding: '0.3rem 1.1rem',
-          fontFamily: 'monospace',
-          background: '#f0f9ff',
-          outline: 'none',
-          minWidth: 180
-        }}>
-        <option value="ALL" style={{ fontFamily: 'monospace', color: '#059669', fontWeight: 700 }}>All Mutual Funds</option>
-        {fundOptionsWithData
-          .slice()
-          .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
-          .map(f => (
-            <option key={f._id} value={f._id} style={{ fontFamily: 'monospace', color: '#0f172a', fontWeight: 600 }}>{f.MutualFundName}</option>
-          ))}
-      </select>
-          {/* Remove Date/NAV from here, keep only in label above */}
-        </label>
-        <button
-          onClick={handleDownload}
-          disabled={!selectedFund || selectedFund === 'ALL' || entries.length === 0}
-          title={selectedFund === 'ALL' ? 'Select one mutual fund to download its data' : 'Download mutual fund data as XLSX'}
-          style={{
-            marginLeft: '1rem',
-            background: '#0f766e',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 6,
-            padding: '0.5rem 1.2rem',
-            fontWeight: 600,
-            fontSize: '1rem',
-            cursor: selectedFund && selectedFund !== 'ALL' && entries.length > 0 ? 'pointer' : 'not-allowed',
-            opacity: selectedFund && selectedFund !== 'ALL' && entries.length > 0 ? 1 : 0.55
-          }}
-        >
-          Download XLSX
-        </button>
-      </div>      
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {!loading && !error && selectedFund && (
@@ -382,7 +289,8 @@ function ViewMutualFundData() {
           <p>No entries found for this fund.</p>
         ) : (
           <>
-            <table className="user-table colorful-table">
+            <div className="view-mf-table-scroll">
+              <table className="user-table colorful-table view-mf-table">
               <thead>
                 <tr>
                   <th>Purchase Date</th>
@@ -441,9 +349,10 @@ function ViewMutualFundData() {
                     </tr>
                   ))}
               </tbody>
-            </table>
+              </table>
+            </div>
             {/* Pagination controls */}
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '1rem', gap: '1rem' }}>
+            <div className="view-mf-pagination">
               <button onClick={() => setPage(page-1)} disabled={page === 1}>Prev</button>
               <span>Page {page} of {Math.ceil(entries.length/10)}</span>
               <button onClick={() => setPage(page+1)} disabled={page === Math.ceil(entries.length/10) || entries.length === 0}>Next</button>
@@ -451,6 +360,7 @@ function ViewMutualFundData() {
           </>
         )
       )}
+      </main>
     </div>
   )
 }

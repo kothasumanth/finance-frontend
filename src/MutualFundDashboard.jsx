@@ -1,32 +1,27 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { fetchUserFundSummary } from './api/fetchUserFundSummary'
 import { fetchCapTypes } from './api/capTypes'
 import UserHeader from './components/UserHeader'
 import SIPInfoPopup from './components/SIPInfoPopup'
+import { SessionSummary } from './components/UserSessionSummary'
+import { useUserSessionSummary } from './components/userSessionSummaryContext'
 
 function MutualFundDashboard() {
   const { userId } = useParams()
   const navigate = useNavigate()
-  const [fundSummary, setFundSummary] = useState([])
+  const { funds: fundSummary, loading: summaryLoading, error: summaryError } = useUserSessionSummary()
   const [capTypes, setCapTypes] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [capTypesLoading, setCapTypesLoading] = useState(true)
+  const [capTypesError, setCapTypesError] = useState(null)
   const [sortConfig, setSortConfig] = useState({ key: 'fundName', direction: 'asc' })
   const [showSIPPopup, setShowSIPPopup] = useState(false)
 
   useEffect(() => {
-    setLoading(true)
-    Promise.all([
-      fetchUserFundSummary(userId),
-      fetchCapTypes()
-    ])
-      .then(([summaryData, capTypesData]) => {
-        setFundSummary(summaryData)
-        setCapTypes(capTypesData)
-      })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false))
+    setCapTypesLoading(true)
+    fetchCapTypes()
+      .then(setCapTypes)
+      .catch(err => setCapTypesError(err.message))
+      .finally(() => setCapTypesLoading(false))
   }, [userId])
 
   // Sorting logic
@@ -51,108 +46,38 @@ function MutualFundDashboard() {
   }
 
   return (
-    <div className="container colorful-bg" style={{ maxWidth: 1250, margin: '0 auto' }}>
-      <UserHeader userId={userId} />
-      <div style={{ position: 'absolute', top: 10, right: 20, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-        <button onClick={() => navigate(`/user/${userId}/overview`)}>Overview</button>
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.3rem',
-          padding: '0.5rem 1rem',
-          background: '#f8fafc',
-          borderRadius: '6px',
-          border: '1px solid #e5e7eb',
-          fontSize: '0.9rem'
-        }}>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <span title="Index"><b>I</b> - Index</span>
-            <span title="Managed"><b>M</b> - Managed</span>
-          </div>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <span title="Active"><b>A</b> - Active</span>
-            <span title="Passive"><b>P</b> - Passive</span>
-          </div>
+    <div className="mf-dashboard-page">
+      <header className="mf-dashboard-topbar">
+        <div className="mf-dashboard-identity">
+          <UserHeader userId={userId} inline />
         </div>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', marginTop: '0.2rem' }}>
-          <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>Mutual Fund Dashboard</h1>
-          <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', marginTop: 0 }}>
-            <button style={{background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'}} onClick={() => navigate(`/user/${userId}/mutualfund-metadata`)}>
-              Add MF MetaData
-            </button>
-            <button style={{background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'}} onClick={() => navigate(`/user/${userId}/mutual-funds`)}>
-              MF Entries
-            </button>
-            <button style={{background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'}} onClick={() => navigate(`/user/${userId}/view-mf-data`)}>
-              View MF Data
-            </button>
-            <button style={{background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'}} onClick={() => navigate(`/user/${userId}/mf-metrics`)}>
-              Metrics
-            </button>
-            <button style={{background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'}} onClick={() => setShowSIPPopup(true)}>
-              SIP Info
-            </button>
-            <button style={{background: '#0f766e', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(15,118,110,0.08)'}} onClick={() => navigate(`/user/${userId}/compare-mf`)}>
-              Compare
-            </button>
-          </div>
-        </div>
-        {/* Overall summary section, right-aligned */}
-        <div style={{marginTop: 0, marginBottom: '1.2rem', fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.2rem', minWidth: 320}}>
-          <span style={{
-            alignSelf: 'center',
-            background: 'linear-gradient(90deg, #fef9c3 0%, #fef08a 100%)',
-            color: '#b45309',
-            borderRadius: 6,
-            padding: '0.2rem 1.2rem',
-            fontWeight: 700,
-            fontSize: '1.08rem',
-            marginBottom: '0.2rem',
-            boxShadow: '0 1px 4px rgba(202,138,4,0.08)'
-          }}>Summary (All Mutual Funds)</span>
-          <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
-            <span>Invested:</span>
-            <span style={{ color: '#2563eb', textAlign: 'right', minWidth: 70 }}>
-              {fundSummary.length > 0 ? fundSummary.reduce((sum, f) => sum + f.invested, 0).toFixed(2) : ''}
-            </span>
-          </span>
-          <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
-            <span>Today Value:</span>
-            <span style={{ color: '#2563eb', textAlign: 'right', minWidth: 70 }}>
-              {fundSummary.length > 0 ? fundSummary.reduce((sum, f) => sum + f.todayValue, 0).toFixed(2) : ''}
-            </span>
-          </span>
-          <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
-            <span>P/L:</span>
-            <span style={{ fontWeight: 700, textAlign: 'right', minWidth: 70, color: (() => {
-              if (!fundSummary.length) return '#2563eb';
-              const invested = fundSummary.reduce((sum, f) => sum + f.invested, 0);
-              const todayValue = fundSummary.reduce((sum, f) => sum + f.todayValue, 0);
-              const profitLoss = todayValue - invested;
-              return profitLoss >= 0 ? '#059669' : '#dc2626';
-            })() }}>
-              {fundSummary.length > 0 ? (() => {
-                const invested = fundSummary.reduce((sum, f) => sum + f.invested, 0);
-                const todayValue = fundSummary.reduce((sum, f) => sum + f.todayValue, 0);
-                const profitLoss = todayValue - invested;
-                return profitLoss.toFixed(2);
-              })() : ''}
-            </span>
-          </span>
-          {/* <span style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
-            <span>Balance Units:</span>
-            <span style={{ color: '#2563eb', textAlign: 'right', minWidth: 70 }}>
-              {fundSummary.length > 0 ? fundSummary.reduce((sum, f) => sum + f.balanceUnits, 0).toFixed(2) : ''}
-            </span>
-          </span> */}
-        </div>
-      </div>
-      {/* Fund-wise summary table */}
-      <div style={{marginTop: '1.0rem'}}>
-        <h2 style={{fontSize: '1.15rem', color: '#059669', marginBottom: '0.7rem'}}>Fund Wise Summary</h2>
-        {loading ? <p>Loading summary...</p> : error ? <p style={{color: 'red'}}>{error}</p> : (
+        <nav className="mf-dashboard-actions" aria-label="Mutual fund actions">
+          <button onClick={() => navigate(`/user/${userId}/overview`)}>Overview</button>
+          <button onClick={() => navigate(`/user/${userId}/mutualfund-metadata`)}>Add MF Metadata</button>
+          <button onClick={() => navigate(`/user/${userId}/mutual-funds`)}>MF Entries</button>
+          <button onClick={() => navigate(`/user/${userId}/view-mf-data`)}>View MF Data</button>
+          <button onClick={() => navigate(`/user/${userId}/mf-metrics`)}>Metrics</button>
+          <button onClick={() => setShowSIPPopup(true)}>SIP Info</button>
+          <button onClick={() => navigate(`/user/${userId}/compare-mf`)}>Compare</button>
+        </nav>
+      </header>
+      <main className="mf-dashboard-main">
+        <h1 className="colorful-title mf-dashboard-title">Mutual Fund Dashboard</h1>
+        <SessionSummary />
+        <div className="mf-dashboard-content">
+          <section className="mf-dashboard-table-panel">
+            <div className="mf-dashboard-table-heading">
+              <div className="mf-dashboard-legend" aria-label="Fund classifications">
+                <span title="Index"><b>I</b> Index</span>
+                <span title="Managed"><b>M</b> Managed</span>
+                <span title="Active"><b>A</b> Active</span>
+                <span title="Passive"><b>P</b> Passive</span>
+              </div>
+              <h2>Fund Wise Summary</h2>
+              <span aria-hidden="true" />
+            </div>
+            {summaryLoading || capTypesLoading ? <p>Loading summary...</p> : summaryError || capTypesError ? <p style={{color: 'red'}}>{summaryError || capTypesError}</p> : (
+              <div className="mf-dashboard-table-scroll">
           <table className="user-table colorful-table">
             <thead>
               <tr>
@@ -246,14 +171,17 @@ function MutualFundDashboard() {
                   <td style={{ fontSize: '0.95em', minWidth: 70 }}>{capTypes.find(ct => ct._id === fund.CapType)?.name || ''}</td>
                   <td>{fund.invested.toFixed(2)}</td>
                   <td>{fund.todayValue.toFixed(2)}</td>
-                  <td style={{color: fund.profitLoss >= 0 ? '#059669' : '#dc2626', fontWeight: 600}}>{fund.profitLoss.toFixed(2)}</td>
+                  <td className={fund.profitLoss >= 0 ? 'is-positive' : 'is-negative'}>{fund.profitLoss.toFixed(2)}</td>
                   {/* <td>{fund.balanceUnits.toFixed(2)}</td> */}
                 </tr>
               ))}
             </tbody>
           </table>
-        )}
-      </div>
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
       {showSIPPopup && (
         <SIPInfoPopup
           userId={userId}

@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { SessionSummary } from './components/UserSessionSummary';
 
 function PfDashboard() {
   const { userId } = useParams();
@@ -258,12 +259,12 @@ function PfDashboard() {
   };
 
   return (
-    <div className="container colorful-bg" style={{ maxWidth: 1250, margin: '0 auto', display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
+    <div className="ppf-dashboard-page">
       <div style={{ flex: 1, minWidth: 0 }}>
         <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>Public Provident Fund Dashboard</h1>
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'row', marginTop: 0, marginBottom: '1.5rem' }}>
-          <div style={{ flex: 1 }} />
-          <div className="pf-dashboard-btn-row" style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center' }}>
+        <SessionSummary />
+        <div className="ppf-dashboard-navigation">
+          <div className="pf-dashboard-btn-row">
             <button
               className="pf-dashboard-btn"
               style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}
@@ -272,7 +273,7 @@ function PfDashboard() {
             <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }} onClick={() => navigate(`/user/${userId}/ppf-details`)}>PPF</button>
             {/* <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}>VPF</button> */}
             {/* <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}>PF</button> */}
-            <button className="pf-dashboard-btn" style={{ minWidth: 140, marginLeft: '2rem', background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(16,185,129,0.08)' }} onClick={handleOpenPopup}>Setup Interest</button>
+            <button className="pf-dashboard-btn" style={{ minWidth: 140, background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(16,185,129,0.08)' }} onClick={handleOpenPopup}>Setup Interest</button>
             <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(245,158,66,0.08)' }} onClick={handleSetupPPFClick}>Setup PPF</button>
             <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(239,68,68,0.08)' }} onClick={handleDeletePPF} disabled={deletePPFLoading}>{deletePPFLoading ? 'Deleting...' : 'Delete PPF'}</button>
           </div>
@@ -400,7 +401,8 @@ function PfDashboard() {
           ) : ppfYearwise.length === 0 ? (
             <div style={{ color: '#64748b', fontStyle: 'italic', marginBottom: 8 }}>No PPF entries found for this user.</div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', marginBottom: 8 }}>
+            <div className="ppf-yearwise-table-scroll">
+              <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse', background: '#fff', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', marginBottom: 8 }}>
               <thead>
                 <tr style={{ background: '#f3f4f6' }}>
                   <th style={{ padding: 8, borderBottom: '1px solid #e5e7eb' }}>Financial Year</th>
@@ -419,15 +421,13 @@ function PfDashboard() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           )}
         </div>
       </div>
       {/* Right side summary panel, styled to match Mutual Fund summary */}
-      <div style={{
-        minWidth: 300,
-        marginLeft: 32,
-        marginTop: 180, // increased further for more vertical spacing
+      <aside className="ppf-dashboard-summary" style={{
         background: '#fff',
         borderRadius: 14,
         boxShadow: '0 4px 24px 0 rgba(99,102,241,0.10)',
@@ -460,7 +460,7 @@ function PfDashboard() {
             <span style={{ fontWeight: 800, fontSize: 22, color: '#059669', letterSpacing: 0.5 }}>{ppfSummary.totalAfter15Y.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
         </div>
-      </div>
+      </aside>
     </div>
   );
 }

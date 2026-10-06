@@ -1,8 +1,9 @@
 import IconButton from './IconButton';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { fetchTodayGoldPrice, saveTodayGoldPrice } from './api/goldPrice';
 import { useParams, Link } from 'react-router-dom';
 import UserHeader from './components/UserHeader';
+import { SessionSummary } from './components/UserSessionSummary';
 
 function GoldData() {
   const [deleteIdx, setDeleteIdx] = useState(null);
@@ -107,29 +108,17 @@ function GoldData() {
 
   // ...existing code...
   return (
-    <div className="container colorful-bg" style={{ paddingTop: '1.2rem', maxWidth: 900, margin: '0 auto' }}>
+    <div className="gold-page">
       <UserHeader userId={userId} />
-      <div style={{ position: 'absolute', top: 10, right: 20, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.7rem' }}>
-        <Link to={`/user/${userId}/overview`} style={{
-          background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', textDecoration: 'none', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'
-        }}>Back to Overview</Link>
-        <button onClick={handleAdd} style={{
-          marginLeft: 0,
-          marginTop: '1.2rem',
-          background: '#f59e42',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 6,
-          padding: '0.5rem 1.2rem',
-          fontWeight: 600,
-          fontSize: '1rem',
-          boxShadow: '0 2px 8px rgba(245,158,66,0.08)',
-          cursor: 'pointer'
-        }}>Add New</button>
-        {/* Gold Price Button & Value - moved below Add New */}
-      <div style={{ marginTop: 0, marginBottom: 8, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
-        <button onClick={() => setShowGoldPriceModal(true)} style={{ background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(245,158,66,0.08)', cursor: 'pointer', marginTop: '1.2rem' }}>Enter Today Gold Price</button>
-        <div style={{ fontWeight: 600, color: '#b45309', fontSize: '1.08rem', marginTop: 2 }}>
+      <header className="gold-topbar">
+        <Link className="gold-back-link" to={`/user/${userId}/overview`}>Back to Overview</Link>
+        <div className="gold-actions">
+          <button onClick={handleAdd}>Add New</button>
+          <button onClick={() => setShowGoldPriceModal(true)}>Enter Today Gold Price</button>
+        </div>
+      </header>
+      <aside className="gold-summary">
+        <div className="gold-today-prices">
           Today Gold Price:
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 6 }}>
             <span style={{ color: '#059669', fontWeight: 700 }}>24K: {todayGoldPrice?.price24k ?? '-'}</span>
@@ -137,21 +126,9 @@ function GoldData() {
             <span style={{ color: '#059669', fontWeight: 700 }}>18K: {todayGoldPrice?.price18k ?? '-'}</span>
           </div>
         </div>
-        <div style={{ marginTop: 16, minWidth: 320, maxWidth: 420, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-          <span style={{
-            fontWeight: 700,
-            color: '#b45309',
-            fontSize: '1.08rem',
-            marginBottom: '0.4rem',
-            background: 'linear-gradient(90deg, #fef9c3 0%, #fef08a 100%)',
-            borderRadius: 8,
-            boxShadow: '0 1px 4px rgba(202,138,4,0.08)',
-            padding: '0.3rem 1.2rem',
-            display: 'inline-block',
-            textAlign: 'center',
-            width: '100%'
-          }}>Summary</span>
-          <div style={{ width: '100%', fontSize: '1rem', marginTop: 8 }}>
+        <section className="gold-summary-details">
+          <h2>Gold Summary</h2>
+          <div className="gold-summary-table">
             {(() => {
               const categoryTotals = [24, 22, 18].map(k => {
                 const entriesForKarat = entries.filter(e => Number(e.karat) === k);
@@ -172,12 +149,12 @@ function GoldData() {
                     <div style={{ fontWeight: 700 }}>Avg Price</div>
                     <div style={{ fontWeight: 700 }}>Today Value</div>
                     {categoryTotals.map(cat => (
-                      <>
+                      <Fragment key={cat.karat}>
                         <div key={`label-${cat.karat}`} style={{ fontWeight: 600, padding: '0.55rem 0', borderTop: '1px solid #e2e8f0' }}>{cat.karat}K</div>
                         <div key={`grams-${cat.karat}`} style={{ padding: '0.55rem 0', borderTop: '1px solid #e2e8f0' }}>{cat.totalGrams.toFixed(2)}</div>
                         <div key={`avg-${cat.karat}`} style={{ padding: '0.55rem 0', borderTop: '1px solid #e2e8f0' }}>{cat.avgPrice.toFixed(2)}</div>
                         <div key={`today-${cat.karat}`} style={{ padding: '0.55rem 0', borderTop: '1px solid #e2e8f0' }}>{cat.todayValue.toFixed(2)}</div>
-                      </>
+                      </Fragment>
                     ))}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0.75rem', borderRadius: 10, background: '#fef3c7', fontWeight: 700 }}>
@@ -188,8 +165,8 @@ function GoldData() {
               );
             })()}
           </div>
-        </div>
-      </div>
+        </section>
+      </aside>
       {/* Modal for Gold Price */}
       {showGoldPriceModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -225,10 +202,8 @@ function GoldData() {
           </div>
         </div>
       )}
-      </div>
-      <div style={{ marginBottom: '1.2rem' }}>
-        <h1 className="colorful-title" style={{ fontSize: '2.1rem', marginTop: '0.5rem', marginBottom: '0.75rem', textAlign: 'left', fontWeight: 800 }}>Gold Details</h1>
-      </div>
+      <h1 className="colorful-title gold-details-title">Gold Details</h1>
+      <SessionSummary />
       {/* Modal for Add/Edit */}
       {showModal && (
         <div style={{
@@ -262,7 +237,8 @@ function GoldData() {
           </div>
         </div>
       )}
-      <table className="user-table colorful-table" style={{ minWidth: 600, margin: '0 auto' }}>
+      <div className="gold-table-scroll">
+      <table className="user-table colorful-table" style={{ minWidth: 800, margin: '0 auto' }}>
         <thead>
           <tr>
             <th>Purchase Date</th>
@@ -351,6 +327,7 @@ function GoldData() {
       </tr>
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

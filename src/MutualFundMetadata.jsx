@@ -3,9 +3,12 @@ import { useParams, Link } from 'react-router-dom'
 import IconButton from './IconButton'
 import CapTypesManagement from './CapTypesManagement'
 import { fetchCapTypes } from './api/capTypes'
+import { SessionSummary } from './components/UserSessionSummary'
+import { useUserSessionSummary } from './components/userSessionSummaryContext'
 
 function MutualFundMetadata() {
   const { userId } = useParams()
+  const { refreshSummary } = useUserSessionSummary()
   const [metadata, setMetadata] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -116,6 +119,7 @@ function MutualFundMetadata() {
         setEditIndexOrManaged('')
         setEditCapType('')
         setShowPopup(false)
+        refreshSummary()
       })
       .catch(err => alert(err.message))
   }
@@ -126,6 +130,7 @@ function MutualFundMetadata() {
       .then(res => {
         if (!res.ok) throw new Error('Failed to delete metadata')
         setMetadata(metadata.filter(m => m._id !== id))
+        refreshSummary()
       })
       .catch(err => alert(err.message))
   }
@@ -168,6 +173,7 @@ function MutualFundMetadata() {
           Mutual Fund Meta Data
         </h1>
       </div>
+      <SessionSummary />
       
       {/* Cap Types Management Modal */}
       <CapTypesManagement 

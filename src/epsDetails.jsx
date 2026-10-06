@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { SessionSummary } from './components/UserSessionSummary';
 
 function groupEntriesByFinancialYear(entries) {
   if (!entries || entries.length === 0) return [];
@@ -205,7 +206,7 @@ function EpsDetails() {
           padding: 1px 4px;
         }
       `}</style>
-      <div style={{ position: 'absolute', top: 10, right: 20 }}>
+      <div className="details-page-topbar">
         <button onClick={() => navigate(`/user/${userId}/eps-dashboard`)}>EPS Dashboard</button>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 48, marginBottom: 8 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-end' }}>
@@ -225,6 +226,7 @@ function EpsDetails() {
         </div>
       </div>
       <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>Detailed EPS Page</h1>
+      <SessionSummary />
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {!loading && !error && (

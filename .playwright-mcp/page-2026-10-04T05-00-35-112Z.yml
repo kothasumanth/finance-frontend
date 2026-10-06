@@ -1,0 +1,56 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - link "Back to Overview" [ref=e5] [cursor=pointer]:
+      - /url: /user/685616cd44dd656573fb17cb/overview
+    - generic [ref=e6]:
+      - button "Add New" [ref=e7] [cursor=pointer]
+      - button "Enter Today Gold Price" [ref=e8] [cursor=pointer]
+  - complementary [ref=e9]:
+    - generic [ref=e10]:
+      - text: "Today Gold Price:"
+      - generic [ref=e11]:
+        - generic [ref=e12]: "24K: -"
+        - generic [ref=e13]: "22K: -"
+        - generic [ref=e14]: "18K: -"
+    - generic [ref=e15]:
+      - heading "Gold Summary" [level=2] [ref=e16]
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - generic [ref=e20]: Karat
+          - generic [ref=e21]: Total Grams
+          - generic [ref=e22]: Avg Price
+          - generic [ref=e23]: Today Value
+          - generic [ref=e24]: 24K
+          - generic [ref=e25]: "0.00"
+          - generic [ref=e26]: "0.00"
+          - generic [ref=e27]: "0.00"
+          - generic [ref=e28]: 22K
+          - generic [ref=e29]: "0.00"
+          - generic [ref=e30]: "0.00"
+          - generic [ref=e31]: "0.00"
+          - generic [ref=e32]: 18K
+          - generic [ref=e33]: "0.00"
+          - generic [ref=e34]: "0.00"
+          - generic [ref=e35]: "0.00"
+        - generic [ref=e36]:
+          - generic [ref=e37]: "Total Invested: 0.00"
+          - generic [ref=e38]: "Total Today Value: 0.00"
+  - heading "Gold Details" [level=1] [ref=e39]
+  - table [ref=e41]:
+    - rowgroup [ref=e42]:
+      - row [ref=e43]:
+        - columnheader "Purchase Date" [ref=e44]
+        - columnheader "Grams" [ref=e45]
+        - columnheader "Price" [ref=e46]
+        - columnheader "Karat" [ref=e47]
+        - columnheader "Comments" [ref=e48]
+        - columnheader "Actions" [ref=e49]
+    - rowgroup [ref=e50]:
+      - row [ref=e51]:
+        - cell "Loading..." [ref=e52]
+      - row [ref=e53]:
+        - cell "Previous Page 1 of 1 Next" [ref=e54]:
+          - generic [ref=e55]:
+            - button "Previous" [disabled] [ref=e56]
+            - generic [ref=e57]: Page 1 of 1
+            - button "Next" [disabled] [ref=e58]

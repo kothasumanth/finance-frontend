@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { SessionSummary } from './components/UserSessionSummary';
 
 function EpsDashboard() {
   const { userId } = useParams();
@@ -267,10 +268,11 @@ function EpsDashboard() {
   }
 
   return (
-    <div className="container" style={{ maxWidth: 1250, margin: '0 auto', display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
+    <div className="container retirement-dashboard-page">
       <div style={{ flex: 1, minWidth: 0 }}>
         <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>EPS Dashboard</h1>
-        <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', justifyContent: 'flex-end' }}>
+        <SessionSummary />
+        <div className="eps-dashboard-actions" style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', justifyContent: 'flex-end' }}>
           <button
             style={{ background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}
             onClick={() => navigate(`/user/${userId}/overview`)}
@@ -375,10 +377,7 @@ function EpsDashboard() {
         </div>
       </div>
       {/* Right side summary panel, styled to match PF summary */}
-      <div style={{
-        minWidth: 300,
-        marginLeft: 32,
-        marginTop: 180,
+      <aside className="retirement-dashboard-summary" style={{
         background: '#fff',
         borderRadius: 14,
         boxShadow: '0 4px 24px 0 rgba(99,102,241,0.10)',
@@ -411,7 +410,7 @@ function EpsDashboard() {
             <span style={{ fontWeight: 800, fontSize: 22, color: '#059669', letterSpacing: 0.5 }}>{epsSummary.totalAfter15Y.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
         </div>
-      </div>
+      </aside>
 
       {/* Setup EPS Popup */}
       {showInterestPopup && (

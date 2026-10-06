@@ -1,16 +1,15 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { fetchUserFundSummary } from './api/fetchUserFundSummary';
 import { fetchGoldTodayValue } from './api/fetchGoldTodayValue';
 import EpsDashboard from './epsDashboard';
 import UserHeader from './components/UserHeader';
+import { SessionSummary } from './components/UserSessionSummary';
+import { useUserSessionSummary } from './components/userSessionSummaryContext';
 
 function FinanceOverview() {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const [fundSummary, setFundSummary] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { funds: fundSummary, loading, error } = useUserSessionSummary();
   const [ppfTotal, setPpfTotal] = useState(null);
   const [pfTotal, setPfTotal] = useState(null);
   const [epsTotal, setEpsTotal] = useState(null);
@@ -26,14 +25,6 @@ function FinanceOverview() {
       }
     }
     fetchGoldToday();
-  }, [userId]);
-
-  useEffect(() => {
-    setLoading(true);
-    fetchUserFundSummary(userId)
-      .then(setFundSummary)
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
   }, [userId]);
 
   useEffect(() => {
@@ -107,75 +98,24 @@ function FinanceOverview() {
   }, [userId]);
 
   // Calculate Mutual Fund totals
-  const invested = fundSummary.reduce((sum, f) => sum + f.invested, 0);
   const todayValue = fundSummary.reduce((sum, f) => sum + f.todayValue, 0);
-  const profitLoss = todayValue - invested;
 
   return (
     <>
       <UserHeader userId={userId} />
-      <div style={{ position: 'absolute', top: 10, right: 20, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.7rem' }}>
-        <button
-          style={{
-            background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(245,158,66,0.08)', cursor: 'pointer'
-          }}
-          onClick={() => navigate('/')}
-        >
-          Home
-        </button>
-        <button
-          style={{
-            background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)', marginTop: '0.7rem', cursor: 'pointer', alignSelf: 'flex-end', width: 200
-          }}
-          onClick={() => navigate(`/user/${userId}/dashboard`)}
-        >
-          Mutual Fund
-        </button>
-        <button
-          style={{
-            background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(5,150,105,0.08)', marginTop: '0.7rem', cursor: 'pointer', alignSelf: 'flex-end', width: 200
-          }}
-          onClick={() => navigate(`/user/${userId}/ppf-dashboard`)}
-        >
-          Public Provident Fund
-        </button>
-        <button
-          style={{
-            background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(5,150,105,0.08)', marginTop: '0.7rem', cursor: 'pointer', alignSelf: 'flex-end', width: 200
-          }}
-          onClick={() => navigate(`/user/${userId}/pf-dashboard`)}
-        >
-          Provident Fund
-        </button>
-        {/* <button
-          style={{
-            background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(5,150,105,0.08)', marginTop: '0.7rem', cursor: 'pointer', alignSelf: 'flex-end', width: 200
-          }}
-          onClick={() => navigate(`/user/${userId}/pf-dashboard`)}
-        >
-          Volentire Provident Fund
-        </button> */}
-        <button
-          style={{
-            background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(5,150,105,0.08)', marginTop: '0.7rem', cursor: 'pointer', alignSelf: 'flex-end', width: 200
-          }}
-          onClick={() => navigate(`/user/${userId}/eps-dashboard`)}
-        >
-          EPS
-        </button>
-        <button
-          style={{
-            background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.7rem 2.2rem', fontWeight: 600, fontSize: '1.1rem', boxShadow: '0 2px 8px rgba(245,158,66,0.08)', marginTop: '0.7rem', cursor: 'pointer', alignSelf: 'flex-end', width: 200
-          }}
-          onClick={() => navigate(`/user/${userId}/gold`)}
-        >
-          Gold
-        </button>
-      </div>
-      <div className="container colorful-bg" style={{ maxWidth: 600, margin: '0 auto', paddingTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <main className="finance-overview-page">
+        <nav className="finance-overview-actions" aria-label="Finance sections">
+          <button onClick={() => navigate('/')}>Home</button>
+          <button onClick={() => navigate(`/user/${userId}/dashboard`)}>Mutual Fund</button>
+          <button onClick={() => navigate(`/user/${userId}/ppf-dashboard`)}>Public Provident Fund</button>
+          <button onClick={() => navigate(`/user/${userId}/pf-dashboard`)}>Provident Fund</button>
+          <button onClick={() => navigate(`/user/${userId}/eps-dashboard`)}>EPS</button>
+          <button onClick={() => navigate(`/user/${userId}/gold`)}>Gold</button>
+        </nav>
         <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1rem' }}>
           <h1 className="colorful-title" style={{ fontSize: '2rem', marginTop: 0, marginBottom: '0.7rem', textAlign: 'center' }}>Finance Overview</h1>
         </div>
+        <SessionSummary />
         <div style={{marginTop: '1.2rem', width: '100%', display: 'flex', justifyContent: 'center'}}>
           <table className="user-table colorful-table" style={{ minWidth: 320, margin: '0 auto' }}>
             <thead>
@@ -215,7 +155,7 @@ function FinanceOverview() {
             </tbody>
           </table>
         </div>
-      </div>
+      </main>
     </>
   );
 }

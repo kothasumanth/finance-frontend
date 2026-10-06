@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { SessionSummary } from './components/UserSessionSummary';
 
 function PfDashboard() {
   const { userId } = useParams();
@@ -219,9 +220,10 @@ function PfDashboard() {
   };
 
   return (
-    <div className="container colorful-bg" style={{ maxWidth: 1250, margin: '0 auto', display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
+    <div className="container colorful-bg retirement-dashboard-page">
       <div style={{ flex: 1, minWidth: 0 }}>
         <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>Provident Fund Dashboard</h1>
+        <SessionSummary />
         <div style={{ width: '100%', display: 'flex', flexDirection: 'row', marginTop: 0, marginBottom: '1.5rem' }}>
           <div style={{ flex: 1 }} />
           <div className="pf-dashboard-btn-row" style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center' }}>
@@ -372,10 +374,7 @@ function PfDashboard() {
         </div>
       </div>
       {/* Right side summary panel, styled to match Mutual Fund summary */}
-      <div style={{
-        minWidth: 300,
-        marginLeft: 32,
-        marginTop: 180, // increased further for more vertical spacing
+      <aside className="retirement-dashboard-summary" style={{
         background: '#fff',
         borderRadius: 14,
         boxShadow: '0 4px 24px 0 rgba(99,102,241,0.10)',
@@ -408,7 +407,7 @@ function PfDashboard() {
             <span style={{ fontWeight: 800, fontSize: 22, color: '#059669', letterSpacing: 0.5 }}>{pfSummary.totalAfter15Y.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
         </div>
-      </div>
+      </aside>
     </div>
   );
 }

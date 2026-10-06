@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import UserHeader from './components/UserHeader'
+import { SessionSummary } from './components/UserSessionSummary'
 import './styles/compare.css'
 
 function CompareMF() {
@@ -253,6 +254,8 @@ function CompareMF() {
             {selectedComparisonFund && comparisonResults.length > 0 && comparisonDifference < 0 ? '↓' : '↗'}
           </div>
         </section>
+
+        <SessionSummary />
 
         {error && <p className="compare-error">{error}</p>}
 

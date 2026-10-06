@@ -8,6 +8,7 @@ import ProgressBar from './components/ProgressBar';
 import { fetchUserFundSummary } from './api/fetchUserFundSummary';
 import { fetchMutualFundMetadata } from './api';
 import { fetchCapTypes } from './api/capTypes';
+import { SessionSummary } from './components/UserSessionSummary';
 
 export default function MFMetrics() {
     const navigate = useNavigate();
@@ -277,6 +278,7 @@ export default function MFMetrics() {
                 </button>
             </div>
             <h2 className="colorful-title" style={{ marginTop: 0, marginBottom: '1.5rem' }}>Mutual Fund Metrics</h2>
+            <SessionSummary />
             {loading ? (
                 <p>Loading metrics...</p>
             ) : error ? (

@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import UserHeader from './components/UserHeader'
+import { SessionSummary } from './components/UserSessionSummary'
 
 function MutualFundDetails() {
   const { userId, fundName } = useParams()
@@ -58,7 +59,7 @@ function MutualFundDetails() {
   return (
     <>
       <UserHeader userId={userId} />
-      <div style={{ position: 'absolute', top: 10, right: 20, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.7rem' }}>
+      <div className="details-page-topbar">
         <button
           onClick={() => navigate(`/user/${userId}/dashboard`)}
           style={{
@@ -83,6 +84,7 @@ function MutualFundDetails() {
             {decodeURIComponent(fundName)} - NAV Details
           </h1>
         </div>
+        <SessionSummary />
 
         {loading ? (
           <p style={{ fontSize: '1rem', color: '#666' }}>⏳ Loading NAV data from mfapi.in...</p>

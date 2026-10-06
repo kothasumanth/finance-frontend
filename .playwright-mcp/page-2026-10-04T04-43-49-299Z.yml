@@ -1,0 +1,25 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - heading "Public Provident Fund Dashboard" [level=1] [ref=e5]
+    - generic [ref=e7]:
+      - button "Overview" [ref=e8] [cursor=pointer]
+      - button "PPF" [ref=e9] [cursor=pointer]
+      - button "Setup Interest" [ref=e10] [cursor=pointer]
+      - button "Setup PPF" [ref=e11] [cursor=pointer]
+      - button "Delete PPF" [ref=e12] [cursor=pointer]
+    - button "Recalculate All PPF Entries" [ref=e14] [cursor=pointer]
+    - generic [ref=e15]:
+      - heading "PPF Yearwise Summary" [level=2] [ref=e16]
+      - generic [ref=e17]: Loading yearwise summary...
+  - complementary [ref=e18]:
+    - heading "PPF Summary" [level=2] [ref=e23]
+    - generic [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]: Total Deposits
+        - generic [ref=e27]: "0.00"
+      - generic [ref=e28]:
+        - generic [ref=e29]: Interest Till Date
+        - generic [ref=e30]: "0.00"
+      - generic [ref=e31]:
+        - generic [ref=e32]: Total After 15Y
+        - generic [ref=e33]: "0.00"

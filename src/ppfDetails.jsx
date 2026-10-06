@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { SessionSummary } from './components/UserSessionSummary';
 
 function groupEntriesByFinancialYear(entries) {
   if (!entries || entries.length === 0) return [];
@@ -201,7 +202,7 @@ function PpfDetails() {
           padding: 1px 4px;
         }
       `}</style>
-      <div style={{ position: 'absolute', top: 10, right: 20 }}>
+      <div className="details-page-topbar">
         <button onClick={() => navigate(`/user/${userId}/ppf-dashboard`)}>PPF Dashboard</button>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 48, marginBottom: 8 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-end' }}>
@@ -221,6 +222,7 @@ function PpfDetails() {
         </div>
       </div>
       <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>Detailed PPF Page</h1>
+      <SessionSummary />
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {!loading && !error && (
