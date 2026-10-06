@@ -10,6 +10,7 @@ export default function SearchableDropdown({
   ariaLabel,
   id,
   disabled = false,
+  maxSuggestions = 8,
   wrapperStyle,
   inputStyle,
 }) {
@@ -99,7 +100,7 @@ export default function SearchableDropdown({
               {emptyOptionLabel}
             </button>
           )}
-          {filteredOptions.slice(0, 8).map(option => (
+          {filteredOptions.slice(0, maxSuggestions).map(option => (
             <button
               key={option.value}
               type="button"

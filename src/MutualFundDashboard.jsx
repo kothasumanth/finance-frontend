@@ -60,6 +60,7 @@ function MutualFundDashboard() {
           <button onClick={() => navigate(`/user/${userId}/mf-metrics`)}>Metrics</button>
           <button onClick={() => setShowSIPPopup(true)}>SIP Info</button>
           <button onClick={() => navigate(`/user/${userId}/compare-mf`)}>Compare</button>
+          <button onClick={() => navigate(`/user/${userId}/sip-analysis`)}>SIP Analysis</button>
         </nav>
       </header>
       <main className="mf-dashboard-main">

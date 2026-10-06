@@ -8,6 +8,7 @@ import MutualFundEntries from './MutualFundEntries'
 import MutualFundMetadata from './MutualFundMetadata'
 import ViewMutualFundData from './ViewMutualFundData'
 import CompareMF from './CompareMF'
+import SIPAnalysis from './SIPAnalysis'
 import GoldData from './GoldData'
 import FinanceOverview from './FinanceOverview'
 import PpfDashboard from './PpfDashboard'
@@ -51,6 +52,7 @@ function App() {
           <Route path="mutualfund-metadata" element={<MutualFundMetadata />} />
           <Route path="view-mf-data" element={<ViewMutualFundData />} />
           <Route path="compare-mf" element={<CompareMF />} />
+          <Route path="sip-analysis" element={<SIPAnalysis />} />
           <Route path="ppf-dashboard" element={<PpfDashboard />} />
           <Route path="ppf-details" element={<PpfDetails />} />
           <Route path="pf-dashboard" element={<PfDashboard />} />

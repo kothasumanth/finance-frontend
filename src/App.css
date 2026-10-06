@@ -810,6 +810,181 @@ body {
   white-space: nowrap;
 }
 
+.sip-analysis-page {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100vh;
+  margin-left: 0;
+  padding: 0 24px 40px;
+  background: var(--page);
+  color: var(--ink);
+}
+
+.sip-analysis-topbar {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.sip-analysis-title {
+  margin: 0 !important;
+  font-size: 1.5rem;
+  white-space: nowrap;
+}
+
+.sip-analysis-dashboard-link {
+  margin-left: auto;
+  padding: 9px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.sip-analysis-main {
+  width: 100%;
+  margin: 0 auto;
+  padding-top: 16px;
+}
+
+.sip-analysis-controls {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.6fr) minmax(170px, 0.8fr) minmax(180px, 0.9fr) auto;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.sip-analysis-control {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.sip-analysis-control > input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+
+.sip-analysis-inception-button {
+  min-height: 42px !important;
+  padding: 8px 14px !important;
+  border: 1px solid var(--green) !important;
+  border-radius: 4px !important;
+  background: var(--green) !important;
+  color: #fff !important;
+  font-size: 0.86rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.sip-analysis-inception-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sip-analysis-error,
+.sip-analysis-status {
+  margin: 12px 0;
+  color: var(--muted);
+}
+
+.sip-analysis-error {
+  color: var(--red);
+}
+
+.sip-analysis-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.sip-analysis-summary-group {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.sip-analysis-summary-group > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sip-analysis-summary-group > div + div {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.sip-analysis-summary span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.sip-analysis-summary strong {
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.sip-analysis-summary strong.is-positive {
+  color: var(--green);
+}
+
+.sip-analysis-summary strong.is-negative {
+  color: var(--red);
+}
+
+.sip-analysis-table-wrap {
+  width: 100%;
+  overflow: auto;
+}
+
+.sip-analysis-table {
+  min-width: 1050px;
+  margin: 0 !important;
+}
+
+.sip-analysis-table th,
+.sip-analysis-table td {
+  white-space: nowrap;
+}
+
+.sip-analysis-table td.is-positive {
+  color: var(--green) !important;
+  font-weight: 700;
+}
+
+.sip-analysis-table td.is-negative {
+  color: var(--red) !important;
+  font-weight: 700;
+}
+
 .ppf-dashboard-page {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
@@ -1121,6 +1296,29 @@ textarea::placeholder {
     grid-row: 2;
   }
 
+  .sip-analysis-page {
+    padding: 0 14px 36px;
+  }
+
+  .sip-analysis-topbar {
+    min-height: 62px;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 0;
+  }
+
+  .sip-analysis-title {
+    font-size: 1.35rem;
+  }
+
+  .sip-analysis-dashboard-link {
+    margin-left: auto;
+  }
+
+  .sip-analysis-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .mf-dashboard-page {
     padding: 0 14px 36px;
   }
@@ -1303,6 +1501,23 @@ textarea::placeholder {
 }
 
 @media (max-width: 560px) {
+  .sip-analysis-controls,
+  .sip-analysis-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sip-analysis-summary {
+    gap: 12px 16px;
+  }
+
+  .sip-analysis-fund-control {
+    grid-column: 1 / -1;
+  }
+
+  .sip-analysis-inception-button {
+    width: 100%;
+  }
+
   .view-mf-summary-heading {
     align-items: flex-start;
     flex-direction: column;
