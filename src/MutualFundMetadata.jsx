@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import IconButton from './IconButton'
 import CapTypesManagement from './CapTypesManagement'
 import { fetchCapTypes } from './api/capTypes'
+import UserHeader from './components/UserHeader'
 import { SessionSummary } from './components/UserSessionSummary'
 import { useUserSessionSummary } from './components/userSessionSummaryContext'
 
@@ -137,7 +138,10 @@ function MutualFundMetadata() {
 
   return (
     <div className="container colorful-bg" style={{ paddingTop: '1.2rem', maxWidth: 1250, margin: '0 auto' }}>
-      <div style={{ position: 'absolute', top: 10, right: 20, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <header className="mf-metadata-topbar">
+        <UserHeader userId={userId} inline />
+        <h1 className="colorful-title mf-metadata-title">Mutual Fund Meta Data</h1>
+        <nav className="mf-metadata-actions" aria-label="Mutual fund metadata actions">
         <Link to={`/user/${userId}/dashboard`} style={{
           background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', textDecoration: 'none', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'
         }}>MF Dashboard</Link>
@@ -167,12 +171,8 @@ function MutualFundMetadata() {
         }}>
           Cap Types
         </button>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.2rem' }}>
-        <h1 className="colorful-title" style={{ margin: 0, fontSize: '1.5rem' }}>
-          Mutual Fund Meta Data
-        </h1>
-      </div>
+        </nav>
+      </header>
       <SessionSummary />
       
       {/* Cap Types Management Modal */}

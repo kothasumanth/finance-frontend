@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import * as XLSX from 'xlsx'
 import UserHeader from './components/UserHeader'
+import SearchableDropdown from './components/SearchableDropdown'
 import { SessionSummary } from './components/UserSessionSummary'
 import { useUserSessionSummary } from './components/userSessionSummaryContext'
 
@@ -233,6 +234,7 @@ function ViewMutualFundData() {
     <div className="view-mf-page">
       <header className="view-mf-topbar">
         <UserHeader userId={userId} inline />
+        <h1 className="colorful-title view-mf-title">View Mutual Fund Data</h1>
         <nav className="view-mf-actions" aria-label="Mutual fund data actions">
           <Link className="view-mf-action" to={`/user/${userId}/dashboard`}>MF Dashboard</Link>
           <button className="view-mf-action" onClick={handleGetAllNavs}>Get All NAVs</button>
@@ -247,7 +249,6 @@ function ViewMutualFundData() {
         </nav>
       </header>
       <main className="view-mf-main">
-        <h1 className="colorful-title view-mf-title">View Mutual Fund Data</h1>
         <SessionSummary />
         <section className="view-mf-summary" aria-label="Selected mutual fund summary">
           <div className="view-mf-summary-heading">
@@ -257,7 +258,7 @@ function ViewMutualFundData() {
             </div>
             <div className="view-mf-nav-details">
               <div><span>Date</span><strong>{mfApiData?.date || '-'}</strong></div>
-              <div><span>Latest NAV</span><strong>{hasLatestNav ? Number(mfApiData.nav).toFixed(5) : '-'}</strong></div>
+              <div><span>Latest NAV</span><strong>{hasLatestNav ? Number(mfApiData.nav).toFixed(3) : '-'}</strong></div>
             </div>
           </div>
           <div className="view-mf-summary-values">
@@ -269,18 +270,22 @@ function ViewMutualFundData() {
                 {profitLoss === null ? '-' : profitLoss.toFixed(2)}
               </strong>
             </div>
-            <div><span>Balance Units</span><strong>{entries.length ? balanceUnits.toFixed(2) : '-'}</strong></div>
+            <div><span>Balance Units</span><strong>{entries.length ? balanceUnits.toFixed(3) : '-'}</strong></div>
           </div>
         </section>
         <div className="view-mf-controls">
           <label htmlFor="view-mf-select">Select MF</label>
-          <select id="view-mf-select" value={selectedFund} onChange={e => setSelectedFund(e.target.value)}>
-            <option value="ALL">All Mutual Funds</option>
-            {fundOptionsWithData
-              .slice()
-              .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
-              .map(fund => <option key={fund._id} value={fund._id}>{fund.MutualFundName}</option>)}
-          </select>
+          <SearchableDropdown
+            id="view-mf-select"
+            ariaLabel="Select MF"
+            options={[
+              { value: 'ALL', label: 'All Mutual Funds' },
+              ...fundOptionsWithData.map(fund => ({ value: fund._id, label: fund.MutualFundName })),
+            ]}
+            value={selectedFund}
+            onChange={setSelectedFund}
+            wrapperStyle={{ maxWidth: 420 }}
+          />
         </div>
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -321,8 +326,8 @@ function ViewMutualFundData() {
                         }}>{entry.investType}</span>
                       </td>
                       <td>{entry.fundName?.MutualFundName || ''}</td>
-                      <td>{entry.nav !== undefined && entry.nav !== '' ? Number(entry.nav).toFixed(2) : ''}</td>
-                      <td style={{ whiteSpace: 'pre-line' }}>{entry.balanceUnit !== undefined && entry.balanceUnit !== '' ? Number(entry.balanceUnit).toFixed(2) : ''}</td>
+                      <td>{entry.nav !== undefined && entry.nav !== '' ? Number(entry.nav).toFixed(3) : ''}</td>
+                      <td style={{ whiteSpace: 'pre-line' }}>{entry.balanceUnit !== undefined && entry.balanceUnit !== '' ? Number(entry.balanceUnit).toFixed(3) : ''}</td>
                       <td>{entry.amount}</td>
                       <td>{(() => {
                         // Show Today Value as balanceUnit * latest NAV from API for Invest rows

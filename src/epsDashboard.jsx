@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { SessionSummary } from './components/UserSessionSummary';
+import UserHeader from './components/UserHeader';
 
 function EpsDashboard() {
   const { userId } = useParams();
@@ -269,45 +269,35 @@ function EpsDashboard() {
 
   return (
     <div className="container retirement-dashboard-page">
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>EPS Dashboard</h1>
-        <SessionSummary />
-        <div className="eps-dashboard-actions" style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem', justifyContent: 'flex-end' }}>
+      <header className="retirement-page-topbar eps-retirement-topbar">
+        <UserHeader userId={userId} inline />
+        <h1 className="colorful-title">EPS Dashboard</h1>
+        <div className="eps-dashboard-actions">
           <button
             style={{ background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}
             onClick={() => navigate(`/user/${userId}/overview`)}
             disabled={loading || actionLoading}
-          >
-            Overview
-          </button>
+          >Overview</button>
           <button
             style={{ background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}
             onClick={() => navigate(`/user/${userId}/eps-details`)}
             disabled={loading || actionLoading}
-          >
-            EPS Details
-          </button>
+          >EPS Details</button>
           <button
             style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}
             onClick={handleOpenInterestPopup}
             disabled={loading || actionLoading}
-          >
-            Setup Interest
-          </button>
+          >Setup Interest</button>
           <button
             style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}
             onClick={() => { setShowSetupEpsPopup(true); setSetupEpsStartDate(''); }}
             disabled={loading || actionLoading}
-          >
-            {actionLoading ? 'Setting up...' : 'Setup EPS'}
-          </button>
+          >{actionLoading ? 'Setting up...' : 'Setup EPS'}</button>
           <button
             style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}
             onClick={handleDeleteEps}
             disabled={loading || actionLoading}
-          >
-            {actionLoading ? 'Deleting...' : 'Delete EPS'}
-          </button>
+          >{actionLoading ? 'Deleting...' : 'Delete EPS'}</button>
           <button
             style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}
             onClick={async () => {
@@ -338,10 +328,10 @@ function EpsDashboard() {
               }
             }}
             disabled={loading || actionLoading}
-          >
-            Recalculate All EPS Entries
-          </button>
+          >Recalculate All EPS Entries</button>
         </div>
+      </header>
+      <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.2rem' }}>
         </div>
 

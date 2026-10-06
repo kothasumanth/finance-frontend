@@ -3,7 +3,6 @@ import { Fragment, useEffect, useState } from 'react';
 import { fetchTodayGoldPrice, saveTodayGoldPrice } from './api/goldPrice';
 import { useParams, Link } from 'react-router-dom';
 import UserHeader from './components/UserHeader';
-import { SessionSummary } from './components/UserSessionSummary';
 
 function GoldData() {
   const [deleteIdx, setDeleteIdx] = useState(null);
@@ -109,8 +108,9 @@ function GoldData() {
   // ...existing code...
   return (
     <div className="gold-page">
-      <UserHeader userId={userId} />
       <header className="gold-topbar">
+        <UserHeader userId={userId} inline />
+        <h1 className="colorful-title gold-details-title">Gold Details</h1>
         <Link className="gold-back-link" to={`/user/${userId}/overview`}>Back to Overview</Link>
         <div className="gold-actions">
           <button onClick={handleAdd}>Add New</button>
@@ -119,11 +119,11 @@ function GoldData() {
       </header>
       <aside className="gold-summary">
         <div className="gold-today-prices">
-          Today Gold Price:
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 6 }}>
-            <span style={{ color: '#059669', fontWeight: 700 }}>24K: {todayGoldPrice?.price24k ?? '-'}</span>
-            <span style={{ color: '#059669', fontWeight: 700 }}>22K: {todayGoldPrice?.price22k ?? '-'}</span>
-            <span style={{ color: '#059669', fontWeight: 700 }}>18K: {todayGoldPrice?.price18k ?? '-'}</span>
+          <strong>Today Gold Price</strong>
+          <div className="gold-price-values">
+            <span>24K: {todayGoldPrice?.price24k ?? '-'}</span>
+            <span>22K: {todayGoldPrice?.price22k ?? '-'}</span>
+            <span>18K: {todayGoldPrice?.price18k ?? '-'}</span>
           </div>
         </div>
         <section className="gold-summary-details">
@@ -142,7 +142,7 @@ function GoldData() {
               const overallInvested = categoryTotals.reduce((sum, c) => sum + c.totalPrice, 0);
               const overallTodayValue = categoryTotals.reduce((sum, c) => sum + c.todayValue, 0);
               return (
-                <div style={{ display: 'grid', gap: 10 }}>
+                <div style={{ display: 'grid', gap: 6 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.2fr', gap: 10, alignItems: 'center' }}>
                     <div style={{ fontWeight: 700 }}>Karat</div>
                     <div style={{ fontWeight: 700 }}>Total Grams</div>
@@ -150,14 +150,14 @@ function GoldData() {
                     <div style={{ fontWeight: 700 }}>Today Value</div>
                     {categoryTotals.map(cat => (
                       <Fragment key={cat.karat}>
-                        <div key={`label-${cat.karat}`} style={{ fontWeight: 600, padding: '0.55rem 0', borderTop: '1px solid #e2e8f0' }}>{cat.karat}K</div>
-                        <div key={`grams-${cat.karat}`} style={{ padding: '0.55rem 0', borderTop: '1px solid #e2e8f0' }}>{cat.totalGrams.toFixed(2)}</div>
-                        <div key={`avg-${cat.karat}`} style={{ padding: '0.55rem 0', borderTop: '1px solid #e2e8f0' }}>{cat.avgPrice.toFixed(2)}</div>
-                        <div key={`today-${cat.karat}`} style={{ padding: '0.55rem 0', borderTop: '1px solid #e2e8f0' }}>{cat.todayValue.toFixed(2)}</div>
+                        <div key={`label-${cat.karat}`} style={{ fontWeight: 600, padding: '0.25rem 0', borderTop: '1px solid #e2e8f0' }}>{cat.karat}K</div>
+                        <div key={`grams-${cat.karat}`} style={{ padding: '0.25rem 0', borderTop: '1px solid #e2e8f0' }}>{cat.totalGrams.toFixed(2)}</div>
+                        <div key={`avg-${cat.karat}`} style={{ padding: '0.25rem 0', borderTop: '1px solid #e2e8f0' }}>{cat.avgPrice.toFixed(2)}</div>
+                        <div key={`today-${cat.karat}`} style={{ padding: '0.25rem 0', borderTop: '1px solid #e2e8f0' }}>{cat.todayValue.toFixed(2)}</div>
                       </Fragment>
                     ))}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0.75rem', borderRadius: 10, background: '#fef3c7', fontWeight: 700 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0.5rem', borderRadius: 6, background: '#fef3c7', fontWeight: 700 }}>
                     <div>Total Invested: {overallInvested.toFixed(2)}</div>
                     <div>Total Today Value: {overallTodayValue.toFixed(2)}</div>
                   </div>
@@ -202,8 +202,6 @@ function GoldData() {
           </div>
         </div>
       )}
-      <h1 className="colorful-title gold-details-title">Gold Details</h1>
-      <SessionSummary />
       {/* Modal for Add/Edit */}
       {showModal && (
         <div style={{
@@ -308,8 +306,8 @@ function GoldData() {
               })
           )}
       {/* Pagination Controls - Centered below table */}
-      <tr>
-        <td colSpan={6} style={{ paddingTop: 18 }}>
+      <tr className="gold-pagination-row">
+        <td colSpan={6}>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16 }}>
             <button
               onClick={() => setPage(page - 1)}

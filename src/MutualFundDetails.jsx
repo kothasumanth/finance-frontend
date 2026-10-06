@@ -2,7 +2,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import UserHeader from './components/UserHeader'
-import { SessionSummary } from './components/UserSessionSummary'
 
 function MutualFundDetails() {
   const { userId, fundName } = useParams()
@@ -58,8 +57,11 @@ function MutualFundDetails() {
 
   return (
     <>
-      <UserHeader userId={userId} />
       <div className="details-page-topbar">
+        <UserHeader userId={userId} inline />
+        <h1 className="colorful-title details-page-title">
+          {decodeURIComponent(fundName)} - NAV Details
+        </h1>
         <button
           onClick={() => navigate(`/user/${userId}/dashboard`)}
           style={{
@@ -78,14 +80,7 @@ function MutualFundDetails() {
           Back to Dashboard
         </button>
       </div>
-      <div className="container colorful-bg" style={{ maxWidth: 800, margin: '0 auto', paddingTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1rem' }}>
-          <h1 className="colorful-title" style={{ fontSize: '1.5rem', marginTop: 0, marginBottom: '0.7rem', textAlign: 'center', lineHeight: 1.3 }}>
-            {decodeURIComponent(fundName)} - NAV Details
-          </h1>
-        </div>
-        <SessionSummary />
-
+      <div className="container colorful-bg" style={{ maxWidth: 800, margin: '0 auto', paddingTop: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {loading ? (
           <p style={{ fontSize: '1rem', color: '#666' }}>⏳ Loading NAV data from mfapi.in...</p>
         ) : error ? (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import UserHeader from './components/UserHeader'
+import SearchableDropdown from './components/SearchableDropdown'
 import { SessionSummary } from './components/UserSessionSummary'
 import './styles/compare.css'
 
@@ -10,8 +11,6 @@ function CompareMF() {
   const [allMetadata, setAllMetadata] = useState([])
   const [selectedPortfolioFund, setSelectedPortfolioFund] = useState('')
   const [selectedComparisonFund, setSelectedComparisonFund] = useState('')
-  const [comparisonFundSearch, setComparisonFundSearch] = useState('')
-  const [showComparisonSuggestions, setShowComparisonSuggestions] = useState(false)
   const [portfolioInvestments, setPortfolioInvestments] = useState([])
   const [comparisonResults, setComparisonResults] = useState([])
   const [loading, setLoading] = useState(false)
@@ -64,9 +63,7 @@ function CompareMF() {
     setSelectedPortfolioFund(fundId)
     setPortfolioInvestments([])
     setComparisonResults([])
-    setComparisonFundSearch('')
     setSelectedComparisonFund('')
-    setShowComparisonSuggestions(false)
     setError(null)
 
     if (!fundId) return
@@ -199,24 +196,6 @@ function CompareMF() {
     }
   }
 
-  const handleComparisonFundSearch = (value) => {
-    setComparisonFundSearch(value)
-    const matchingFund = allMetadata.find(fund =>
-      fund.MutualFundName.toLowerCase() === value.trim().toLowerCase()
-    )
-
-    if (matchingFund) {
-      handleComparisonFundChange(matchingFund._id)
-    } else {
-      setSelectedComparisonFund('')
-      setComparisonResults([])
-    }
-  }
-
-  const filteredComparisonFunds = allMetadata
-    .filter(fund => fund.MutualFundName.toLowerCase().includes(comparisonFundSearch.trim().toLowerCase()))
-    .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
-
   const formatDate = (dateStr) => {
     if (!dateStr) return ''
     const d = new Date(dateStr)
@@ -239,21 +218,16 @@ function CompareMF() {
         <header className="compare-topbar">
           <div className="compare-topbar-actions">
             <UserHeader userId={userId} inline />
+            <h1 className="compare-page-title">Compare mutual funds</h1>
+            <div
+              className={`compare-hero-mark${selectedComparisonFund && comparisonResults.length > 0 && comparisonDifference < 0 ? ' compare-hero-mark-negative' : ''}`}
+              aria-hidden="true"
+            >
+              {selectedComparisonFund && comparisonResults.length > 0 && comparisonDifference < 0 ? '↓' : '↗'}
+            </div>
             <Link className="compare-back-link" to={`/user/${userId}/dashboard`}>Back to dashboard</Link>
           </div>
         </header>
-
-        <section className="compare-hero">
-          <div>
-            <h1>Compare mutual funds</h1>
-          </div>
-          <div
-            className={`compare-hero-mark${selectedComparisonFund && comparisonResults.length > 0 && comparisonDifference < 0 ? ' compare-hero-mark-negative' : ''}`}
-            aria-hidden="true"
-          >
-            {selectedComparisonFund && comparisonResults.length > 0 && comparisonDifference < 0 ? '↓' : '↗'}
-          </div>
-        </section>
 
         <SessionSummary />
 
@@ -264,107 +238,26 @@ function CompareMF() {
         {/* Portfolio Fund Selection */}
         <div className="compare-selector compare-selector-primary">
           <h3>Your portfolio fund (Holding)</h3>
-          <select
+          <SearchableDropdown
+            ariaLabel="Your portfolio fund"
+            emptyOptionLabel="Select a fund from your portfolio"
+            options={portfolioFunds.map(fund => ({ value: fund._id, label: fund.MutualFundName }))}
             value={selectedPortfolioFund}
-            onChange={(e) => handlePortfolioFundChange(e.target.value)}
-            style={{
-              width: '100%',
-              fontWeight: 600,
-              color: '#2563eb',
-              fontSize: '1rem',
-              border: '1.5px solid #059669',
-              borderRadius: 6,
-              padding: '0.5rem 1rem',
-              fontFamily: 'monospace',
-              background: '#fff',
-              outline: 'none'
-            }}
-          >
-            <option value="">Select a fund from your portfolio</option>
-            {portfolioFunds
-              .slice()
-              .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
-              .map(fund => (
-                <option key={fund._id} value={fund._id}>{fund.MutualFundName}</option>
-              ))}
-          </select>
+            onChange={handlePortfolioFundChange}
+          />
         </div>
 
         {/* Comparison Fund Selection */}
         <div className="compare-selector compare-selector-secondary">
           <h3>Compare with (Alternative)</h3>
-          <div style={{ position: 'relative' }}>
-            <input
-              value={comparisonFundSearch}
-              onChange={(e) => handleComparisonFundSearch(e.target.value)}
-              onFocus={() => setShowComparisonSuggestions(true)}
-              onBlur={() => setTimeout(() => setShowComparisonSuggestions(false), 150)}
-              disabled={!selectedPortfolioFund || portfolioInvestments.length === 0}
-              placeholder="Type to search funds"
-              aria-label="Compare with fund"
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                fontWeight: 600,
-                color: '#2563eb',
-                fontSize: '1rem',
-                border: '1.5px solid #059669',
-                borderRadius: 6,
-                padding: '0.5rem 1rem',
-                fontFamily: 'monospace',
-                background: '#fff',
-                outline: 'none',
-                opacity: !selectedPortfolioFund || portfolioInvestments.length === 0 ? 0.5 : 1,
-                cursor: !selectedPortfolioFund || portfolioInvestments.length === 0 ? 'not-allowed' : 'text'
-              }}
-            />
-            {showComparisonSuggestions && selectedPortfolioFund && portfolioInvestments.length > 0 && (
-              <div style={{
-                position: 'absolute',
-                top: 'calc(100% + 4px)',
-                left: 0,
-                right: 0,
-                maxHeight: 220,
-                overflowY: 'auto',
-                background: '#fff',
-                border: '1px solid #cbd5e1',
-                borderRadius: 6,
-                boxShadow: '0 6px 16px rgba(15, 23, 42, 0.14)',
-                zIndex: 10
-              }}>
-                {filteredComparisonFunds.slice(0, 8).map(fund => (
-                  <button
-                    key={fund._id}
-                    type="button"
-                    onMouseDown={() => {
-                      setComparisonFundSearch(fund.MutualFundName)
-                      setShowComparisonSuggestions(false)
-                      handleComparisonFundChange(fund._id)
-                    }}
-                    style={{
-                      display: 'block',
-                      width: '100%',
-                      padding: '0.6rem 0.75rem',
-                      border: 'none',
-                      borderBottom: '1px solid #f1f5f9',
-                      background: '#fff',
-                      color: '#1e293b',
-                      textAlign: 'left',
-                      fontSize: '0.9rem',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {fund.MutualFundName}
-                  </button>
-                ))}
-                {filteredComparisonFunds.length === 0 && (
-                  <div style={{ padding: '0.7rem 0.75rem', color: '#64748b', fontSize: '0.9rem' }}>
-                    No matching funds
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <SearchableDropdown
+            ariaLabel="Compare with fund"
+            placeholder="Type to search funds"
+            options={allMetadata.map(fund => ({ value: fund._id, label: fund.MutualFundName }))}
+            value={selectedComparisonFund}
+            onChange={handleComparisonFundChange}
+            disabled={!selectedPortfolioFund || portfolioInvestments.length === 0}
+          />
         </div>
       </div>
 

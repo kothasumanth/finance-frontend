@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { SessionSummary } from './components/UserSessionSummary';
+import UserHeader from './components/UserHeader';
+import RetirementSummary from './components/RetirementSummary';
 
 function groupEntriesByFinancialYear(entries) {
   if (!entries || entries.length === 0) return [];
@@ -203,8 +204,10 @@ function PpfDetails() {
         }
       `}</style>
       <div className="details-page-topbar">
+        <UserHeader userId={userId} inline />
+        <h1 className="colorful-title details-page-title">Detailed PPF Page</h1>
         <button onClick={() => navigate(`/user/${userId}/ppf-dashboard`)}>PPF Dashboard</button>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 48, marginBottom: 8 }}>
+        <div className="details-page-balance-summary" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 48, marginBottom: 8 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-end' }}>
             <div style={{ background: '#f5f7fa', borderRadius: 8, padding: '8px 18px', boxShadow: '0 1px 4px #0001', minWidth: 120, marginBottom: 0 }}>
               <div style={{ fontSize: 13, color: '#888' }}>Opening Balance</div>
@@ -221,8 +224,7 @@ function PpfDetails() {
           </div>
         </div>
       </div>
-      <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>Detailed PPF Page</h1>
-      <SessionSummary />
+      <RetirementSummary moduleName="PPF" entries={entries} loading={loading} error={error} />
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {!loading && !error && (

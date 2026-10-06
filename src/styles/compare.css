@@ -20,14 +20,25 @@
   min-height: 72px;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   border-bottom: 1px solid #d8d2c4;
 }
 
 .compare-topbar-actions {
   display: flex;
+  width: 100%;
   align-items: center;
   gap: 12px;
+}
+
+.compare-page-title {
+  margin: 0;
+  color: #18211f;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .user-header-inline {
@@ -52,6 +63,7 @@
 }
 
 .compare-back-link {
+  margin-left: auto;
   color: #18211f !important;
   border: 1px solid #b9b2a4;
   border-radius: 999px;
@@ -128,6 +140,13 @@
   background: #fbe6df;
   color: #c84d3a;
   transform: none;
+}
+
+.compare-topbar .compare-hero-mark {
+  position: static;
+  width: 32px;
+  height: 32px;
+  font-size: 1.25rem;
 }
 
 .compare-error {

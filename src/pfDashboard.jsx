@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { SessionSummary } from './components/UserSessionSummary';
+import UserHeader from './components/UserHeader';
 
 function PfDashboard() {
   const { userId } = useParams();
@@ -221,48 +221,45 @@ function PfDashboard() {
 
   return (
     <div className="container colorful-bg retirement-dashboard-page">
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>Provident Fund Dashboard</h1>
-        <SessionSummary />
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'row', marginTop: 0, marginBottom: '1.5rem' }}>
-          <div style={{ flex: 1 }} />
-          <div className="pf-dashboard-btn-row" style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center' }}>
-            <button
-              className="pf-dashboard-btn"
-              style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}
-              onClick={() => navigate(`/user/${userId}/overview`)}
-            >Overview</button>
-            <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }} onClick={() => navigate(`/user/${userId}/pf-details`)}>PF Details</button>
-            {/* <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}>VPF</button> */}
-            {/* <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}>PPF</button> */}
-            <button className="pf-dashboard-btn" style={{ minWidth: 140, marginLeft: '2rem', background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(16,185,129,0.08)' }} onClick={handleOpenPopup}>Setup Interest</button>
-            <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(245,158,66,0.08)' }} onClick={handleSetupPFClick}>Setup PF</button>
-            <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(239,68,68,0.08)' }} onClick={handleDeletePF} disabled={deletePFLoading}>{deletePFLoading ? 'Deleting...' : 'Delete PF'}</button>
-            <button className="pf-dashboard-btn" style={{ minWidth: 180, background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem' }} onClick={async () => {
-              if (!window.confirm('Recalculate all PF entries for all users?')) return;
-              try {
-                const pfTypesRes = await fetch('http://localhost:3000/pf-types');
-                const pfTypes = await pfTypesRes.json();
-                const pfType = pfTypes.find(t => t.name === 'PF');
-                if (!pfType) { alert('PF type not found'); return; }
-                const res = await fetch('http://localhost:3000/pfentry/recalculate-all', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ pfTypeId: pfType._id })
-                });
-                if (res.ok) {
-                  alert('Recalculation complete for PF entries!');
-                  window.location.reload();
-                } else {
-                  const err = await res.json();
-                  alert(err.error || 'Error recalculating PF entries');
-                }
-              } catch (err) {
-                alert('Error recalculating PF entries');
+      <header className="retirement-page-topbar pf-retirement-topbar">
+        <UserHeader userId={userId} inline />
+        <h1 className="colorful-title">Provident Fund Dashboard</h1>
+        <div className="pf-dashboard-btn-row" style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center' }}>
+          <button
+            className="pf-dashboard-btn"
+            style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}
+            onClick={() => navigate(`/user/${userId}/overview`)}
+          >Overview</button>
+          <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }} onClick={() => navigate(`/user/${userId}/pf-details`)}>PF Details</button>
+          <button className="pf-dashboard-btn" style={{ minWidth: 140, marginLeft: '2rem', background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(16,185,129,0.08)' }} onClick={handleOpenPopup}>Setup Interest</button>
+          <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(245,158,66,0.08)' }} onClick={handleSetupPFClick}>Setup PF</button>
+          <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(239,68,68,0.08)' }} onClick={handleDeletePF} disabled={deletePFLoading}>{deletePFLoading ? 'Deleting...' : 'Delete PF'}</button>
+          <button className="pf-dashboard-btn" style={{ minWidth: 180, background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem' }} onClick={async () => {
+            if (!window.confirm('Recalculate all PF entries for all users?')) return;
+            try {
+              const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+              const pfTypes = await pfTypesRes.json();
+              const pfType = pfTypes.find(t => t.name === 'PF');
+              if (!pfType) { alert('PF type not found'); return; }
+              const res = await fetch('http://localhost:3000/pfentry/recalculate-all', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pfTypeId: pfType._id })
+              });
+              if (res.ok) {
+                alert('Recalculation complete for PF entries!');
+                window.location.reload();
+              } else {
+                const err = await res.json();
+                alert(err.error || 'Error recalculating PF entries');
               }
-            }}>Recalculate All PF Entries</button>
-          </div>
+            } catch (err) {
+              alert('Error recalculating PF entries');
+            }
+          }}>Recalculate All PF Entries</button>
         </div>
+      </header>
+      <div style={{ flex: 1, minWidth: 0 }}>
         {showPopup && (
           <div className="popup-bg" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.2)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className="popup" style={{ background: '#fff', borderRadius: 8, padding: 24, minWidth: 420, boxShadow: '0 2px 16px rgba(0,0,0,0.12)' }}>

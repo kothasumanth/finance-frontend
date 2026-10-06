@@ -50,6 +50,7 @@ function MutualFundDashboard() {
       <header className="mf-dashboard-topbar">
         <div className="mf-dashboard-identity">
           <UserHeader userId={userId} inline />
+          <h1 className="colorful-title mf-dashboard-title">Mutual Fund Dashboard</h1>
         </div>
         <nav className="mf-dashboard-actions" aria-label="Mutual fund actions">
           <button onClick={() => navigate(`/user/${userId}/overview`)}>Overview</button>
@@ -62,7 +63,6 @@ function MutualFundDashboard() {
         </nav>
       </header>
       <main className="mf-dashboard-main">
-        <h1 className="colorful-title mf-dashboard-title">Mutual Fund Dashboard</h1>
         <SessionSummary />
         <div className="mf-dashboard-content">
           <section className="mf-dashboard-table-panel">

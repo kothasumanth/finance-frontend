@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { fetchMutualFundMetadata } from './api'
 import IconButton from './IconButton'
+import UserHeader from './components/UserHeader'
+import SearchableDropdown from './components/SearchableDropdown'
 import { SessionSummary } from './components/UserSessionSummary'
 import { useUserSessionSummary } from './components/userSessionSummaryContext'
 
@@ -57,7 +59,10 @@ function MutualFundEntries() {
 
   const handleAdd = () => {
     setShowPopup(true)
-    setFundName(fundOptions.length > 0 ? fundOptions[0]._id : '')
+    const initialFundId = fundOptions.some(fund => fund._id === fundName)
+      ? fundName
+      : fundOptions[0]?._id || ''
+    setFundName(initialFundId)
     setMultiEntries([{ date: '', investType: 'Invest', amount: '' }])
   }
 
@@ -105,7 +110,7 @@ function MutualFundEntries() {
 
   const handleEdit = (entry) => {
     setEditId(entry._id)
-    setEditFundName(entry.fundName)
+    setEditFundName(entry.fundName?._id || entry.fundName || '')
     setEditDate(entry.purchaseDate)
     setEditInvestType(entry.investType || 'Invest')
     setEditAmount(entry.amount || '')
@@ -155,46 +160,24 @@ function MutualFundEntries() {
 
   return (
     <div className="container colorful-bg" style={{ paddingTop: '1.2rem', maxWidth: 1250, margin: '0 auto' }}>
-      <div style={{ position: 'absolute', top: 10, right: 20 }}>
-        <Link to={`/user/${userId}/dashboard`} style={{
-          background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', textDecoration: 'none', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'
-        }}>MF Dashboard</Link>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.2rem' }}>
-        <h1 className="colorful-title" style={{ margin: 0, fontSize: '1.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+        <UserHeader userId={userId} inline />
+        <h1 className="colorful-title" style={{ margin: 0, fontSize: '1.5rem', whiteSpace: 'nowrap' }}>
           Mutual Fund Entries
         </h1>
-        {/* Filter Mutual Fund Dropdown */}
-        <select
-          value={fundName || ''}
-          onChange={e => {
-            setFundName(e.target.value);
-            setPage(1);
+        <SearchableDropdown
+          ariaLabel="Filter mutual funds"
+          emptyOptionLabel="All Mutual Funds"
+          options={fundOptions.map(fund => ({ value: fund._id, label: fund.MutualFundName }))}
+          value={fundName}
+          onChange={selectedFundId => {
+            setFundName(selectedFundId)
+            setPage(1)
           }}
-          style={{
-            fontWeight: 600,
-            color: '#2563eb',
-            fontSize: '1rem',
-            border: '1.5px solid #059669',
-            borderRadius: 6,
-            padding: '0.3rem 1.1rem',
-            fontFamily: 'monospace',
-            background: '#f0f9ff',
-            outline: 'none',
-            minWidth: 180,
-            marginLeft: '1.5rem',
-          }}
-        >
-          <option value="">All Mutual Funds</option>
-          {fundOptions
-            .slice()
-            .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
-            .map(opt => (
-              <option key={opt._id} value={opt._id}>{opt.MutualFundName}</option>
-            ))}
-        </select>
+          wrapperStyle={{ flex: '1 1 220px', maxWidth: 360, minWidth: 180 }}
+          inputStyle={{ padding: '0.3rem 1.1rem', background: '#f0f9ff' }}
+        />
         <button onClick={handleAdd} style={{
-          marginLeft: '2rem',
           background: '#6366f1',
           color: '#fff',
           border: 'none',
@@ -208,6 +191,11 @@ function MutualFundEntries() {
         }}>
           Add
         </button>
+        <Link to={`/user/${userId}/dashboard`} style={{
+          marginLeft: 'auto',
+          background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', textDecoration: 'none', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)',
+          whiteSpace: 'nowrap',
+        }}>MF Dashboard</Link>
       </div>
       <SessionSummary />
       {showPopup && (
@@ -233,27 +221,14 @@ function MutualFundEntries() {
               <div style={{ display: 'flex', alignItems: 'center', width: '100%', marginBottom: 0 }}>
                 <span style={{ flex: '0 0 140px', fontWeight: 'bold', color: '#059669', fontSize: '1rem', textAlign: 'left', paddingRight: 10 }}>Fund Name:</span>
                 <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-start' }}>
-                  <select value={fundName} onChange={e => setFundName(e.target.value)}
-                    style={{
-                      fontWeight: 600,
-                      color: '#2563eb',
-                      fontSize: '1rem',
-                      border: '1.5px solid #059669',
-                      borderRadius: 6,
-                      padding: '0.3rem 1.1rem',
-                      fontFamily: 'monospace',
-                      background: '#f0f9ff',
-                      outline: 'none',
-                      minWidth: 180,
-                      textAlign: 'left'
-                    }}>
-                    {fundOptions
-                      .slice()
-                      .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
-                      .map(opt => (
-                        <option key={opt._id} value={opt._id}>{opt.MutualFundName}</option>
-                      ))}
-                  </select>
+                  <SearchableDropdown
+                    ariaLabel="Fund name"
+                    options={fundOptions.map(fund => ({ value: fund._id, label: fund.MutualFundName }))}
+                    value={fundName}
+                    onChange={setFundName}
+                    wrapperStyle={{ flex: 1, minWidth: 180 }}
+                    inputStyle={{ padding: '0.3rem 1.1rem', background: '#f0f9ff' }}
+                  />
                 </div>
               </div>
 
@@ -397,29 +372,14 @@ function MutualFundEntries() {
                   <tr key={entry._id}>
                     <td>
                       {editId === entry._id ? (
-                        <select value={editFundName} onChange={e => setEditFundName(e.target.value)}
-                          style={{
-                            fontWeight: 600,
-                            color: '#2563eb',
-                            fontSize: '1rem',
-                            border: '1.5px solid #059669',
-                            borderRadius: 6,
-                            padding: '0.3rem 1.1rem',
-                            fontFamily: 'monospace',
-                            background: '#f0f9ff',
-                            outline: 'none',
-                            minWidth: 180,
-                            maxWidth: '100%',
-                            width: '100%',
-                            boxSizing: 'border-box',
-                          }}>
-                          {fundOptions
-                            .slice()
-                            .sort((a, b) => a.MutualFundName.localeCompare(b.MutualFundName))
-                            .map(opt => (
-                              <option key={opt._id} value={opt._id}>{opt.MutualFundName}</option>
-                            ))}
-                        </select>
+                        <SearchableDropdown
+                          ariaLabel="Edit fund name"
+                          options={fundOptions.map(fund => ({ value: fund._id, label: fund.MutualFundName }))}
+                          value={editFundName}
+                          onChange={setEditFundName}
+                          wrapperStyle={{ minWidth: 180, maxWidth: '100%' }}
+                          inputStyle={{ padding: '0.3rem 1.1rem', background: '#f0f9ff' }}
+                        />
                       ) : (
                         entry.fundName?.MutualFundName || ''
                       )}

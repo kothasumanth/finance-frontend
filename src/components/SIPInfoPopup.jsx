@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import IconButton from '../IconButton';
+import SearchableDropdown from './SearchableDropdown';
 
 function SIPInfoPopup({ userId, onClose, fundSummary }) {
     const [sipInfo, setSipInfo] = useState([]);
@@ -162,23 +163,13 @@ function SIPInfoPopup({ userId, onClose, fundSummary }) {
                             <label style={{ display: 'block', marginBottom: '0.5rem', color: '#4b5563' }}>
                                 Mutual Fund
                             </label>
-                            <select
+                            <SearchableDropdown
+                                ariaLabel="Mutual Fund"
+                                emptyOptionLabel="Select Fund"
+                                options={investedFunds.map(fund => ({ value: fund.id, label: fund.name }))}
                                 value={selectedFund}
-                                onChange={(e) => setSelectedFund(e.target.value)}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.5rem',
-                                    border: '1px solid #d1d5db',
-                                    borderRadius: '0.375rem',
-                                }}
-                            >
-                                <option value="">Select Fund</option>
-                                {investedFunds.map(fund => (
-                                    <option key={fund.id} value={fund.id}>
-                                        {fund.name}
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={setSelectedFund}
+                            />
                         </div>
 
                         <div>

@@ -1,162 +1,148 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { fetchGoldTodayValue } from './api/fetchGoldTodayValue';
-import EpsDashboard from './epsDashboard';
+import { fetchGoldSummary } from './api/fetchGoldTodayValue';
 import UserHeader from './components/UserHeader';
-import { SessionSummary } from './components/UserSessionSummary';
 import { useUserSessionSummary } from './components/userSessionSummaryContext';
+
+function summarizeContributionEntries(entries) {
+  const values = Array.isArray(entries) ? entries : [];
+  const investValue = values.reduce((sum, entry) => sum + (Number(entry.amountDeposited) || 0), 0);
+  const profitLoss = values.reduce((sum, entry) => sum + (Number(entry.monthInterest) || 0), 0);
+  return { investValue, todayValue: investValue + profitLoss, profitLoss };
+}
+
+function formatSummaryValue(summary, key) {
+  if (!summary) return 'Loading...';
+  if (summary.error) return '-';
+  return summary[key].toFixed(2);
+}
 
 function FinanceOverview() {
   const { userId } = useParams();
   const navigate = useNavigate();
   const { funds: fundSummary, loading, error } = useUserSessionSummary();
-  const [ppfTotal, setPpfTotal] = useState(null);
-  const [pfTotal, setPfTotal] = useState(null);
-  const [epsTotal, setEpsTotal] = useState(null);
-  const [goldTodayValue, setGoldTodayValue] = useState(null);
+  const [ppfSummary, setPpfSummary] = useState(null);
+  const [pfSummary, setPfSummary] = useState(null);
+  const [epsSummary, setEpsSummary] = useState(null);
+  const [goldSummary, setGoldSummary] = useState(null);
   useEffect(() => {
-    async function fetchGoldToday() {
-      setGoldTodayValue(null);
+    async function loadGoldSummary() {
       try {
-        const todayVal = await fetchGoldTodayValue(userId);
-        setGoldTodayValue(todayVal.toFixed(2));
-      } catch {
-        setGoldTodayValue(null);
-      }
-    }
-    fetchGoldToday();
-  }, [userId]);
-
-  useEffect(() => {
-    // Fetch PPF summary (Total After 15Y) from backend
-    async function fetchPPFSummary() {
-      try {
-        const pfTypesRes = await fetch('http://localhost:3000/pf-types');
-        const pfTypes = await pfTypesRes.json();
-        const ppfType = pfTypes.find(t => t.name === 'PPF');
-        if (!ppfType) return;
-        const res = await fetch(`http://localhost:3000/pfentry/user/${userId}/type/${ppfType._id}`);
-        const entries = await res.json();
-        // Calculate totalDeposits and totalInterest
-        let totalDeposits = 0, totalInterest = 0;
-        entries.forEach(e => {
-          totalDeposits += e.amountDeposited || 0;
-          totalInterest += e.monthInterest || 0;
+        const summary = await fetchGoldSummary(userId);
+        setGoldSummary({
+          investValue: summary.invested,
+          todayValue: summary.todayValue,
+          profitLoss: summary.todayValue - summary.invested,
         });
-        setPpfTotal((totalDeposits + totalInterest).toFixed(2));
       } catch {
-        setPpfTotal(null);
+        setGoldSummary({ error: true });
       }
     }
-    fetchPPFSummary();
+    loadGoldSummary();
   }, [userId]);
 
   useEffect(() => {
-    // Fetch PF summary (Total After 15Y) from backend
-    async function fetchPFSummary() {
-      try {
-        const pfTypesRes = await fetch('http://localhost:3000/pf-types');
-        const pfTypes = await pfTypesRes.json();
-        const pfType = pfTypes.find(t => t.name === 'PF');
-        if (!pfType) return;
-        const res = await fetch(`http://localhost:3000/pfentry/user/${userId}/type/${pfType._id}`);
-        const entries = await res.json();
-        let totalDeposits = 0, totalInterest = 0;
-        entries.forEach(e => {
-          totalDeposits += e.amountDeposited || 0;
-          totalInterest += e.monthInterest || 0;
-        });
-        setPfTotal((totalDeposits + totalInterest).toFixed(2));
-      } catch {
-        setPfTotal(null);
-      }
+    async function fetchSummary(typeName) {
+      const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+      if (!pfTypesRes.ok) throw new Error('Failed to fetch provident fund types');
+      const pfTypes = await pfTypesRes.json();
+      const pfType = pfTypes.find(type => type.name === typeName);
+      if (!pfType) throw new Error(`${typeName} type not found`);
+      const response = await fetch(`http://localhost:3000/pfentry/user/${userId}/type/${pfType._id}`);
+      if (!response.ok) throw new Error(`Failed to fetch ${typeName} entries`);
+      return summarizeContributionEntries(await response.json());
     }
-    fetchPFSummary();
+
+    async function fetchModuleSummaries() {
+      const [ppf, pf, eps] = await Promise.all([
+        fetchSummary('PPF').catch(() => ({ error: true })),
+        fetchSummary('PF').catch(() => ({ error: true })),
+        fetchSummary('EPS').catch(() => ({ error: true })),
+      ]);
+      setPpfSummary(ppf);
+      setPfSummary(pf);
+      setEpsSummary(eps);
+    }
+
+    fetchModuleSummaries();
   }, [userId]);
 
-  useEffect(() => {
-    // Fetch EPS summary (Total After 15Y) from backend
-    async function fetchEPSSummary() {
-      try {
-        const pfTypesRes = await fetch('http://localhost:3000/pf-types');
-        const pfTypes = await pfTypesRes.json();
-        const epsType = pfTypes.find(t => t.name === 'EPS');
-        if (!epsType) return;
-        const res = await fetch(`http://localhost:3000/pfentry/user/${userId}/type/${epsType._id}`);
-        const entries = await res.json();
-        let totalDeposits = 0, totalInterest = 0;
-        entries.forEach(e => {
-          totalDeposits += e.amountDeposited || 0;
-          totalInterest += e.monthInterest || 0;
-        });
-        setEpsTotal((totalDeposits + totalInterest).toFixed(2));
-      } catch {
-        setEpsTotal(null);
-      }
-    }
-    fetchEPSSummary();
-  }, [userId]);
+  const mutualFundInvested = fundSummary.reduce((sum, fund) => sum + Number(fund.invested || 0), 0);
+  const mutualFundTodayValue = fundSummary.reduce((sum, fund) => sum + Number(fund.todayValue || 0), 0);
+  const mutualFundSummary = loading ? null : error
+    ? { error: true }
+    : {
+      investValue: mutualFundInvested,
+      todayValue: mutualFundTodayValue,
+      profitLoss: mutualFundTodayValue - mutualFundInvested,
+    };
 
-  // Calculate Mutual Fund totals
-  const todayValue = fundSummary.reduce((sum, f) => sum + f.todayValue, 0);
+  const moduleSummaries = [mutualFundSummary, ppfSummary, pfSummary, epsSummary, goldSummary];
+  const totalSummary = moduleSummaries.some(summary => summary === null)
+    ? null
+    : moduleSummaries.some(summary => summary.error)
+      ? { error: true }
+      : moduleSummaries.reduce((total, summary) => ({
+        investValue: total.investValue + summary.investValue,
+        todayValue: total.todayValue + summary.todayValue,
+        profitLoss: total.profitLoss + summary.profitLoss,
+      }), { investValue: 0, todayValue: 0, profitLoss: 0 });
+
+  const summaries = [
+    ['Mutual Fund', mutualFundSummary],
+    ['Public Provident Fund', ppfSummary],
+    ['Provident Fund', pfSummary],
+    ['EPS', epsSummary],
+    ['Gold', goldSummary],
+  ];
 
   return (
-    <>
-      <UserHeader userId={userId} />
       <main className="finance-overview-page">
-        <nav className="finance-overview-actions" aria-label="Finance sections">
-          <button onClick={() => navigate('/')}>Home</button>
-          <button onClick={() => navigate(`/user/${userId}/dashboard`)}>Mutual Fund</button>
-          <button onClick={() => navigate(`/user/${userId}/ppf-dashboard`)}>Public Provident Fund</button>
-          <button onClick={() => navigate(`/user/${userId}/pf-dashboard`)}>Provident Fund</button>
-          <button onClick={() => navigate(`/user/${userId}/eps-dashboard`)}>EPS</button>
-          <button onClick={() => navigate(`/user/${userId}/gold`)}>Gold</button>
-        </nav>
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1rem' }}>
-          <h1 className="colorful-title" style={{ fontSize: '2rem', marginTop: 0, marginBottom: '0.7rem', textAlign: 'center' }}>Finance Overview</h1>
-        </div>
-        <SessionSummary />
-        <div style={{marginTop: '1.2rem', width: '100%', display: 'flex', justifyContent: 'center'}}>
-          <table className="user-table colorful-table" style={{ minWidth: 320, margin: '0 auto' }}>
+        <header className="finance-overview-topbar">
+          <UserHeader userId={userId} inline />
+          <h1 className="colorful-title finance-overview-title">Finance Overview</h1>
+          <nav className="finance-overview-actions" aria-label="Finance sections">
+            <button onClick={() => navigate('/')}>Home</button>
+            <button onClick={() => navigate(`/user/${userId}/dashboard`)}>Mutual Fund</button>
+            <button onClick={() => navigate(`/user/${userId}/ppf-dashboard`)}>Public Provident Fund</button>
+            <button onClick={() => navigate(`/user/${userId}/pf-dashboard`)}>Provident Fund</button>
+            <button onClick={() => navigate(`/user/${userId}/eps-dashboard`)}>EPS</button>
+            <button onClick={() => navigate(`/user/${userId}/gold`)}>Gold</button>
+          </nav>
+        </header>
+        <div className="finance-overview-table-wrap">
+          <table className="user-table colorful-table finance-overview-table">
             <thead>
               <tr>
-                <th>Type</th>
-                <th>Total Value</th>
+                <th>Investment Type</th>
+                <th>Invest Value</th>
+                <th>Today Value</th>
+                <th>P/L</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Mutual Fund</td>
-                <td>{loading ? 'Loading...' : error ? '-' : todayValue.toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td>Public Provident Fund</td>
-                <td>{ppfTotal === null ? (loading ? 'Loading...' : '-') : ppfTotal}</td>
-              </tr>
-              <tr>
-                <td>Provident Fund</td>
-                <td>{pfTotal === null ? (loading ? 'Loading...' : '-') : pfTotal}</td>
-              </tr>
-              <tr>
-                <td>EPS</td>
-                <td>{epsTotal === null ? (loading ? 'Loading...' : '-') : epsTotal}</td>
-              </tr>
-              <tr>
-                <td>Gold</td>
-                <td>{goldTodayValue === null ? (loading ? 'Loading...' : '-') : goldTodayValue}</td>
-              </tr>
-              <tr style={{ fontWeight: 700, background: '#fffbe6', color: '#b45309', borderTop: '2px solid #fde68a' }}>
-                <td style={{ background: '#fffbe6', color: '#b45309' }}>Total</td>
-                <td style={{ background: '#fffbe6', color: '#b45309' }}>{(() => {
-                  const values = [todayValue, Number(ppfTotal), Number(pfTotal), Number(epsTotal), Number(goldTodayValue)].filter(v => !isNaN(v));
-                  return values.length === 0 ? '-' : values.reduce((sum, v) => sum + v, 0).toFixed(2);
-                })()}</td>
+              {summaries.map(([moduleName, summary]) => (
+                <tr key={moduleName}>
+                  <td>{moduleName}</td>
+                  <td>{formatSummaryValue(summary, 'investValue')}</td>
+                  <td>{formatSummaryValue(summary, 'todayValue')}</td>
+                  <td className={summary && !summary.error ? summary.profitLoss >= 0 ? 'is-positive' : 'is-negative' : ''}>
+                    {formatSummaryValue(summary, 'profitLoss')}
+                  </td>
+                </tr>
+              ))}
+              <tr className="finance-overview-total-row">
+                <td>Total</td>
+                <td>{formatSummaryValue(totalSummary, 'investValue')}</td>
+                <td>{formatSummaryValue(totalSummary, 'todayValue')}</td>
+                <td className={totalSummary && !totalSummary.error ? totalSummary.profitLoss >= 0 ? 'is-positive' : 'is-negative' : ''}>
+                  {formatSummaryValue(totalSummary, 'profitLoss')}
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
       </main>
-    </>
   );
 }
 

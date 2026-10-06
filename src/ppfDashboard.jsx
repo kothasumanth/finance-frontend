@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { SessionSummary } from './components/UserSessionSummary';
+import UserHeader from './components/UserHeader';
 
 function PfDashboard() {
   const { userId } = useParams();
@@ -260,24 +260,48 @@ function PfDashboard() {
 
   return (
     <div className="ppf-dashboard-page">
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <h1 className="colorful-title" style={{ marginTop: 0, marginBottom: '0.7rem' }}>Public Provident Fund Dashboard</h1>
-        <SessionSummary />
-        <div className="ppf-dashboard-navigation">
-          <div className="pf-dashboard-btn-row">
-            <button
-              className="pf-dashboard-btn"
-              style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}
-              onClick={() => navigate(`/user/${userId}/overview`)}
-            >Overview</button>
-            <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }} onClick={() => navigate(`/user/${userId}/ppf-details`)}>PPF</button>
-            {/* <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}>VPF</button> */}
-            {/* <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}>PF</button> */}
-            <button className="pf-dashboard-btn" style={{ minWidth: 140, background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(16,185,129,0.08)' }} onClick={handleOpenPopup}>Setup Interest</button>
-            <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(245,158,66,0.08)' }} onClick={handleSetupPPFClick}>Setup PPF</button>
-            <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(239,68,68,0.08)' }} onClick={handleDeletePPF} disabled={deletePPFLoading}>{deletePPFLoading ? 'Deleting...' : 'Delete PPF'}</button>
-          </div>
+      <header className="retirement-page-topbar ppf-retirement-topbar">
+        <UserHeader userId={userId} inline />
+        <h1 className="colorful-title">Public Provident Fund Dashboard</h1>
+        <div className="pf-dashboard-btn-row">
+          <button
+            className="pf-dashboard-btn"
+            style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}
+            onClick={() => navigate(`/user/${userId}/overview`)}
+          >Overview</button>
+          <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }} onClick={() => navigate(`/user/${userId}/ppf-details`)}>PPF</button>
+          <button className="pf-dashboard-btn" style={{ minWidth: 140, background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(16,185,129,0.08)' }} onClick={handleOpenPopup}>Setup Interest</button>
+          <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(245,158,66,0.08)' }} onClick={handleSetupPPFClick}>Setup PPF</button>
+          <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(239,68,68,0.08)' }} onClick={handleDeletePPF} disabled={deletePPFLoading}>{deletePPFLoading ? 'Deleting...' : 'Delete PPF'}</button>
+          <button
+            className="pf-dashboard-btn"
+            style={{ minWidth: 190, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}
+            onClick={async () => {
+              if (!window.confirm('Recalculate all PPF entries for all users?')) return;
+              try {
+                const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+                const pfTypes = await pfTypesRes.json();
+                const ppfType = pfTypes.find(t => t.name === 'PPF');
+                if (!ppfType) { alert('PPF type not found'); return; }
+                const res = await fetch('http://localhost:3000/pfentry/recalculate-all', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ pfTypeId: ppfType._id })
+                });
+                if (res.ok) {
+                  alert('Recalculation complete for PPF entries!');
+                } else {
+                  const err = await res.json();
+                  alert(err.error || 'Error recalculating PPF entries');
+                }
+              } catch (err) {
+                alert('Error recalculating PPF entries');
+              }
+            }}
+          >Recalculate All PPF Entries</button>
         </div>
+      </header>
+      <div style={{ flex: 1, minWidth: 0 }}>
         {showPopup && (
           <div className="popup-bg" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.2)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className="popup" style={{ background: '#fff', borderRadius: 8, padding: 24, minWidth: 420, boxShadow: '0 2px 16px rgba(0,0,0,0.12)' }}>
@@ -365,34 +389,6 @@ function PfDashboard() {
             </div>
           </div>
         )}
-        {/* Move Recalculate All PF Entries button up, remove 'coming soon' text */}
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', marginBottom: '1.5rem' }}>
-            <button
-            style={{ background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}
-            onClick={async () => {
-              if (!window.confirm('Recalculate all PPF entries for all users?')) return;
-              try {
-                const pfTypesRes = await fetch('http://localhost:3000/pf-types');
-                const pfTypes = await pfTypesRes.json();
-                const ppfType = pfTypes.find(t => t.name === 'PPF');
-                if (!ppfType) { alert('PPF type not found'); return; }
-                const res = await fetch('http://localhost:3000/pfentry/recalculate-all', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ pfTypeId: ppfType._id })
-                });
-                if (res.ok) {
-                  alert('Recalculation complete for PPF entries!');
-                } else {
-                  const err = await res.json();
-                  alert(err.error || 'Error recalculating PPF entries');
-                }
-              } catch (err) {
-                alert('Error recalculating PPF entries');
-              }
-            }}
-          >Recalculate All PPF Entries</button>
-        </div>
         {/* PPF Yearwise Summary Table */}
         <div style={{ width: '100%', marginTop: 24, marginBottom: 8 }}>
           <h2 style={{ margin: '0 0 0.5rem 0', color: '#334155', fontSize: '1.1rem' }}>PPF Yearwise Summary</h2>

@@ -65,7 +65,7 @@ body {
   width: 100vw;
   min-height: 100vh;
   margin-left: calc(50% - 50vw);
-  padding: 0 24px 56px;
+  padding: 0 24px 12px;
   background: var(--page);
   color: var(--ink);
 }
@@ -74,12 +74,13 @@ body {
   min-height: 72px;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 12px;
   border-bottom: 1px solid var(--line);
 }
 
 .gold-back-link {
+  margin-left: auto;
   padding: 9px 16px;
   border: 1px solid var(--line-strong);
   border-radius: 999px;
@@ -106,19 +107,37 @@ body {
 .gold-summary {
   display: grid;
   grid-template-columns: minmax(190px, 0.7fr) minmax(0, 1.8fr);
-  gap: 24px;
+  gap: 12px;
   align-items: start;
-  margin: 24px 0 32px;
-  padding: 22px;
+  margin: 12px 0 16px;
+  padding: 12px 14px;
   border: 1px solid var(--line);
   background: var(--surface);
-  box-shadow: 0 12px 28px rgba(53, 48, 37, 0.05);
+  box-shadow: 0 4px 12px rgba(53, 48, 37, 0.04);
 }
 
 .gold-today-prices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   color: #a94c32;
   font-size: 0.9rem;
   font-weight: 700;
+}
+
+.gold-price-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gold-price-values span {
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--green);
+  font-size: 0.82rem;
+  white-space: nowrap;
 }
 
 .gold-summary-details {
@@ -126,10 +145,10 @@ body {
 }
 
 .gold-summary-details h2 {
-  margin: 0 0 12px;
+  margin: 0 0 6px;
   color: var(--ink);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.35rem;
+  font-size: 1.1rem;
   font-weight: 500;
 }
 
@@ -142,8 +161,36 @@ body {
 }
 
 .gold-details-title {
-  margin: 0 0 20px;
-  text-align: center;
+  margin: 0 !important;
+  font-size: 1.5rem;
+  text-align: left !important;
+  white-space: nowrap;
+}
+
+.mf-metadata-topbar,
+.mf-metrics-topbar {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.mf-metadata-title,
+.mf-metrics-title {
+  margin: 0 !important;
+  font-size: 1.5rem;
+  white-space: nowrap;
+}
+
+.mf-metadata-actions,
+.mf-metrics-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
 }
 
 .gold-table-scroll {
@@ -156,6 +203,15 @@ body {
   margin: 0;
 }
 
+.gold-table-scroll .user-table th,
+.gold-table-scroll .user-table td {
+  padding: 0.15rem 0.6rem;
+}
+
+.gold-table-scroll .user-table .gold-pagination-row td {
+  padding: 0.25rem 0.6rem;
+}
+
 .retirement-dashboard-page {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
@@ -163,8 +219,112 @@ body {
   align-items: start;
 }
 
+.retirement-page-topbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.retirement-page-topbar > .colorful-title {
+  margin: 0 !important;
+  font-size: 1.5rem;
+  white-space: nowrap;
+}
+
+.retirement-page-topbar .pf-dashboard-btn-row,
+.retirement-page-topbar .eps-dashboard-actions {
+  flex: 1 1 100%;
+  justify-content: flex-end;
+  margin-left: 0;
+}
+
+.retirement-page-topbar .eps-dashboard-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.pf-retirement-topbar,
+.ppf-retirement-topbar,
+.eps-retirement-topbar {
+  grid-column: 1 / -1;
+}
+
+.pf-retirement-topbar .pf-dashboard-btn-row,
+.ppf-retirement-topbar .pf-dashboard-btn-row,
+.eps-retirement-topbar .eps-dashboard-actions {
+  flex: 0 1 auto;
+  margin-left: auto;
+}
+
+.ppf-retirement-topbar .pf-dashboard-btn-row {
+  gap: 4px;
+}
+
+.ppf-retirement-topbar .pf-dashboard-btn {
+  min-width: 0 !important;
+}
+
+.pf-retirement-topbar .pf-dashboard-btn-row {
+  gap: 8px !important;
+}
+
+.pf-retirement-topbar .pf-dashboard-btn[style*="margin-left"] {
+  margin-left: 0 !important;
+}
+
 .retirement-dashboard-summary {
   min-width: 0;
+}
+
+.retirement-module-summary {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.7fr) minmax(0, 2.3fr);
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.retirement-module-summary h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.retirement-module-summary-values {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.retirement-module-summary-values > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.retirement-module-summary-values span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.retirement-module-summary-values strong {
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .details-page-topbar {
@@ -173,22 +333,22 @@ body {
   min-height: 72px;
   display: flex !important;
   flex-direction: row !important;
-  align-items: flex-start;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: flex-start;
   flex-wrap: wrap;
   gap: 12px;
   margin: 0 auto 16px;
-  padding-top: 48px;
+  padding-top: 0;
 }
 
-.details-page-topbar > div {
+.details-page-topbar > .details-page-balance-summary {
   display: flex !important;
   flex: 1 1 auto;
   justify-content: flex-end !important;
   margin: 0 !important;
 }
 
-.details-page-topbar > div > div {
+.details-page-topbar > .details-page-balance-summary > div {
   display: flex !important;
   flex-direction: row !important;
   flex-wrap: wrap;
@@ -196,11 +356,18 @@ body {
   gap: 8px !important;
 }
 
-.details-page-topbar > div > div > div {
+.details-page-topbar > .details-page-balance-summary > div > div {
   border: 1px solid var(--line) !important;
   border-radius: 3px !important;
   background: var(--surface) !important;
   box-shadow: none !important;
+}
+
+.details-page-title {
+  flex: 0 1 auto;
+  margin: 0 !important;
+  font-size: 1.5rem;
+  text-align: left !important;
 }
 
 .view-mf-page {
@@ -216,7 +383,7 @@ body {
   min-height: 72px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 16px;
   border-bottom: 1px solid var(--line);
 }
@@ -270,9 +437,16 @@ body {
   margin: 0 auto;
 }
 
-.view-mf-title {
-  margin: 20px 0 12px;
+.view-mf-topbar .view-mf-title {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: 1.5rem;
   text-align: left !important;
+  white-space: nowrap;
+}
+
+.view-mf-actions {
+  margin-left: auto;
 }
 
 .view-mf-summary {
@@ -483,8 +657,14 @@ body {
 }
 
 .mf-dashboard-title {
-  margin: 20px 0 10px;
-  text-align: center;
+  margin: 0;
+  font-size: 1.5rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.mf-dashboard-identity .mf-dashboard-title {
+  margin: 0;
 }
 
 .session-summary {
@@ -565,7 +745,16 @@ body {
 }
 
 .finance-overview-page {
-  padding-top: 32px;
+  padding-top: 0;
+}
+
+.finance-overview-topbar {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--line);
 }
 
 .finance-overview-actions {
@@ -573,7 +762,52 @@ body {
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 16px;
+  margin: 0 0 0 auto;
+}
+
+.finance-overview-table-wrap {
+  width: 100%;
+  margin-top: 1.2rem;
+  overflow-x: auto;
+}
+
+.finance-overview-table {
+  width: min(100%, 1000px) !important;
+  min-width: 700px;
+  margin: 0 auto !important;
+}
+
+.finance-overview-table th:not(:first-child),
+.finance-overview-table td:not(:first-child) {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.finance-overview-table td.is-positive {
+  color: var(--green) !important;
+  font-weight: 700;
+}
+
+.finance-overview-table td.is-negative {
+  color: var(--red) !important;
+  font-weight: 700;
+}
+
+.finance-overview-total-row {
+  border-top: 3px solid #d4e6d7;
+}
+
+.user-table.finance-overview-table tr.finance-overview-total-row td {
+  background: var(--green) !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  border-bottom: 0;
+}
+
+.finance-overview-title {
+  margin: 0 !important;
+  font-size: 1.5rem;
+  white-space: nowrap;
 }
 
 .ppf-dashboard-page {
@@ -731,6 +965,7 @@ body {
   margin-bottom: 1.25rem;
   color: var(--ink);
   font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.5rem;
   font-weight: 500;
   letter-spacing: 0;
   text-align: center !important;
@@ -896,9 +1131,13 @@ textarea::placeholder {
 
   .gold-topbar {
     min-height: 62px;
-    justify-content: space-between;
+    justify-content: flex-start;
     flex-wrap: wrap;
-    padding: 52px 0 10px;
+    padding: 12px 0;
+  }
+
+  .gold-back-link {
+    margin-left: 0;
   }
 
   .gold-actions {
@@ -936,7 +1175,7 @@ textarea::placeholder {
   }
 
   .mf-dashboard-title {
-    margin: 18px 0 10px;
+    margin: 0;
     font-size: 1.5rem;
   }
 
@@ -944,6 +1183,15 @@ textarea::placeholder {
     grid-template-columns: 1fr;
     gap: 10px;
     padding: 12px 10px;
+  }
+
+  .retirement-module-summary {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .retirement-module-summary-values {
+    gap: 8px;
   }
 
   .session-summary-values > div {
@@ -980,6 +1228,36 @@ textarea::placeholder {
     padding: 20px 14px 36px;
   }
 
+  .finance-overview-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 0;
+  }
+
+  .finance-overview-actions {
+    justify-content: flex-start;
+    margin-left: 0;
+  }
+
+  .retirement-page-topbar {
+    align-items: flex-start;
+    padding: 12px 0;
+  }
+
+  .retirement-page-topbar .pf-dashboard-btn-row,
+  .retirement-page-topbar .eps-dashboard-actions {
+    justify-content: flex-start;
+  }
+
+  .pf-retirement-topbar .pf-dashboard-btn-row,
+  .ppf-retirement-topbar .pf-dashboard-btn-row,
+  .eps-retirement-topbar .eps-dashboard-actions {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    margin-left: 0;
+  }
+
   .ppf-dashboard-page {
     grid-template-columns: 1fr;
   }
@@ -1001,6 +1279,7 @@ textarea::placeholder {
 
   .view-mf-actions {
     justify-content: flex-start;
+    margin-left: 0;
   }
 
   .view-mf-summary {
@@ -1019,7 +1298,6 @@ textarea::placeholder {
   }
 
   .view-mf-title {
-    margin: 18px 0 10px;
     font-size: 1.5rem;
   }
 }
@@ -1066,10 +1344,10 @@ textarea::placeholder {
   .details-page-topbar {
     width: calc(100% - 28px);
     justify-content: flex-start;
-    padding-top: 48px;
+    padding-top: 0;
   }
 
-  .details-page-topbar > div {
+  .details-page-topbar > .details-page-balance-summary {
     justify-content: flex-start !important;
   }
 
