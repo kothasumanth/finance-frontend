@@ -242,6 +242,7 @@ function CompareMF() {
             ariaLabel="Your portfolio fund"
             emptyOptionLabel="Select a fund from your portfolio"
             options={portfolioFunds.map(fund => ({ value: fund._id, label: fund.MutualFundName }))}
+            maxSuggestions={Infinity}
             value={selectedPortfolioFund}
             onChange={handlePortfolioFundChange}
           />
@@ -254,6 +255,7 @@ function CompareMF() {
             ariaLabel="Compare with fund"
             placeholder="Type to search funds"
             options={allMetadata.map(fund => ({ value: fund._id, label: fund.MutualFundName }))}
+            maxSuggestions={Infinity}
             value={selectedComparisonFund}
             onChange={handleComparisonFundChange}
             disabled={!selectedPortfolioFund || portfolioInvestments.length === 0}

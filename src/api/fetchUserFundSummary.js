@@ -64,9 +64,9 @@ export async function fetchUserFundSummary(userId) {
   for (const id in fundMap) {
     fundMap[id].profitLoss = fundMap[id].todayValue - fundMap[id].invested;
   }
-  // Only include funds where user has at least one entry
+  // Only include funds with remaining units
   const filtered = Object.values(fundMap)
-    .filter(fund => fund.invested > 0 || fund.balanceUnits > 0 || fund.todayValue > 0)
+    .filter(fund => fund.balanceUnits > 0 && Number(fund.invested.toFixed(2)) > 0)
     .map(fund => {
       // Get the cap type name from the cap types array
       const capTypeName = capTypes.find(ct => ct._id === fund.CapType)?.name;

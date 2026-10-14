@@ -261,7 +261,7 @@ function SIPAnalysis() {
             <section className="sip-analysis-summary" aria-label={`${fundName} SIP simulation summary`}>
               <div className="sip-analysis-summary-group">
                 <div><span>Monthly SIP</span><strong>{formatCurrency(amount)}</strong></div>
-                <div><span>Installments</span><strong>{rows.length}</strong></div>
+                <div><span>Installments</span><strong>{rows.length} ({Math.floor(rows.length / 12)}Y {rows.length % 12}M)</strong></div>
               </div>
               <div className="sip-analysis-summary-group">
                 <div><span>Total Invested</span><strong>{formatCurrency(totals.investedToDate)}</strong></div>

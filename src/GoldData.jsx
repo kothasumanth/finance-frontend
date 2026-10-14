@@ -141,6 +141,8 @@ function GoldData() {
               });
               const overallInvested = categoryTotals.reduce((sum, c) => sum + c.totalPrice, 0);
               const overallTodayValue = categoryTotals.reduce((sum, c) => sum + c.todayValue, 0);
+              const overallProfitLoss = overallTodayValue - overallInvested;
+              const overallProfitLossColor = overallProfitLoss > 0 ? '#059669' : overallProfitLoss < 0 ? '#dc2626' : 'inherit';
               return (
                 <div style={{ display: 'grid', gap: 6 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.2fr', gap: 10, alignItems: 'center' }}>
@@ -157,9 +159,10 @@ function GoldData() {
                       </Fragment>
                     ))}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0.5rem', borderRadius: 6, background: '#fef3c7', fontWeight: 700 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, padding: '0.5rem', borderRadius: 6, background: '#fef3c7', fontWeight: 700 }}>
                     <div>Total Invested: {overallInvested.toFixed(2)}</div>
                     <div>Total Today Value: {overallTodayValue.toFixed(2)}</div>
+                    <div style={{ color: overallProfitLossColor }}>Total P/L: {overallProfitLoss.toFixed(2)}</div>
                   </div>
                 </div>
               );
@@ -240,19 +243,22 @@ function GoldData() {
         <thead>
           <tr>
             <th>Purchase Date</th>
-            <th>Grams</th>
-            <th>Price</th>
-            <th>Karat</th>
             <th>Comments</th>
+            <th>Karat</th>
+            <th>Grams</th>
+            <th>Purchase Price / Gram</th>
+            <th>Purchase Price</th>
+            <th>Today Value</th>
+            <th>P/L</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {loading ? (
-            <tr><td colSpan={6}>Loading...</td></tr>
+            <tr><td colSpan={9}>Loading...</td></tr>
           ) : entries.length === 0 ? (
             <tr>
-              <td colSpan={6} style={{ textAlign: 'center' }}>
+              <td colSpan={9} style={{ textAlign: 'center' }}>
                 No entries found.
               </td>
             </tr>
@@ -261,13 +267,38 @@ function GoldData() {
               .slice((page - 1) * rowsPerPage, page * rowsPerPage)
               .map((entry, idx) => {
                 const globalIdx = (page - 1) * rowsPerPage + idx;
+                const grams = Number(entry.grams);
+                const purchasePrice = Number(entry.price);
+                const purchasePricePerGram = grams > 0 && Number.isFinite(purchasePrice)
+                  ? purchasePrice / grams
+                  : null;
+                const karat = Number(entry.karat) || 24;
+                const rawTodayRate = todayGoldPrice?.[`price${karat}k`];
+                const todayRate = rawTodayRate === undefined || rawTodayRate === null || rawTodayRate === ''
+                  ? null
+                  : Number(rawTodayRate);
+                const todayValue = todayRate !== null && Number.isFinite(todayRate) && Number.isFinite(grams)
+                  ? grams * todayRate
+                  : null;
+                const todayValueColor = todayValue === null || !Number.isFinite(purchasePrice)
+                  ? 'inherit'
+                  : todayValue < purchasePrice ? '#dc2626' : todayValue > purchasePrice ? '#059669' : 'inherit';
+                const profitLoss = todayValue === null || !Number.isFinite(purchasePrice)
+                  ? null
+                  : todayValue - purchasePrice;
+                const profitLossColor = profitLoss === null || profitLoss === 0
+                  ? 'inherit'
+                  : profitLoss > 0 ? '#059669' : '#dc2626';
                 return (
                   <tr key={entry._id || globalIdx}>
                     <td>{entry.purchaseDate ? formatDate(entry.purchaseDate) : ''}</td>
-                    <td>{entry.grams}</td>
-                    <td>{entry.price}</td>
-                    <td>{entry.karat || 24}</td>
                     <td>{entry.comments}</td>
+                    <td>{entry.karat || 24}</td>
+                    <td>{entry.grams}</td>
+                    <td>{purchasePricePerGram === null ? '-' : purchasePricePerGram.toFixed(2)}</td>
+                    <td>{entry.price}</td>
+                    <td>{todayValue === null ? '-' : <span style={{ color: todayValueColor, fontWeight: 600 }}>{todayValue.toFixed(2)}</span>}</td>
+                    <td>{profitLoss === null ? '-' : <span style={{ color: profitLossColor, fontWeight: 600 }}>{profitLoss.toFixed(2)}</span>}</td>
                     <td>
                       {deleteIdx === globalIdx ? (
                         <>

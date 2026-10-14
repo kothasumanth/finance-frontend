@@ -237,6 +237,7 @@ function ViewMutualFundData() {
         <h1 className="colorful-title view-mf-title">View Mutual Fund Data</h1>
         <nav className="view-mf-actions" aria-label="Mutual fund data actions">
           <Link className="view-mf-action" to={`/user/${userId}/dashboard`}>MF Dashboard</Link>
+          <Link className="view-mf-action" to={`/user/${userId}/mutual-funds`}>MF Entries</Link>
           <button className="view-mf-action" onClick={handleGetAllNavs}>Get All NAVs</button>
           <button className="view-mf-action" onClick={handleReCal}>ReCal</button>
           <button className="view-mf-action view-mf-action-danger" onClick={handleForceNull}>Force Null NAV/Units</button>
@@ -249,7 +250,7 @@ function ViewMutualFundData() {
         </nav>
       </header>
       <main className="view-mf-main">
-        <SessionSummary />
+        <SessionSummary fundId={selectedFund} />
         <section className="view-mf-summary" aria-label="Selected mutual fund summary">
           <div className="view-mf-summary-heading">
             <div>

@@ -197,7 +197,7 @@ function MutualFundEntries() {
           whiteSpace: 'nowrap',
         }}>MF Dashboard</Link>
       </div>
-      <SessionSummary />
+      <SessionSummary fundId={fundName} />
       {showPopup && (
         <div className="popup" style={{
           position: 'fixed', left: 0, top: 0, width: '100vw', height: '100vh',

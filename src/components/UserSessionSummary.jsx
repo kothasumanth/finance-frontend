@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Outlet, useParams } from 'react-router-dom'
+import { Outlet, useLocation, useParams } from 'react-router-dom'
 import { fetchUserFundSummary } from '../api/fetchUserFundSummary'
 import { UserSessionSummaryContext, useUserSessionSummary } from './userSessionSummaryContext'
 
 export function UserSessionSummaryProvider() {
   const { userId } = useParams()
+  const location = useLocation()
   const [funds, setFunds] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const previousPath = useState(location.pathname)[0]
 
   const refreshSummary = useCallback(async () => {
     setLoading(true)
@@ -26,6 +28,11 @@ export function UserSessionSummaryProvider() {
     refreshSummary()
   }, [refreshSummary])
 
+  useEffect(() => {
+    if (previousPath === location.pathname) return
+    if (location.pathname.endsWith('/dashboard')) refreshSummary()
+  }, [location.pathname, previousPath, refreshSummary])
+
   return (
     <UserSessionSummaryContext.Provider value={{ funds, loading, error, refreshSummary }}>
       <Outlet />
@@ -33,10 +40,13 @@ export function UserSessionSummaryProvider() {
   )
 }
 
-export function SessionSummary() {
+export function SessionSummary({ fundId }) {
   const { funds, loading, error } = useUserSessionSummary()
-  const invested = funds.reduce((sum, fund) => sum + Number(fund.invested || 0), 0)
-  const todayValue = funds.reduce((sum, fund) => sum + Number(fund.todayValue || 0), 0)
+  const visibleFunds = fundId && fundId !== 'ALL'
+    ? funds.filter(fund => fund.metadata?._id === fundId)
+    : funds
+  const invested = visibleFunds.reduce((sum, fund) => sum + Number(fund.invested || 0), 0)
+  const todayValue = visibleFunds.reduce((sum, fund) => sum + Number(fund.todayValue || 0), 0)
   const profitLoss = todayValue - invested
 
   const displayValue = value => loading ? 'Loading...' : error ? '-' : value.toFixed(2)
