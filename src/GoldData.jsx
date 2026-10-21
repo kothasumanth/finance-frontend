@@ -3,7 +3,6 @@ import IconButton from './IconButton';
 import { Fragment, useEffect, useState } from 'react';
 import { fetchTodayGoldPrice, saveTodayGoldPrice } from './api/goldPrice';
 import { useParams, Link } from 'react-router-dom';
-import UserHeader from './components/UserHeader';
 
 function GoldData() {
   const [deleteIdx, setDeleteIdx] = useState(null);
@@ -110,7 +109,6 @@ function GoldData() {
   return (
     <div className="gold-page">
       <header className="gold-topbar">
-        <UserHeader userId={userId} inline />
         <h1 className="colorful-title gold-details-title">Gold Details</h1>
         <Link className="gold-back-link" to={`/user/${userId}/overview`}>Back to Overview</Link>
         <div className="gold-actions">

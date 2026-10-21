@@ -2,7 +2,6 @@ import { apiUrl } from './api.js'
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import * as XLSX from 'xlsx'
-import UserHeader from './components/UserHeader'
 import SearchableDropdown from './components/SearchableDropdown'
 import { SessionSummary } from './components/UserSessionSummary'
 import { useUserSessionSummary } from './components/userSessionSummaryContext'
@@ -234,7 +233,6 @@ function ViewMutualFundData() {
   return (
     <div className="view-mf-page">
       <header className="view-mf-topbar">
-        <UserHeader userId={userId} inline />
         <h1 className="colorful-title view-mf-title">View Mutual Fund Data</h1>
         <nav className="view-mf-actions" aria-label="Mutual fund data actions">
           <Link className="view-mf-action" to={`/user/${userId}/dashboard`}>MF Dashboard</Link>

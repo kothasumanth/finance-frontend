@@ -4,7 +4,6 @@ import { useParams, Link } from 'react-router-dom'
 import IconButton from './IconButton'
 import CapTypesManagement from './CapTypesManagement'
 import { fetchCapTypes } from './api/capTypes'
-import UserHeader from './components/UserHeader'
 import { SessionSummary } from './components/UserSessionSummary'
 import { useUserSessionSummary } from './components/userSessionSummaryContext'
 
@@ -140,7 +139,6 @@ function MutualFundMetadata() {
   return (
     <div className="container colorful-bg" style={{ paddingTop: '1.2rem', maxWidth: 1250, margin: '0 auto' }}>
       <header className="mf-metadata-topbar">
-        <UserHeader userId={userId} inline />
         <h1 className="colorful-title mf-metadata-title">Mutual Fund Meta Data</h1>
         <nav className="mf-metadata-actions" aria-label="Mutual fund metadata actions">
         <Link to={`/user/${userId}/dashboard`} style={{

@@ -41,27 +41,6 @@
   white-space: nowrap;
 }
 
-.user-header-inline {
-  position: static !important;
-  z-index: auto !important;
-  padding: 9px 16px !important;
-  border-color: #b9b2a4 !important;
-  border-radius: 999px !important;
-  background: transparent !important;
-  font-size: 0.82rem !important;
-}
-
-.user-header-inline > span:first-child {
-  color: #18211f !important;
-}
-
-.user-header-inline > span:last-child {
-  background: none !important;
-  color: #18211f !important;
-  font-weight: 700 !important;
-  -webkit-text-fill-color: currentColor !important;
-}
-
 .compare-back-link {
   margin-left: auto;
   color: #18211f !important;

@@ -1,7 +1,6 @@
 import { apiUrl } from './api.js'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import UserHeader from './components/UserHeader'
 import SearchableDropdown from './components/SearchableDropdown'
 
 function getLocalDateString(date = new Date()) {
@@ -196,7 +195,6 @@ function SIPAnalysis() {
   return (
     <div className="sip-analysis-page">
       <header className="sip-analysis-topbar">
-        <UserHeader userId={userId} inline />
         <h1 className="colorful-title sip-analysis-title">SIP Analysis</h1>
         <Link className="sip-analysis-dashboard-link" to={`/user/${userId}/dashboard`}>MF Dashboard</Link>
       </header>

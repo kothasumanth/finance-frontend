@@ -1,7 +1,6 @@
 import { apiUrl } from './api.js'
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import UserHeader from './components/UserHeader';
 
 function PfDashboard() {
   const { userId } = useParams();
@@ -223,7 +222,6 @@ function PfDashboard() {
   return (
     <div className="container colorful-bg retirement-dashboard-page">
       <header className="retirement-page-topbar pf-retirement-topbar">
-        <UserHeader userId={userId} inline />
         <h1 className="colorful-title">Provident Fund Dashboard</h1>
         <div className="pf-dashboard-btn-row" style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'center' }}>
           <button

@@ -3,7 +3,6 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import FundDetailsTooltip from './components/FundDetailsTooltip';
 import SIPDetailsTooltip from './components/SIPDetailsTooltip';
-import UserHeader from './components/UserHeader';
 import StatusPill from './components/StatusPill';
 import ProgressBar from './components/ProgressBar';
 import { fetchUserFundSummary } from './api/fetchUserFundSummary';
@@ -270,7 +269,6 @@ export default function MFMetrics() {
     return (
         <div className="container colorful-bg" style={{ maxWidth: 1250, margin: '0 auto', paddingTop: '1.2rem' }}>
             <header className="mf-metrics-topbar">
-                <UserHeader userId={userId} inline />
                 <h1 className="colorful-title mf-metrics-title">Mutual Fund Metrics</h1>
                 <div className="mf-metrics-actions">
                 <button style={{background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)'}} onClick={() => navigate(`/user/${userId}/dashboard`)}>

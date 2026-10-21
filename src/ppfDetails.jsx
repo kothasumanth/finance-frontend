@@ -1,7 +1,6 @@
 import { apiUrl } from './api.js'
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import UserHeader from './components/UserHeader';
 import RetirementSummary from './components/RetirementSummary';
 
 function groupEntriesByFinancialYear(entries) {
@@ -205,7 +204,6 @@ function PpfDetails() {
         }
       `}</style>
       <div className="details-page-topbar">
-        <UserHeader userId={userId} inline />
         <h1 className="colorful-title details-page-title">Detailed PPF Page</h1>
         <button onClick={() => navigate(`/user/${userId}/ppf-dashboard`)}>PPF Dashboard</button>
         <div className="details-page-balance-summary" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 48, marginBottom: 8 }}>

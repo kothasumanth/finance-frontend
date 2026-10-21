@@ -24,7 +24,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173) by d
 ### 3. Connect to the backend
 Make sure the Finance Copilot backend (Node.js + Express + MongoDB) is running and accessible. During local development, the frontend defaults to `http://localhost:3000`.
 
-For deployments, set the `VITE_API_BASE_URL` environment variable to the backend's public URL before building the frontend. The production default is `https://finance-backend-js8l.onrender.com`. In Netlify, add `VITE_API_BASE_URL` under **Site configuration → Environment variables** if you use a different backend URL, then trigger a new deploy.
+The frontend uses `/api` for backend calls. Vite proxies this path to `http://localhost:3000` during local development; Netlify proxies it to the deployed Render backend using `public/_redirects`. If your backend URL changes, update that redirect and deploy again.
 
 ## Database Backup & Restore
 Backup and restore functionality is managed from the **backend**. See [backend README](../finance-backend/README.md#backup--restore) for details.

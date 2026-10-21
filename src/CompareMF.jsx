@@ -1,7 +1,6 @@
 import { apiUrl } from './api.js'
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import UserHeader from './components/UserHeader'
 import SearchableDropdown from './components/SearchableDropdown'
 import { SessionSummary } from './components/UserSessionSummary'
 import './styles/compare.css'
@@ -218,7 +217,6 @@ function CompareMF() {
       <div className="compare-shell">
         <header className="compare-topbar">
           <div className="compare-topbar-actions">
-            <UserHeader userId={userId} inline />
             <h1 className="compare-page-title">Compare mutual funds</h1>
             <div
               className={`compare-hero-mark${selectedComparisonFund && comparisonResults.length > 0 && comparisonDifference < 0 ? ' compare-hero-mark-negative' : ''}`}

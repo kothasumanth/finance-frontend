@@ -1,7 +1,6 @@
 import { apiUrl } from './api.js'
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import UserHeader from './components/UserHeader';
 import RetirementSummary from './components/RetirementSummary';
 
 function groupEntriesByFinancialYear(entries) {
@@ -209,7 +208,6 @@ function EpsDetails() {
         }
       `}</style>
       <div className="details-page-topbar">
-        <UserHeader userId={userId} inline />
         <h1 className="colorful-title details-page-title">Detailed EPS Page</h1>
         <button onClick={() => navigate(`/user/${userId}/eps-dashboard`)}>EPS Dashboard</button>
         <div className="details-page-balance-summary" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 48, marginBottom: 8 }}>

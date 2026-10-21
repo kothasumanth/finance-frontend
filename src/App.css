@@ -47,6 +47,87 @@ body {
   box-shadow: none;
 }
 
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--page, #f3f6fb);
+  color: var(--ink, #172033);
+}
+
+.auth-card {
+  width: min(100%, 420px);
+  display: grid;
+  gap: 12px;
+  padding: 28px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.12);
+}
+
+.auth-card h1,
+.auth-card p {
+  margin: 0;
+}
+
+.auth-card label {
+  font-weight: 600;
+}
+
+.auth-card input {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.auth-card small {
+  color: #475569;
+}
+
+.auth-error {
+  color: #b91c1c;
+}
+
+.auth-submit {
+  min-height: 42px;
+  background: #2563eb;
+  color: white;
+}
+
+.auth-mode-toggle {
+  background: transparent;
+  color: #1d4ed8;
+  box-shadow: none;
+}
+
+.auth-session-bar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 8px 20px;
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+@media (max-width: 520px) {
+  .auth-card {
+    padding: 22px;
+  }
+
+  .auth-session-bar {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
 .colorful-bg {
   min-height: 100vh;
   background: transparent;
@@ -627,12 +708,6 @@ body {
   flex-shrink: 0;
 }
 
-.mf-dashboard-page .user-header-inline {
-  padding: 9px 16px;
-  border-color: var(--line-strong);
-  background: transparent;
-}
-
 .mf-dashboard-legend {
   display: flex;
   flex-wrap: wrap;
@@ -1146,38 +1221,6 @@ body {
   text-align: center !important;
 }
 
-.user-header {
-  position: absolute;
-  top: 10px;
-  left: 20px;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 9px 16px;
-  border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  background: var(--page);
-  color: var(--ink);
-  font-size: 0.82rem;
-}
-
-.user-header-inline {
-  position: static;
-  top: auto;
-  left: auto;
-  z-index: auto;
-}
-
-.user-header-label {
-  color: var(--muted);
-}
-
-.user-header-name {
-  color: var(--ink);
-  font-weight: 700;
-}
-
 .user-table {
   width: 100%;
   margin-top: 1rem;
@@ -1272,13 +1315,6 @@ textarea::placeholder {
     width: 100vw !important;
     margin: 0 0 36px calc(50% - 50vw) !important;
     padding: 16px 14px;
-  }
-
-  .user-header:not(.user-header-inline) {
-    top: 8px;
-    left: 12px;
-    padding: 7px 12px;
-    font-size: 0.76rem;
   }
 
   .compare-results-layout {

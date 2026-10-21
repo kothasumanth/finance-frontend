@@ -2,7 +2,6 @@ import { apiUrl } from './api.js'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import UserHeader from './components/UserHeader'
 
 function MutualFundDetails() {
   const { userId, fundName } = useParams()
@@ -59,7 +58,6 @@ function MutualFundDetails() {
   return (
     <>
       <div className="details-page-topbar">
-        <UserHeader userId={userId} inline />
         <h1 className="colorful-title details-page-title">
           {decodeURIComponent(fundName)} - NAV Details
         </h1>

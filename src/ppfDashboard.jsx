@@ -1,7 +1,6 @@
 import { apiUrl } from './api.js'
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import UserHeader from './components/UserHeader';
 
 function PfDashboard() {
   const { userId } = useParams();
@@ -262,7 +261,6 @@ function PfDashboard() {
   return (
     <div className="ppf-dashboard-page">
       <header className="retirement-page-topbar ppf-retirement-topbar">
-        <UserHeader userId={userId} inline />
         <h1 className="colorful-title">Public Provident Fund Dashboard</h1>
         <div className="pf-dashboard-btn-row">
           <button

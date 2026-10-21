@@ -2,7 +2,6 @@ import { apiUrl } from './api.js'
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { fetchGoldSummary } from './api/fetchGoldTodayValue';
-import UserHeader from './components/UserHeader';
 import { useUserSessionSummary } from './components/userSessionSummaryContext';
 
 function summarizeContributionEntries(entries) {
@@ -100,7 +99,6 @@ function FinanceOverview() {
   return (
       <main className="finance-overview-page">
         <header className="finance-overview-topbar">
-          <UserHeader userId={userId} inline />
           <h1 className="colorful-title finance-overview-title">Finance Overview</h1>
           <nav className="finance-overview-actions" aria-label="Finance sections">
             <button onClick={() => navigate('/')}>Home</button>

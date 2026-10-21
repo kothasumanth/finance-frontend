@@ -1,7 +1,6 @@
 import { apiUrl } from './api.js'
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import UserHeader from './components/UserHeader';
 
 function EpsDashboard() {
   const { userId } = useParams();
@@ -271,7 +270,6 @@ function EpsDashboard() {
   return (
     <div className="container retirement-dashboard-page">
       <header className="retirement-page-topbar eps-retirement-topbar">
-        <UserHeader userId={userId} inline />
         <h1 className="colorful-title">EPS Dashboard</h1>
         <div className="eps-dashboard-actions">
           <button

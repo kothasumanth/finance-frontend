@@ -1,8 +1,4 @@
-const defaultApiBaseUrl = import.meta.env.PROD
-  ? 'https://finance-backend-js8l.onrender.com'
-  : 'http://localhost:3000'
-
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || defaultApiBaseUrl).replace(/\/+$/, '')
+export const API_BASE_URL = '/api'
 
 export function apiUrl(path) {
   return `${API_BASE_URL}/${path.replace(/^\/+/, '')}`

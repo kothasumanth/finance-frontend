@@ -1,7 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { fetchCapTypes } from './api/capTypes'
-import UserHeader from './components/UserHeader'
 import SIPInfoPopup from './components/SIPInfoPopup'
 import { SessionSummary } from './components/UserSessionSummary'
 import { useUserSessionSummary } from './components/userSessionSummaryContext'
@@ -49,7 +48,6 @@ function MutualFundDashboard() {
     <div className="mf-dashboard-page">
       <header className="mf-dashboard-topbar">
         <div className="mf-dashboard-identity">
-          <UserHeader userId={userId} inline />
           <h1 className="colorful-title mf-dashboard-title">Mutual Fund Dashboard</h1>
         </div>
         <nav className="mf-dashboard-actions" aria-label="Mutual fund actions">

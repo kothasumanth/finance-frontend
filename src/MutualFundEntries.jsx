@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { fetchMutualFundMetadata } from './api'
 import IconButton from './IconButton'
-import UserHeader from './components/UserHeader'
 import SearchableDropdown from './components/SearchableDropdown'
 import { SessionSummary } from './components/UserSessionSummary'
 import { useUserSessionSummary } from './components/userSessionSummaryContext'
@@ -162,7 +161,6 @@ function MutualFundEntries() {
   return (
     <div className="container colorful-bg" style={{ paddingTop: '1.2rem', maxWidth: 1250, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-        <UserHeader userId={userId} inline />
         <h1 className="colorful-title" style={{ margin: 0, fontSize: '1.5rem', whiteSpace: 'nowrap' }}>
           Mutual Fund Entries
         </h1>
