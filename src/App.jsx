@@ -1,3 +1,4 @@
+import { apiUrl } from './api.js'
 import { useEffect, useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'
 import './App.css'
@@ -25,7 +26,7 @@ function App() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    fetch('http://localhost:3000/users-table-json')
+    fetch(apiUrl('/users-table-json'))
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch users')
         return res.json()
@@ -78,7 +79,7 @@ function Home({ users, setUsers, loading, error }) {
     const name = newName.trim()
     if (!name) return setAddError('Please enter a name')
     try {
-      const res = await fetch('http://localhost:3000/users', {
+      const res = await fetch(apiUrl('/users'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })

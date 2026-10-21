@@ -1,3 +1,4 @@
+import { apiUrl } from '../api.js'
 import React, { useState, useEffect } from 'react';
 import IconButton from '../IconButton';
 import SearchableDropdown from './SearchableDropdown';
@@ -19,7 +20,7 @@ function SIPInfoPopup({ userId, onClose, fundSummary }) {
 
     const fetchSIPInfo = async () => {
         try {
-            const response = await fetch(`http://localhost:3000/sip-info/${userId}`);
+            const response = await fetch(apiUrl(`/sip-info/${userId}`));
             if (!response.ok) throw new Error('Failed to fetch SIP info');
             const data = await response.json();
             setSipInfo(data);
@@ -51,8 +52,8 @@ function SIPInfoPopup({ userId, onClose, fundSummary }) {
             };
 
             const url = editId 
-                ? `http://localhost:3000/sip-info/${editId}`
-                : 'http://localhost:3000/sip-info';
+                ? apiUrl(`/sip-info/${editId}`)
+                : apiUrl('/sip-info');
             
             const response = await fetch(url, {
                 method: editId ? 'PUT' : 'POST',
@@ -86,7 +87,7 @@ function SIPInfoPopup({ userId, onClose, fundSummary }) {
         if (!window.confirm('Are you sure you want to delete this SIP info?')) return;
 
         try {
-            const response = await fetch(`http://localhost:3000/sip-info/${id}`, {
+            const response = await fetch(apiUrl(`/sip-info/${id}`), {
                 method: 'DELETE'
             });
 

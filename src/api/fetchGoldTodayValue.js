@@ -1,8 +1,9 @@
+import { apiUrl } from '../api.js'
 // Fetches gold summary (today value) for a user
 import { fetchTodayGoldPrice } from './goldPrice';
 
 export async function fetchGoldSummary(userId) {
-  const res = await fetch(`http://localhost:3000/gold-entries?userId=${userId}`);
+  const res = await fetch(apiUrl(`/gold-entries?userId=${userId}`));
   if (!res.ok) return { invested: 0, todayValue: 0 };
   const data = await res.json();
   const todayGoldPrice = await fetchTodayGoldPrice();

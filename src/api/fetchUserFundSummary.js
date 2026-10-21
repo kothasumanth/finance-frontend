@@ -1,17 +1,18 @@
+import { apiUrl } from '../api.js'
 // Fetches all entries and metadata for a user, grouped by fund
 export async function fetchUserFundSummary(userId) {
   // Get all entries for the user
-  const entriesRes = await fetch(`http://localhost:3000/mutual-funds/${userId}`);
+  const entriesRes = await fetch(apiUrl(`/mutual-funds/${userId}`));
   if (!entriesRes.ok) throw new Error('Failed to fetch entries');
   const entries = await entriesRes.json();
   
   // Get all fund metadata
-  const metaRes = await fetch('http://localhost:3000/mutualfund-metadata');
+  const metaRes = await fetch(apiUrl('/mutualfund-metadata'));
   if (!metaRes.ok) throw new Error('Failed to fetch metadata');
   const metadata = await metaRes.json();
 
   // Get all cap types for mapping
-  const capTypesRes = await fetch('http://localhost:3000/api/mfcaptypes');
+  const capTypesRes = await fetch(apiUrl('/api/mfcaptypes'));
   if (!capTypesRes.ok) throw new Error('Failed to fetch cap types');
   const capTypes = await capTypesRes.json();
   // Get latest NAVs for all funds
@@ -19,7 +20,7 @@ export async function fetchUserFundSummary(userId) {
   for (const meta of metadata) {
     if (!meta.GoogleValue) continue;
     try {
-      const navRes = await fetch(`http://localhost:3000/mf-api?googleValue=${encodeURIComponent(meta.GoogleValue)}`);
+      const navRes = await fetch(apiUrl(`/mf-api?googleValue=${encodeURIComponent(meta.GoogleValue)}`));
       const navData = await navRes.json();
       navs[meta._id] = Number(navData.nav) || null;
     } catch { navs[meta._id] = null; }

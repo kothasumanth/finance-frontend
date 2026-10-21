@@ -1,3 +1,4 @@
+import { apiUrl } from './api.js'
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import UserHeader from './components/UserHeader';
@@ -70,18 +71,18 @@ function PpfDetails() {
     async function fetchEntries() {
       setLoading(true);
       try {
-        const typesRes = await fetch('http://localhost:3000/pf-types');
+        const typesRes = await fetch(apiUrl('/pf-types'));
         const types = await typesRes.json();
         const ppfType = types.find(t => t.name === 'PPF');
         if (!ppfType) throw new Error('PPF type not found');
         
         // Fetch PPF entries
-        const res = await fetch(`http://localhost:3000/pfentry/user/${userId}/type/${ppfType._id}`);
+        const res = await fetch(apiUrl(`/pfentry/user/${userId}/type/${ppfType._id}`));
         let data = await res.json();
         
         if (Array.isArray(data) && data.length > 0) {
           // Fetch all ROI records for PPF type
-          const roiRes = await fetch('http://localhost:3000/pf-interest');
+          const roiRes = await fetch(apiUrl('/pf-interest'));
           const allRoiData = await roiRes.json();
           const ppfRoiData = allRoiData.filter(roi => roi.pfType === ppfType._id);
           
@@ -148,7 +149,7 @@ function PpfDetails() {
     if (day <= 5) {
       monthInterest = parseFloat((amount * (1/12) * (parseFloat(roi)/100)).toFixed(2));
     }
-    const res = await fetch(`http://localhost:3000/pfentry/${entry._id}`, {
+    const res = await fetch(apiUrl(`/pfentry/${entry._id}`), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -164,7 +165,7 @@ function PpfDetails() {
         const ids = [...new Set(updated.map(e => e.pfInterestId).filter(Boolean))];
         let roiMap = {};
         if (ids.length > 0) {
-          const roiRes = await fetch('http://localhost:3000/pf-interest');
+          const roiRes = await fetch(apiUrl('/pf-interest'));
           const roiData = await roiRes.json();
           ids.forEach(id => {
             const found = roiData.find(r => r._id === id);

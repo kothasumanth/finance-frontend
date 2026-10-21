@@ -1,3 +1,4 @@
+import { apiUrl } from './api.js'
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import * as XLSX from 'xlsx'
@@ -19,7 +20,7 @@ function ViewMutualFundData() {
   const [page, setPage] = useState(1)
 
   useEffect(() => {
-    fetch('http://localhost:3000/mutualfund-metadata')
+    fetch(apiUrl('/mutualfund-metadata'))
       .then(res => res.json())
       .then(data => setFundOptions(data))
       .catch(() => setFundOptions([]))
@@ -34,7 +35,7 @@ function ViewMutualFundData() {
 
   useEffect(() => {
     // Fetch all MF entries for user and filter fundOptions to only those with data
-    fetch(`http://localhost:3000/mutual-funds/${userId}`)
+    fetch(apiUrl(`/mutual-funds/${userId}`))
       .then(res => res.json())
       .then(data => {
         // Get unique fund IDs that have data
@@ -47,7 +48,7 @@ function ViewMutualFundData() {
   useEffect(() => {
     if (!selectedFund) return
     setLoading(true)
-    fetch(`http://localhost:3000/mutual-funds/${userId}`)
+    fetch(apiUrl(`/mutual-funds/${userId}`))
       .then(res => res.json())
       .then(data => {
         if (selectedFund === 'ALL') {
@@ -74,7 +75,7 @@ function ViewMutualFundData() {
       setMfApiData(null)
       return
     }
-    const url = `http://localhost:3000/mf-api?googleValue=${encodeURIComponent(fund.GoogleValue)}`
+    const url = apiUrl(`/mf-api?googleValue=${encodeURIComponent(fund.GoogleValue)}`)
     fetch(url)
       .then(res => res.json())
       .then(data => {
@@ -117,7 +118,7 @@ function ViewMutualFundData() {
       if (navObj && navObj.nav) {
         const navValue = parseFloat(navObj.nav)
         units = entry.amount && navValue ? (parseFloat(entry.amount) / navValue).toFixed(4) : ''
-        await fetch(`http://localhost:3000/mutual-funds/${entry._id}`, {
+        await fetch(apiUrl(`/mutual-funds/${entry._id}`), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -139,13 +140,13 @@ function ViewMutualFundData() {
 
   const handleReCal = async () => {
     if (!selectedFund) return;
-    await fetch('http://localhost:3000/mutual-funds/recal', {
+    await fetch(apiUrl('/mutual-funds/recal'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, fundId: selectedFund })
     });
     // Refresh entries
-    fetch(`http://localhost:3000/mutual-funds/${userId}`)
+    fetch(apiUrl(`/mutual-funds/${userId}`))
       .then(res => res.json())
       .then(data => setEntries(data.filter(e => e.fundName && e.fundName._id === selectedFund)));
     await refreshSummary()
@@ -153,13 +154,13 @@ function ViewMutualFundData() {
 
   const handleForceNull = async () => {
     if (!selectedFund) return;
-    await fetch('http://localhost:3000/mutual-funds/force-null', {
+    await fetch(apiUrl('/mutual-funds/force-null'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, fundId: selectedFund })
     });
     // Refresh entries
-    fetch(`http://localhost:3000/mutual-funds/${userId}`)
+    fetch(apiUrl(`/mutual-funds/${userId}`))
       .then(res => res.json())
       .then(data => setEntries(data.filter(e => e.fundName && e.fundName._id === selectedFund)));
     await refreshSummary()

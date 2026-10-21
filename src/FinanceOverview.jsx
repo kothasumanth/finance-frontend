@@ -1,3 +1,4 @@
+import { apiUrl } from './api.js'
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { fetchGoldSummary } from './api/fetchGoldTodayValue';
@@ -43,12 +44,12 @@ function FinanceOverview() {
 
   useEffect(() => {
     async function fetchSummary(typeName) {
-      const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+      const pfTypesRes = await fetch(apiUrl('/pf-types'));
       if (!pfTypesRes.ok) throw new Error('Failed to fetch provident fund types');
       const pfTypes = await pfTypesRes.json();
       const pfType = pfTypes.find(type => type.name === typeName);
       if (!pfType) throw new Error(`${typeName} type not found`);
-      const response = await fetch(`http://localhost:3000/pfentry/user/${userId}/type/${pfType._id}`);
+      const response = await fetch(apiUrl(`/pfentry/user/${userId}/type/${pfType._id}`));
       if (!response.ok) throw new Error(`Failed to fetch ${typeName} entries`);
       return summarizeContributionEntries(await response.json());
     }

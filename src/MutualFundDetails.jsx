@@ -1,3 +1,4 @@
+import { apiUrl } from './api.js'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
@@ -16,7 +17,7 @@ function MutualFundDetails() {
       try {
         setLoading(true)
         setError(null)
-        const response = await fetch(`http://localhost:3000/mf-nav/${userId}/${encodeURIComponent(fundName)}`)
+        const response = await fetch(apiUrl(`/mf-nav/${userId}/${encodeURIComponent(fundName)}`))
         
         const contentType = response.headers.get('content-type')
         let data = null

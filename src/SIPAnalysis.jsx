@@ -1,3 +1,4 @@
+import { apiUrl } from './api.js'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import UserHeader from './components/UserHeader'
@@ -92,7 +93,7 @@ function SIPAnalysis() {
 
   useEffect(() => {
     let active = true
-    fetch('http://localhost:3000/mutualfund-metadata')
+    fetch(apiUrl('/mutualfund-metadata'))
       .then(response => {
         if (!response.ok) throw new Error('Failed to load mutual funds')
         return response.json()

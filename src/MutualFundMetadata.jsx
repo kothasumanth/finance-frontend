@@ -1,3 +1,4 @@
+import { apiUrl } from './api.js'
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import IconButton from './IconButton'
@@ -33,7 +34,7 @@ function MutualFundMetadata() {
       try {
         setLoading(true);
         const [metadataRes, capTypesRes] = await Promise.all([
-          fetch('http://localhost:3000/mutualfund-metadata'),
+          fetch(apiUrl('/mutualfund-metadata')),
           fetchCapTypes()
         ]);
         
@@ -78,7 +79,7 @@ function MutualFundMetadata() {
 
   const handleSave = () => {
     const method = editId ? 'PUT' : 'POST'
-    const url = editId ? `http://localhost:3000/mutualfund-metadata/${editId}` : 'http://localhost:3000/mutualfund-metadata'
+    const url = editId ? apiUrl(`/mutualfund-metadata/${editId}`) : apiUrl('/mutualfund-metadata')
     const body = editId
       ? {
           MutualFundName: fundName,
@@ -127,7 +128,7 @@ function MutualFundMetadata() {
 
   const handleDelete = (id) => {
     if (!window.confirm('Are you sure you want to delete this metadata?')) return
-    fetch(`http://localhost:3000/mutualfund-metadata/${id}`, { method: 'DELETE' })
+    fetch(apiUrl(`/mutualfund-metadata/${id}`), { method: 'DELETE' })
       .then(res => {
         if (!res.ok) throw new Error('Failed to delete metadata')
         setMetadata(metadata.filter(m => m._id !== id))

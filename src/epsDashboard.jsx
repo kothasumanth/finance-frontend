@@ -1,3 +1,4 @@
+import { apiUrl } from './api.js'
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import UserHeader from './components/UserHeader';
@@ -49,12 +50,12 @@ function EpsDashboard() {
     setLoading(true);
     try {
       // Fetch PF types and get EPS type
-      const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+      const pfTypesRes = await fetch(apiUrl('/pf-types'));
       const pfTypes = await pfTypesRes.json();
       const epsType = pfTypes.find(t => t.name === 'EPS');
       if (!epsType) throw new Error('EPS type not found');
       // Fetch EPS entries for user
-      const res = await fetch(`http://localhost:3000/pfentry/user/${userId}/type/${epsType._id}`);
+      const res = await fetch(apiUrl(`/pfentry/user/${userId}/type/${epsType._id}`));
       const entries = await res.json();
       setEpsEntries(entries);
       // Calculate total
@@ -76,11 +77,11 @@ function EpsDashboard() {
   async function fetchEpsYearwise() {
     setEpsYearwiseLoading(true);
     try {
-      const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+      const pfTypesRes = await fetch(apiUrl('/pf-types'));
       const pfTypes = await pfTypesRes.json();
       const epsType = pfTypes.find(t => t.name === 'EPS');
       if (!epsType) throw new Error('EPS type not found');
-      const res = await fetch(`http://localhost:3000/pfentry/user/${userId}/type/${epsType._id}`);
+      const res = await fetch(apiUrl(`/pfentry/user/${userId}/type/${epsType._id}`));
       const entries = await res.json();
       // Group by FY (April-March)
       const fyMap = {};
@@ -117,11 +118,11 @@ function EpsDashboard() {
   async function handleSetupEps() {
     setActionLoading(true);
     try {
-      const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+      const pfTypesRes = await fetch(apiUrl('/pf-types'));
       const pfTypes = await pfTypesRes.json();
       const epsType = pfTypes.find(t => t.name === 'EPS');
       if (!epsType) throw new Error('EPS type not found');
-      await fetch('http://localhost:3000/pfentry/pf-bulk-create', {
+      await fetch(apiUrl('/pfentry/pf-bulk-create'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, pfTypeId: epsType._id, years: 15 })
@@ -139,11 +140,11 @@ function EpsDashboard() {
     setActionLoading(true);
     try {
       // Fetch PF types and get EPS type
-      const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+      const pfTypesRes = await fetch(apiUrl('/pf-types'));
       const pfTypes = await pfTypesRes.json();
       const epsType = pfTypes.find(t => t.name === 'EPS');
       if (!epsType) throw new Error('EPS type not found');
-      const res = await fetch(`http://localhost:3000/pfentry/user/${userId}/type/${epsType._id}`, {
+      const res = await fetch(apiUrl(`/pfentry/user/${userId}/type/${epsType._id}`), {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -165,8 +166,8 @@ function EpsDashboard() {
     if (showInterestPopup) {
       setInterestLoading(true);
       Promise.all([
-        fetch('http://localhost:3000/pf-interest').then(res => res.json()),
-        fetch('http://localhost:3000/pf-types').then(res => res.json())
+        fetch(apiUrl('/pf-interest')).then(res => res.json()),
+        fetch(apiUrl('/pf-types')).then(res => res.json())
       ]).then(([interestData, pfTypesData]) => {
         setPfTypes(pfTypesData);
         const epsType = pfTypesData.find(t => t.name === 'EPS');
@@ -201,7 +202,7 @@ function EpsDashboard() {
 
   const handleInterestDelete = (idx) => {
     if (!window.confirm('Delete this record?')) return;
-    fetch(`http://localhost:3000/pf-interest/${interestRows[idx]._id}`, { method: 'DELETE' })
+    fetch(apiUrl(`/pf-interest/${interestRows[idx]._id}`), { method: 'DELETE' })
       .then(() => setInterestRows(rows => rows.filter((_, i) => i !== idx)));
   };
 
@@ -221,7 +222,7 @@ function EpsDashboard() {
       }
     }
     const method = interestEditRow != null && interestEditRow < interestRows.length ? 'PUT' : 'POST';
-    const url = method === 'POST' ? 'http://localhost:3000/pf-interest' : `http://localhost:3000/pf-interest/${interestRows[interestEditRow]._id}`;
+    const url = method === 'POST' ? apiUrl('/pf-interest') : apiUrl(`/pf-interest/${interestRows[interestEditRow]._id}`);
     fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
@@ -242,11 +243,11 @@ function EpsDashboard() {
   async function handleSetupEpsSave() {
     setActionLoading(true);
     try {
-      const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+      const pfTypesRes = await fetch(apiUrl('/pf-types'));
       const pfTypes = await pfTypesRes.json();
       const epsType = pfTypes.find(t => t.name === 'EPS');
       if (!epsType) throw new Error('EPS type not found');
-      const res = await fetch('http://localhost:3000/pfentry/pf-bulk-create', {
+      const res = await fetch(apiUrl('/pfentry/pf-bulk-create'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, pfTypeId: epsType._id, startDate: setupEpsStartDate })
@@ -304,11 +305,11 @@ function EpsDashboard() {
               if (!window.confirm('Recalculate all EPS entries for all users?')) return;
               setActionLoading(true);
               try {
-                const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+                const pfTypesRes = await fetch(apiUrl('/pf-types'));
                 const pfTypes = await pfTypesRes.json();
                 const epsType = pfTypes.find(t => t.name === 'EPS');
                 if (!epsType) { alert('EPS type not found'); setActionLoading(false); return; }
-                const res = await fetch('http://localhost:3000/pfentry/recalculate-all', {
+                const res = await fetch(apiUrl('/pfentry/recalculate-all'), {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ pfTypeId: epsType._id })

@@ -1,3 +1,4 @@
+import { apiUrl } from './api.js'
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { fetchMutualFundMetadata } from './api'
@@ -36,7 +37,7 @@ function MutualFundEntries() {
   const [page, setPage] = useState(1)
 
   useEffect(() => {
-    fetch(`http://localhost:3000/mutual-funds/${userId}`)
+    fetch(apiUrl(`/mutual-funds/${userId}`))
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch mutual fund entries')
         return res.json()
@@ -86,7 +87,7 @@ function MutualFundEntries() {
     // Save all entries
     Promise.all(
       entriesToSave.map(entry =>
-        fetch('http://localhost:3000/mutual-funds', {
+        fetch(apiUrl('/mutual-funds'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(entry)
@@ -117,7 +118,7 @@ function MutualFundEntries() {
   }
 
   const handleSaveEdit = (entry) => {
-    fetch(`http://localhost:3000/mutual-funds/${entry._id}`, {
+    fetch(apiUrl(`/mutual-funds/${entry._id}`), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -145,7 +146,7 @@ function MutualFundEntries() {
 
   const handleDelete = (entry) => {
     if (!window.confirm('Are you sure you want to delete this entry?')) return
-    fetch(`http://localhost:3000/mutual-funds/${entry._id}`, {
+    fetch(apiUrl(`/mutual-funds/${entry._id}`), {
       method: 'DELETE'
     })
       .then((res) => {

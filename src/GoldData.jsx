@@ -1,3 +1,4 @@
+import { apiUrl } from './api.js'
 import IconButton from './IconButton';
 import { Fragment, useEffect, useState } from 'react';
 import { fetchTodayGoldPrice, saveTodayGoldPrice } from './api/goldPrice';
@@ -9,7 +10,7 @@ function GoldData() {
   const handleDelete = async (idx) => {
     const entry = entries[idx];
     if (!entry || !entry._id) return;
-    const res = await fetch(`http://localhost:3000/gold-entries/${entry._id}`, {
+    const res = await fetch(apiUrl(`/gold-entries/${entry._id}`), {
       method: 'DELETE'
     });
     if (res.ok) {
@@ -51,7 +52,7 @@ function GoldData() {
 
   const fetchGoldEntries = async () => {
     setLoading(true);
-    const res = await fetch(`http://localhost:3000/gold-entries?userId=${userId}`);
+    const res = await fetch(apiUrl(`/gold-entries?userId=${userId}`));
     let data = await res.json();
     // Sort by purchaseDate descending
     data = data.sort((a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate));
@@ -86,7 +87,7 @@ function GoldData() {
       karat: Number(form.karat) || 24
     };
     if (editRow !== null && entries[editRow]?._id) payload._id = entries[editRow]._id;
-    const res = await fetch('http://localhost:3000/gold-entries', {
+    const res = await fetch(apiUrl('/gold-entries'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

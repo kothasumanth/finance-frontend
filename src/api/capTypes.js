@@ -1,8 +1,8 @@
-const API_BASE_URL = 'http://localhost:3000';
+import { apiUrl } from '../api.js'
 
 export const fetchCapTypes = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/mfcaptypes`);
+        const response = await fetch(apiUrl('/api/mfcaptypes'));
         if (!response.ok) throw new Error('Failed to fetch cap types');
         return await response.json();
     } catch (error) {
@@ -13,7 +13,7 @@ export const fetchCapTypes = async () => {
 
 export const createCapType = async (name) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/mfcaptypes`, {
+        const response = await fetch(apiUrl('/api/mfcaptypes'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -30,7 +30,7 @@ export const createCapType = async (name) => {
 
 export const updateCapType = async (id, name) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/mfcaptypes/${id}`, {
+        const response = await fetch(apiUrl(`/api/mfcaptypes/${id}`), {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -47,7 +47,7 @@ export const updateCapType = async (id, name) => {
 
 export const deleteCapType = async (id) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/mfcaptypes/${id}`, {
+        const response = await fetch(apiUrl(`/api/mfcaptypes/${id}`), {
             method: 'DELETE',
         });
         if (!response.ok) throw new Error('Failed to delete cap type');

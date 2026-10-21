@@ -1,3 +1,4 @@
+import { apiUrl } from '../api.js'
 import React, { useEffect, useState } from 'react';
 
 export default function UserHeader({ userId, inline = false }) {
@@ -5,7 +6,7 @@ export default function UserHeader({ userId, inline = false }) {
 
     useEffect(() => {
         if (userId) {
-            fetch(`http://localhost:3000/users/${userId}`)
+            fetch(apiUrl(`/users/${userId}`))
                 .then(response => response.json())
                 .then(data => setUserData(data))
                 .catch(error => console.error('Error fetching user data:', error));

@@ -1,3 +1,4 @@
+import { apiUrl } from './api.js'
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import FundDetailsTooltip from './components/FundDetailsTooltip';
@@ -153,7 +154,7 @@ export default function MFMetrics() {
         if (showExpectedModal && capTypes.length > 0) {
             const fetchModalExpectedPercentages = async () => {
                 try {
-                    const response = await fetch(`http://localhost:3000/expected-percentages/${userId}`);
+                    const response = await fetch(apiUrl(`/expected-percentages/${userId}`));
                     if (!response.ok) throw new Error('Failed to fetch expected percentages');
                     
                     const data = await response.json();
@@ -193,7 +194,7 @@ export default function MFMetrics() {
             fetchMutualFundMetadata(),
             fetchCapTypes(),
             // fetch SIP info for this user to compute SIP/Mth
-            fetch(`http://localhost:3000/sip-info/${userId}`).then(r => r.ok ? r.json() : [])
+            fetch(apiUrl(`/sip-info/${userId}`)).then(r => r.ok ? r.json() : [])
         ])
             .then(([summaryData, metadataData, capTypesData, sipData]) => {
                 console.log('Fund Summary Data:', summaryData);
@@ -232,7 +233,7 @@ export default function MFMetrics() {
             if (!capTypes.length) return;
 
             try {
-                const response = await fetch(`http://localhost:3000/expected-percentages/${userId}`);
+                const response = await fetch(apiUrl(`/expected-percentages/${userId}`));
                 if (!response.ok) throw new Error('Failed to fetch expected percentages');
                 
                 const data = await response.json();
@@ -1068,7 +1069,7 @@ export default function MFMetrics() {
                                         }
 
                                         // Save to API
-                                        const response = await fetch(`http://localhost:3000/expected-percentages/${userId}`, {
+                                        const response = await fetch(apiUrl(`/expected-percentages/${userId}`), {
                                             method: 'POST',
                                             headers: {
                                                 'Content-Type': 'application/json',

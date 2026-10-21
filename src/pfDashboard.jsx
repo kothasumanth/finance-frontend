@@ -1,3 +1,4 @@
+import { apiUrl } from './api.js'
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import UserHeader from './components/UserHeader';
@@ -29,11 +30,11 @@ function PfDashboard() {
     async function fetchPFYearwise() {
       setPfYearwiseLoading(true);
       try {
-        const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+        const pfTypesRes = await fetch(apiUrl('/pf-types'));
         const pfTypes = await pfTypesRes.json();
         const pfType = pfTypes.find(t => t.name === 'PF');
         if (!pfType) throw new Error('PF type not found');
-        const res = await fetch(`http://localhost:3000/pfentry/user/${userId}/type/${pfType._id}`);
+        const res = await fetch(apiUrl(`/pfentry/user/${userId}/type/${pfType._id}`));
         const entries = await res.json();
         // Group by FY (April-March)
         const fyMap = {};
@@ -73,8 +74,8 @@ function PfDashboard() {
     if (showPopup) {
       setLoading(true);
       Promise.all([
-        fetch('http://localhost:3000/pf-interest').then(res => res.json()),
-        fetch('http://localhost:3000/pf-types').then(res => res.json())
+        fetch(apiUrl('/pf-interest')).then(res => res.json()),
+        fetch(apiUrl('/pf-types')).then(res => res.json())
       ])
         .then(([interestData, pfTypesData]) => {
           setPfTypes(pfTypesData);
@@ -125,7 +126,7 @@ function PfDashboard() {
 
   const handleDelete = (idx) => {
     if (window.confirm('Delete this record?')) {
-      fetch(`http://localhost:3000/pf-interest/${interestRows[idx]._id}`, { method: 'DELETE' })
+      fetch(apiUrl(`/pf-interest/${interestRows[idx]._id}`), { method: 'DELETE' })
         .then(() => {
           setInterestRows(rows => rows.filter((_, i) => i !== idx));
         });
@@ -148,7 +149,7 @@ function PfDashboard() {
       }
     }
     const method = editRow != null && editRow < interestRows.length ? 'PUT' : 'POST';
-    const url = method === 'POST' ? 'http://localhost:3000/pf-interest' : `http://localhost:3000/pf-interest/${interestRows[editRow]._id}`;
+    const url = method === 'POST' ? apiUrl('/pf-interest') : apiUrl(`/pf-interest/${interestRows[editRow]._id}`);
     fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
@@ -176,11 +177,11 @@ function PfDashboard() {
   const handleSetupPFSave = async () => {
     setSetupPFLoading(true);
     try {
-      const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+      const pfTypesRes = await fetch(apiUrl('/pf-types'));
       const pfTypes = await pfTypesRes.json();
       const pfType = pfTypes.find(t => t.name === 'PF');
       if (!pfType) { alert('PF type not found'); setSetupPFLoading(false); return; }
-      const res = await fetch('http://localhost:3000/pfentry/pf-bulk-create', {
+      const res = await fetch(apiUrl('/pfentry/pf-bulk-create'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, pfTypeId: pfType._id, startDate: setupPFStartDate })
@@ -202,11 +203,11 @@ function PfDashboard() {
     if (!window.confirm('Are you sure you want to delete all PF entries for this user?')) return;
     setDeletePFLoading(true);
     try {
-      const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+      const pfTypesRes = await fetch(apiUrl('/pf-types'));
       const pfTypes = await pfTypesRes.json();
       const pfType = pfTypes.find(t => t.name === 'PF');
       if (!pfType) { alert('PF type not found'); setDeletePFLoading(false); return; }
-      const res = await fetch(`http://localhost:3000/pfentry/user/${userId}/type/${pfType._id}`, { method: 'DELETE' });
+      const res = await fetch(apiUrl(`/pfentry/user/${userId}/type/${pfType._id}`), { method: 'DELETE' });
       if (res.ok) {
         alert('All PF entries deleted for this user.');
       } else {
@@ -237,11 +238,11 @@ function PfDashboard() {
           <button className="pf-dashboard-btn" style={{ minWidth: 180, background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem' }} onClick={async () => {
             if (!window.confirm('Recalculate all PF entries for all users?')) return;
             try {
-              const pfTypesRes = await fetch('http://localhost:3000/pf-types');
+              const pfTypesRes = await fetch(apiUrl('/pf-types'));
               const pfTypes = await pfTypesRes.json();
               const pfType = pfTypes.find(t => t.name === 'PF');
               if (!pfType) { alert('PF type not found'); return; }
-              const res = await fetch('http://localhost:3000/pfentry/recalculate-all', {
+              const res = await fetch(apiUrl('/pfentry/recalculate-all'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ pfTypeId: pfType._id })

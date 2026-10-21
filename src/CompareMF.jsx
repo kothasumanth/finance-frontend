@@ -1,3 +1,4 @@
+import { apiUrl } from './api.js'
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import UserHeader from './components/UserHeader'
@@ -21,7 +22,7 @@ function CompareMF() {
   useEffect(() => {
     const fetchPortfolio = async () => {
       try {
-        const res = await fetch(`http://localhost:3000/mutual-funds/${userId}`)
+        const res = await fetch(apiUrl(`/mutual-funds/${userId}`))
         if (!res.ok) throw new Error('Failed to fetch mutual funds')
         const entries = await res.json()
 
@@ -46,7 +47,7 @@ function CompareMF() {
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
-        const res = await fetch('http://localhost:3000/mutualfund-metadata')
+        const res = await fetch(apiUrl('/mutualfund-metadata'))
         if (!res.ok) throw new Error('Failed to fetch metadata')
         const data = await res.json()
         setAllMetadata(data)
@@ -70,7 +71,7 @@ function CompareMF() {
 
     try {
       setLoading(true)
-      const res = await fetch(`http://localhost:3000/mutual-funds/${userId}`)
+      const res = await fetch(apiUrl(`/mutual-funds/${userId}`))
       if (!res.ok) throw new Error('Failed to fetch entries')
       const entries = await res.json()
 
@@ -85,7 +86,7 @@ function CompareMF() {
       const fundMeta = portfolioFunds.find(f => f._id === fundId)
       if (fundMeta && fundMeta.GoogleValue) {
         try {
-          const navRes = await fetch(`http://localhost:3000/mf-api?googleValue=${encodeURIComponent(fundMeta.GoogleValue)}`)
+          const navRes = await fetch(apiUrl(`/mf-api?googleValue=${encodeURIComponent(fundMeta.GoogleValue)}`))
           const navData = await navRes.json()
           setPortfolioFundData(navData)
         } catch {
@@ -116,7 +117,7 @@ function CompareMF() {
       }
 
       // Fetch NAV data for comparison fund
-      const navRes = await fetch(`http://localhost:3000/mf-api?googleValue=${encodeURIComponent(comparisonMeta.GoogleValue)}`)
+      const navRes = await fetch(apiUrl(`/mf-api?googleValue=${encodeURIComponent(comparisonMeta.GoogleValue)}`))
       const navData = await navRes.json()
       const historyRes = await fetch(`https://api.mfapi.in/mf/${comparisonMeta.GoogleValue}`)
       if (!historyRes.ok) throw new Error('Failed to fetch comparison fund history')
