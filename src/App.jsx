@@ -13,6 +13,7 @@ import SIPAnalysis from './SIPAnalysis'
 import GoldData from './GoldData'
 import FinanceOverview from './FinanceOverview'
 import Expenses from './Expenses'
+import AdminUsers from './AdminUsers'
 import PpfDashboard from './ppfDashboard'
 import PpfDetails from './ppfDetails'
 import PfDashboard from './pfDashboard'
@@ -30,7 +31,7 @@ function App() {
 }
 
 function AuthenticatedApp() {
-  const [auth, setAuth] = useState({ loading: true, user: null, mustChangePassword: false, error: '' })
+  const [auth, setAuth] = useState({ loading: true, user: null, isAdmin: false, mustChangePassword: false, error: '' })
   useEffect(() => {
     fetch(apiUrl('/auth/me'))
       .then(async res => {
@@ -42,16 +43,18 @@ function AuthenticatedApp() {
       .then(data => setAuth({
         loading: false,
         user: data?.user || null,
+        isAdmin: Boolean(data?.isAdmin),
         mustChangePassword: Boolean(data?.mustChangePassword),
         error: ''
       }))
-      .catch(err => setAuth({ loading: false, user: null, mustChangePassword: false, error: err.message }))
+      .catch(err => setAuth({ loading: false, user: null, isAdmin: false, mustChangePassword: false, error: err.message }))
   }, [])
 
   const completeLogin = data => {
     setAuth({
       loading: false,
       user: data.user,
+      isAdmin: Boolean(data.isAdmin),
       mustChangePassword: Boolean(data.mustChangePassword),
       error: ''
     })
@@ -60,7 +63,7 @@ function AuthenticatedApp() {
   const logout = async () => {
     const response = await fetch(apiUrl('/auth/logout'), { method: 'POST' })
     if (!response.ok) throw new Error('Unable to log out. Please try again.')
-    setAuth({ loading: false, user: null, mustChangePassword: false, error: '' })
+    setAuth({ loading: false, user: null, isAdmin: false, mustChangePassword: false, error: '' })
   }
 
   return (
@@ -87,11 +90,11 @@ function AuthenticatedApp() {
           auth.loading ? <p role="status">Checking login...</p>
             : !auth.user ? <Navigate to="/" replace />
               : auth.mustChangePassword ? <Navigate to="/change-password" replace />
-                : <ProtectedUser user={auth.user} onLogout={logout} />
+                  : <ProtectedUser user={auth.user} isAdmin={auth.isAdmin} onLogout={logout} />
         }
       >
           <Route index element={<Navigate to="overview" replace />} />
-          <Route element={<UserSessionSummaryProvider />}>
+          <Route element={<UserSessionSummaryProvider isAdmin={auth.isAdmin} />}>
           <Route path="overview" element={<FinanceOverview />} />
           <Route path="expenses" element={<Expenses />} />
           <Route path="dashboard" element={<MutualFundDashboard />} />
@@ -110,13 +113,14 @@ function AuthenticatedApp() {
           <Route path="gold" element={<GoldData />} />
           <Route path="mf-metrics" element={<MFMetrics />} />
           </Route>
+          <Route path="admin-users" element={<AdminUsers />} />
         </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }
 
-function ProtectedUser({ user, onLogout }) {
+function ProtectedUser({ user, isAdmin, onLogout }) {
   const { userId } = useParams()
   const [error, setError] = useState('')
   const navigate = useNavigate()
@@ -142,7 +146,7 @@ function ProtectedUser({ user, onLogout }) {
         <button type="button" onClick={handleLogout}>Log out</button>
         {error && <span role="alert">{error}</span>}
       </div>
-      <Outlet />
+      <Outlet context={{ isAdmin }} />
     </>
   )
 }

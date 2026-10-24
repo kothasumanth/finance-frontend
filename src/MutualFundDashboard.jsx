@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { fetchCapTypes } from './api/capTypes'
 import SIPInfoPopup from './components/SIPInfoPopup'
@@ -8,6 +8,7 @@ import { useUserSessionSummary } from './components/userSessionSummaryContext'
 function MutualFundDashboard() {
   const { userId } = useParams()
   const navigate = useNavigate()
+  const { isAdmin } = useOutletContext()
   const { funds: fundSummary, loading: summaryLoading, error: summaryError } = useUserSessionSummary()
   const [capTypes, setCapTypes] = useState([])
   const [capTypesLoading, setCapTypesLoading] = useState(true)
@@ -52,7 +53,7 @@ function MutualFundDashboard() {
         </div>
         <nav className="mf-dashboard-actions" aria-label="Mutual fund actions">
           <button onClick={() => navigate(`/user/${userId}/overview`)}>Overview</button>
-          <button onClick={() => navigate(`/user/${userId}/mutualfund-metadata`)}>Add MF Metadata</button>
+          {isAdmin && <button onClick={() => navigate(`/user/${userId}/mutualfund-metadata`)}>Add MF Metadata</button>}
           <button onClick={() => navigate(`/user/${userId}/mutual-funds`)}>MF Entries</button>
           <button onClick={() => navigate(`/user/${userId}/view-mf-data`)}>View MF Data</button>
           <button onClick={() => navigate(`/user/${userId}/mf-metrics`)}>Metrics</button>

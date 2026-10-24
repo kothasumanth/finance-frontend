@@ -3,7 +3,7 @@ import { Outlet, useLocation, useParams } from 'react-router-dom'
 import { fetchUserFundSummary } from '../api/fetchUserFundSummary'
 import { UserSessionSummaryContext, useUserSessionSummary } from './userSessionSummaryContext'
 
-export function UserSessionSummaryProvider() {
+export function UserSessionSummaryProvider({ isAdmin }) {
   const { userId } = useParams()
   const location = useLocation()
   const [funds, setFunds] = useState([])
@@ -35,7 +35,7 @@ export function UserSessionSummaryProvider() {
 
   return (
     <UserSessionSummaryContext.Provider value={{ funds, loading, error, refreshSummary }}>
-      <Outlet />
+      <Outlet context={{ isAdmin }} />
     </UserSessionSummaryContext.Provider>
   )
 }

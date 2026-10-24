@@ -37,6 +37,8 @@ The frontend uses `/api` for backend calls. Vite proxies this path to `http://lo
 
 Local `.env` files are ignored by Git. Keep production secrets and the production MongoDB URI only in Render's environment settings, never in committed files.
 
+The Finance Overview shows **Manage Users** only to Admin accounts. Admins can assign Admin/Member roles and delete users; the backend enforces the same permissions independently of the UI.
+
 ## Database Backup & Restore
 Backup and restore functionality is managed from the **backend**. See [backend README](../finance-backend/README.md#backup--restore) for details.
 

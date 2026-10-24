@@ -503,6 +503,59 @@ body {
   font-weight: 700 !important;
 }
 
+.admin-users-page {
+  width: min(100%, 1440px);
+  margin: 0 auto;
+  padding: 1.2rem 24px 48px;
+  box-sizing: border-box;
+}
+
+.admin-users-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-users-topbar h1 {
+  margin: 0 !important;
+  font-size: 1.5rem;
+}
+
+.admin-users-panel {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.admin-users-panel > p:first-child {
+  margin-top: 0;
+}
+
+.admin-users-panel select {
+  min-height: 38px;
+  padding: 6px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.admin-delete-user-button {
+  color: #b91c1c !important;
+}
+
+.admin-delete-user-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .mf-metrics-table .mf-metrics-difference-value.mf-metrics-difference-needed {
   color: #15803d !important;
 }

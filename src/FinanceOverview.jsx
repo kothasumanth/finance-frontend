@@ -1,5 +1,5 @@
 import { apiUrl } from './api.js'
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { fetchGoldSummary } from './api/fetchGoldTodayValue';
 import { useUserSessionSummary } from './components/userSessionSummaryContext';
@@ -20,6 +20,7 @@ function formatSummaryValue(summary, key) {
 function FinanceOverview() {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const { isAdmin } = useOutletContext();
   const { funds: fundSummary, loading, error } = useUserSessionSummary();
   const [ppfSummary, setPpfSummary] = useState(null);
   const [pfSummary, setPfSummary] = useState(null);
@@ -107,6 +108,7 @@ function FinanceOverview() {
             <button onClick={() => navigate(`/user/${userId}/eps-dashboard`)}>EPS</button>
             <button onClick={() => navigate(`/user/${userId}/gold`)}>Gold</button>
             <button onClick={() => navigate(`/user/${userId}/expenses`)}>Expenses</button>
+            {isAdmin && <button onClick={() => navigate(`/user/${userId}/admin-users`)}>Manage Users</button>}
           </nav>
         </header>
         <div className="finance-overview-table-wrap">
