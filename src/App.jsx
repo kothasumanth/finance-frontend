@@ -12,6 +12,7 @@ import CompareMF from './CompareMF'
 import SIPAnalysis from './SIPAnalysis'
 import GoldData from './GoldData'
 import FinanceOverview from './FinanceOverview'
+import Expenses from './Expenses'
 import PpfDashboard from './ppfDashboard'
 import PpfDetails from './ppfDetails'
 import PfDashboard from './pfDashboard'
@@ -92,6 +93,7 @@ function AuthenticatedApp() {
           <Route index element={<Navigate to="overview" replace />} />
           <Route element={<UserSessionSummaryProvider />}>
           <Route path="overview" element={<FinanceOverview />} />
+          <Route path="expenses" element={<Expenses />} />
           <Route path="dashboard" element={<MutualFundDashboard />} />
           <Route path="mf-details/:fundName" element={<MutualFundDetails />} />
           <Route path="mutual-funds" element={<MutualFundEntries />} />

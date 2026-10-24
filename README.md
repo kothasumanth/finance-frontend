@@ -6,6 +6,7 @@ This is the frontend for the Finance Copilot project, built with React and Vite.
 - Modern React (Vite) setup
 - Fetches user data from the backend API
 - Displays users in a clean, responsive table
+- Tracks account-specific daily expenses with multi-entry forms, monthly totals, and year/month expense-type analysis
 
 ## Getting Started
 
@@ -24,7 +25,17 @@ The app will be available at [http://localhost:5173](http://localhost:5173) by d
 ### 3. Connect to the backend
 Make sure the Finance Copilot backend (Node.js + Express + MongoDB) is running and accessible. During local development, the frontend defaults to `http://localhost:3000`.
 
-The frontend uses `/api` for backend calls. Vite proxies this path to `http://localhost:3000` during local development; Netlify proxies it to the deployed Render backend using `public/_redirects`. If your backend URL changes, update that redirect and deploy again.
+The frontend uses `/api` for backend calls. Vite proxies this path to `http://localhost:3000` during local development; Netlify proxies it to the deployed Render backend using `public/_redirects`. The local proxy stays pointed at localhost and does not use the production API. If the production backend URL changes, update the Netlify redirect and deploy again.
+
+### Develop Locally and Deploy Safely
+
+1. Keep both repositories on a feature branch (for example, `Lakshmi`) while making changes.
+2. In the backend repository, use the local `.env` with `MONGODB_URI=mongodb://localhost:27017/finance_copilot`, then run `npm start`.
+3. In the frontend repository, run `npm run dev`. The app at `http://localhost:5173` sends `/api` requests to the local backend at `http://localhost:3000`.
+4. Test both applications locally. The local backend must be restarted after changing backend code so Node loads the updated routes.
+5. Commit and push only the feature branch, then open a pull request into `main` when the changes are ready. Configure Render and Netlify to use `main` as their production branch; merging the pull request is the production release.
+
+Local `.env` files are ignored by Git. Keep production secrets and the production MongoDB URI only in Render's environment settings, never in committed files.
 
 ## Database Backup & Restore
 Backup and restore functionality is managed from the **backend**. See [backend README](../finance-backend/README.md#backup--restore) for details.

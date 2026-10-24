@@ -101,12 +101,12 @@ function FinanceOverview() {
         <header className="finance-overview-topbar">
           <h1 className="colorful-title finance-overview-title">Finance Overview</h1>
           <nav className="finance-overview-actions" aria-label="Finance sections">
-            <button onClick={() => navigate('/')}>Home</button>
             <button onClick={() => navigate(`/user/${userId}/dashboard`)}>Mutual Fund</button>
             <button onClick={() => navigate(`/user/${userId}/ppf-dashboard`)}>Public Provident Fund</button>
             <button onClick={() => navigate(`/user/${userId}/pf-dashboard`)}>Provident Fund</button>
             <button onClick={() => navigate(`/user/${userId}/eps-dashboard`)}>EPS</button>
             <button onClick={() => navigate(`/user/${userId}/gold`)}>Gold</button>
+            <button onClick={() => navigate(`/user/${userId}/expenses`)}>Expenses</button>
           </nav>
         </header>
         <div className="finance-overview-table-wrap">

@@ -274,6 +274,243 @@ body {
   margin-left: auto;
 }
 
+.mf-metrics-table-scroll {
+  margin: 2rem 0;
+  overflow-x: auto;
+}
+
+.mf-metrics-table {
+  min-width: 900px;
+  margin: 0 !important;
+}
+
+.mf-metrics-table > tbody > tr > .mf-metrics-category-cell {
+  border-left: 3px solid #94a3b8 !important;
+}
+
+.mf-metrics-table > tbody > tr > .mf-metrics-category-0 {
+  border-left-color: #60a5fa !important;
+  background: #eff6ff !important;
+}
+
+.mf-metrics-table .mf-metrics-category-0 > table > tbody > tr > td {
+  background: #eff6ff !important;
+}
+
+.mf-metrics-table > tbody > tr > .mf-metrics-category-1 {
+  border-left-color: #34d399 !important;
+  background: #ecfdf5 !important;
+}
+
+.mf-metrics-table .mf-metrics-category-1 > table > tbody > tr > td {
+  background: #ecfdf5 !important;
+}
+
+.mf-metrics-table > tbody > tr > .mf-metrics-category-2 {
+  border-left-color: #a78bfa !important;
+  background: #f5f3ff !important;
+}
+
+.mf-metrics-table .mf-metrics-category-2 > table > tbody > tr > td {
+  background: #f5f3ff !important;
+}
+
+.mf-metrics-table > tbody > tr > .mf-metrics-category-3 {
+  border-left-color: #fb923c !important;
+  background: #fff7ed !important;
+}
+
+.mf-metrics-table .mf-metrics-category-3 > table > tbody > tr > td {
+  background: #fff7ed !important;
+}
+
+.mf-metrics-table .mf-metrics-difference-label {
+  min-width: 190px;
+  background: #f8fafc !important;
+  color: #334155 !important;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mf-metrics-difference-label span,
+.mf-metrics-difference-label small {
+  display: block;
+}
+
+.mf-metrics-difference-label small {
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.expense-page {
+  width: min(100%, 1440px);
+  margin: 0 auto;
+  padding: 1.2rem 24px 48px;
+  box-sizing: border-box;
+}
+
+.expense-topbar,
+.expense-nav,
+.expense-form-actions,
+.expense-analysis-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.expense-topbar {
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.expense-topbar h1 {
+  margin: 0 !important;
+  font-size: 1.5rem;
+}
+
+.expense-nav {
+  margin-bottom: 20px;
+}
+
+.expense-nav button.expense-nav-active {
+  background: var(--ink) !important;
+  color: #fff !important;
+}
+
+.expense-panel {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.expense-panel h2 {
+  margin: 0 0 16px;
+}
+
+.expense-panel h3 {
+  margin: 18px 0 10px;
+}
+
+.expense-table-scroll {
+  overflow-x: auto;
+}
+
+.expense-table {
+  min-width: 620px;
+  margin: 0;
+}
+
+.expense-table th,
+.expense-table td {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.expense-entry-table input,
+.expense-entry-table select,
+.expense-analysis-controls select,
+.expense-type-form input {
+  min-height: 40px;
+  padding: 7px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.expense-entry-table input[type="number"] {
+  width: 150px;
+}
+
+.expense-form-actions {
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+.expense-help-text {
+  margin: 10px 0 0;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.expense-analysis-controls {
+  margin-bottom: 16px;
+}
+
+.expense-analysis-controls label {
+  display: grid;
+  gap: 5px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.expense-message {
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+
+.expense-error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.expense-success {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.expense-type-form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.expense-type-form label {
+  font-weight: 600;
+}
+
+.expense-type-list {
+  display: grid;
+  gap: 8px;
+  max-width: 600px;
+  padding: 0;
+  list-style: none;
+}
+
+.expense-type-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.expense-total-row td {
+  background: #eef2f7 !important;
+  color: var(--ink) !important;
+  font-weight: 700 !important;
+}
+
+.mf-metrics-table .mf-metrics-difference-value.mf-metrics-difference-needed {
+  color: #15803d !important;
+}
+
+.mf-metrics-table .mf-metrics-difference-value.mf-metrics-difference-over {
+  color: #b91c1c !important;
+}
+
 .gold-table-scroll {
   overflow-x: auto;
 }

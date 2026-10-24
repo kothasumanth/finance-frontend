@@ -285,21 +285,9 @@ export default function MFMetrics() {
             ) : error ? (
                 <p style={{color: 'red'}}>{error}</p>
             ) : (
-                <table className="user-table colorful-table" style={{ margin: '2rem 0' }}>
+                <div className="mf-metrics-table-scroll">
+                <table className="user-table colorful-table mf-metrics-table" style={{ margin: '2rem 0' }}>
                     <tbody>
-                        <tr>
-                            <td colSpan={Math.max(uniqueCapTypes.length + 1, 1)} style={{
-                                background: 'linear-gradient(90deg, #fef9c3 0%, #fef08a 100%)',
-                                padding: '0.5rem 1rem',
-                                textAlign: 'center',
-                                borderBottom: '2px solid #e5e7eb'
-                            }}>
-                                <span style={{ color: '#b45309', fontWeight: 700, fontSize: '1.08rem', marginRight: '0.5rem' }}>Amount:</span>
-                                <span style={{ color: '#2563eb', fontWeight: 600, fontSize: '1.1rem' }}>
-                                    {fundSummary.length > 0 ? fundSummary.reduce((sum, f) => sum + parseFloat(f.invested || 0), 0).toFixed(2) : '0.00'}
-                                </span>
-                            </td>
-                        </tr>
                         {uniqueCapTypes.length > 0 && (
                             <>
                                 <tr>
@@ -316,7 +304,7 @@ export default function MFMetrics() {
                                         Cap Wise
                                     </td>
                                     {uniqueCapTypes.map((capType, index) => (
-                                        <th key={index} style={{
+                                        <th key={index} className={`mf-metrics-category-cell mf-metrics-category-${index % 4}`} style={{
                                             background: 'linear-gradient(90deg, #fef9c3 0%, #fef08a 100%)',
                                             color: '#b45309',
                                             fontWeight: 700,
@@ -357,7 +345,7 @@ export default function MFMetrics() {
 
                                         const progressMax = Math.max(expectedAmountForCap, 1);
                                         return (
-                                            <td key={index} style={{
+                                            <td key={index} className={`mf-metrics-category-cell mf-metrics-category-${index % 4}`} style={{
                                                 padding: '0.75rem 1rem',
                                                 textAlign: 'center',
                                                 color: '#2563eb',
@@ -409,7 +397,7 @@ export default function MFMetrics() {
                                         const amountColor = isOver ? '#dc2626' : '#059669';
 
                                         return (
-                                            <td key={index} style={{
+                                            <td key={index} className={`mf-metrics-category-cell mf-metrics-category-${index % 4}`} style={{
                                                 padding: '0.75rem 1rem',
                                                 textAlign: 'center',
                                                 color: amountColor,
@@ -439,8 +427,8 @@ export default function MFMetrics() {
                                     }}>
                                         Active/Passive
                                     </td>
-                                    {uniqueCapTypes.map((capType) => (
-                                        <td key={capType} style={{ padding: 0 }}>
+                                    {uniqueCapTypes.map((capType, index) => (
+                                        <td key={capType} className={`mf-metrics-category-cell mf-metrics-category-${index % 4}`} style={{ padding: 0 }}>
                                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                                 <tbody>
                                                     <tr>
@@ -474,8 +462,8 @@ export default function MFMetrics() {
                                     }}>
                                         Actual
                                     </td>
-                                    {uniqueCapTypes.map((capType) => (
-                                        <td key={capType} style={{ padding: 0 }}>
+                                    {uniqueCapTypes.map((capType, index) => (
+                                        <td key={capType} className={`mf-metrics-category-cell mf-metrics-category-${index % 4}`} style={{ padding: 0 }}>
                                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                                 <tbody>
                                                     <tr>
@@ -566,8 +554,8 @@ export default function MFMetrics() {
                                     }}>
                                         Actual %
                                     </td>
-                                    {uniqueCapTypes.map((capType) => (
-                                        <td key={capType} style={{ padding: 0 }}>
+                                    {uniqueCapTypes.map((capType, index) => (
+                                        <td key={capType} className={`mf-metrics-category-cell mf-metrics-category-${index % 4}`} style={{ padding: 0 }}>
                                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                                 <tbody>
                                                     <tr>
@@ -609,8 +597,8 @@ export default function MFMetrics() {
                                     }}>
                                         Expected
                                     </td>
-                                    {uniqueCapTypes.map((capType) => (
-                                        <td key={capType} style={{ padding: 0 }}>
+                                    {uniqueCapTypes.map((capType, index) => (
+                                        <td key={capType} className={`mf-metrics-category-cell mf-metrics-category-${index % 4}`} style={{ padding: 0 }}>
                                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                                 <tbody>
                                                     <tr>
@@ -661,8 +649,8 @@ export default function MFMetrics() {
                                     }}>
                                         Expected %
                                     </td>
-                                    {uniqueCapTypes.map((capType) => (
-                                        <td key={capType} style={{ padding: 0 }}>
+                                    {uniqueCapTypes.map((capType, index) => (
+                                        <td key={capType} className={`mf-metrics-category-cell mf-metrics-category-${index % 4}`} style={{ padding: 0 }}>
                                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                                 <tbody>
                                                     <tr>
@@ -691,6 +679,42 @@ export default function MFMetrics() {
                                         </td>
                                     ))}
                                 </tr>
+                                <tr>
+                                    <td className="mf-metrics-difference-label" title="Expected amount minus actual invested amount">
+                                        <span>Diff (Expected - Actual)</span>
+                                        <small>Positive = amount to invest</small>
+                                    </td>
+                                    {uniqueCapTypes.map((capType, capIndex) => (
+                                        <td key={capType} className={`mf-metrics-category-cell mf-metrics-category-${capIndex % 4}`} style={{ padding: 0 }}>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                                <tbody>
+                                                    <tr>
+                                                        {uniqueActivePassive.map((ap, apIndex) => {
+                                                            const totalInvestment = fundSummary.reduce((sum, fund) => sum + (parseFloat(fund.invested) || 0), 0);
+                                                            const capExpectedAmount = (totalInvestment * (parseFloat(expectedPercentages[`${capType}_total`]) || 0)) / 100;
+                                                            const expectedAmount = (capExpectedAmount * (parseFloat(expectedPercentages[`${capType}_${ap}`]) || 0)) / 100;
+                                                            const actualAmount = getInvestmentForCapTypeAndAP(capType, ap);
+                                                            const difference = Number((expectedAmount - actualAmount).toFixed(2));
+
+                                                            return (
+                                                                <td key={apIndex} className={`mf-metrics-difference-value ${difference > 0 ? 'mf-metrics-difference-needed' : 'mf-metrics-difference-over'}`} style={{
+                                                                    padding: '0.75rem 1rem',
+                                                                    textAlign: 'center',
+                                                                    fontWeight: 700,
+                                                                    fontSize: '1.1rem',
+                                                                    borderLeft: apIndex > 0 ? '1px solid #e5e7eb' : 'none',
+                                                                    width: '50%'
+                                                                }}>
+                                                                    {difference > 0 ? '+' : ''}{difference.toFixed(2)}
+                                                                </td>
+                                                            );
+                                                        })}
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    ))}
+                                </tr>
                                 {/* Insert SIP/Mth row here so it appears at the end of the metric rows */}
                                 <tr>
                                     <td style={{
@@ -703,8 +727,8 @@ export default function MFMetrics() {
                                     }}>
                                         SIP/Mth Actual
                                     </td>
-                                    {uniqueCapTypes.map((capType) => (
-                                        <td key={capType} style={{ padding: 0 }}>
+                                    {uniqueCapTypes.map((capType, index) => (
+                                        <td key={capType} className={`mf-metrics-category-cell mf-metrics-category-${index % 4}`} style={{ padding: 0 }}>
                                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                                 <tbody>
                                                     <tr>
@@ -796,8 +820,8 @@ export default function MFMetrics() {
                                     }}>
                                         SIP/Mth Expected
                                     </td>
-                                    {uniqueCapTypes.map((capType) => (
-                                        <td key={capType} style={{ padding: 0 }}>
+                                    {uniqueCapTypes.map((capType, index) => (
+                                        <td key={capType} className={`mf-metrics-category-cell mf-metrics-category-${index % 4}`} style={{ padding: 0 }}>
                                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                                 <tbody>
                                                     <tr>
@@ -831,6 +855,7 @@ export default function MFMetrics() {
                         )}
                     </tbody>
                 </table>
+                </div>
             )}
 
             {/* Expected Percentages Modal */}
