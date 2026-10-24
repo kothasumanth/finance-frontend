@@ -33,6 +33,10 @@ function App() {
 function AuthenticatedApp() {
   const [auth, setAuth] = useState({ loading: true, user: null, isAdmin: false, mustChangePassword: false, error: '' })
   useEffect(() => {
+    document.title = auth.user ? `My Home Finance - ${auth.user.name}` : 'My Home Finance'
+  }, [auth.user])
+
+  useEffect(() => {
     fetch(apiUrl('/auth/me'))
       .then(async res => {
         if (res.status === 401) return null

@@ -345,10 +345,11 @@ body {
 }
 
 .expense-page {
-  width: min(100%, 1440px);
-  margin: 0 auto;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
   padding: 1.2rem 24px 48px;
   box-sizing: border-box;
+  background: var(--page);
 }
 
 .expense-topbar,
@@ -504,10 +505,11 @@ body {
 }
 
 .admin-users-page {
-  width: min(100%, 1440px);
-  margin: 0 auto;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
   padding: 1.2rem 24px 48px;
   box-sizing: border-box;
+  background: var(--page);
 }
 
 .admin-users-topbar {
