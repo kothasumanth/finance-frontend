@@ -1942,6 +1942,10 @@ textarea::placeholder {
     background: var(--surface);
   }
 
+  .expense-entry-table tbody tr {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  }
+
   .expense-entry-table tbody td,
   .expense-mobile-cards tbody td,
   .user-table.expense-mobile-cards tbody tr:nth-child(even) td {
@@ -1968,6 +1972,10 @@ textarea::placeholder {
     min-width: 0;
     max-width: 100%;
     box-sizing: border-box;
+  }
+
+  .expense-entry-table tbody td input[type="number"] {
+    width: 100%;
   }
 
   .expense-entry-table tbody td.expense-entry-actions {
