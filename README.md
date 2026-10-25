@@ -6,7 +6,7 @@ This is the frontend for the Finance Copilot project, built with React and Vite.
 - Modern React (Vite) setup
 - Fetches user data from the backend API
 - Displays users in a clean, responsive table
-- Tracks account-specific daily expenses with multi-entry forms, optional comments, editable/deletable entries, daily entry views, monthly totals, and year/month expense-type analysis
+- Tracks account-specific daily expenses with multi-entry forms, optional comments, editable/deletable entries and unused expense types, daily entry views, monthly totals, and year/month expense-type analysis
 
 ## Getting Started
 

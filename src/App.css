@@ -563,6 +563,12 @@ body {
   background: #fff;
 }
 
+.expense-type-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .expense-total-row td {
   background: #eef2f7 !important;
   color: var(--ink) !important;
@@ -1894,6 +1900,193 @@ textarea::placeholder {
 }
 
 @media (max-width: 560px) {
+  .expense-page {
+    width: 100%;
+    margin-left: 0;
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .expense-panel {
+    padding: 14px;
+  }
+
+  .expense-entry-table,
+  .expense-mobile-cards {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .expense-entry-table thead,
+  .expense-mobile-cards thead {
+    display: none;
+  }
+
+  .expense-entry-table tbody,
+  .expense-mobile-cards tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  .expense-entry-table tbody tr,
+  .expense-mobile-cards tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px 12px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+
+  .expense-entry-table tbody td,
+  .expense-mobile-cards tbody td,
+  .user-table.expense-mobile-cards tbody tr:nth-child(even) td {
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent !important;
+    white-space: normal;
+  }
+
+  .expense-entry-table tbody td::before,
+  .expense-mobile-cards tbody td::before {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--muted);
+    content: attr(data-label);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .expense-entry-table tbody td input,
+  .expense-entry-table tbody td select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .expense-entry-table tbody td.expense-entry-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .expense-entry-table tbody td.expense-entry-actions::before {
+    align-self: stretch;
+  }
+
+  .expense-mobile-cards tbody td[data-label="Analysis"] button {
+    width: 100%;
+    min-height: 36px !important;
+    padding: 7px 10px !important;
+  }
+
+  .expense-mobile-cards tbody td[data-label="Total expenses"],
+  .expense-mobile-cards tbody td[data-label="Total"],
+  .expense-mobile-cards tbody td[data-label="Entries"],
+  .expense-mobile-cards tbody td[data-label="Share"] {
+    align-self: center;
+  }
+
+  .expense-analysis-controls {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .expense-analysis-controls h2 {
+    margin-bottom: 0;
+  }
+
+  .expense-daily-table {
+    display: block;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .expense-daily-table thead {
+    display: none;
+  }
+
+  .expense-daily-table tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  .expense-daily-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+
+  .expense-daily-table tbody td,
+  .user-table.expense-daily-table tbody tr:nth-child(even) td {
+    min-width: 0;
+    padding: 2px 0;
+    border: 0;
+    background: transparent !important;
+  }
+
+  .expense-daily-table tbody td:first-child {
+    grid-column: 1 / -1;
+    font-weight: 700;
+  }
+
+  .expense-daily-table tbody td:nth-child(2) {
+    grid-column: 1 / -1;
+    color: var(--muted) !important;
+    font-size: 0.85rem;
+  }
+
+  .expense-daily-table tbody td:nth-child(2):not(:empty)::before {
+    content: "Comments: ";
+    font-weight: 600;
+  }
+
+  .expense-daily-table tbody td:nth-child(3) {
+    align-self: center;
+    font-weight: 700;
+  }
+
+  .expense-daily-table tbody td:nth-child(3)::before {
+    content: "Amount: ";
+    font-weight: 400;
+  }
+
+  .expense-daily-table tbody td.expense-row-actions {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .expense-daily-table tbody td.expense-row-actions button {
+    min-height: 36px !important;
+    padding: 7px 12px !important;
+  }
+
+  .expense-daily-table input,
+  .expense-daily-table select {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 4px;
+    box-sizing: border-box;
+  }
+
+  .expense-daily-table tbody td:nth-child(3) input {
+    width: 112px;
+    margin: 0;
+  }
+
   .sip-analysis-controls,
   .sip-analysis-summary {
     grid-template-columns: 1fr 1fr;

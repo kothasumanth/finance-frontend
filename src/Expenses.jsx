@@ -270,6 +270,22 @@ export default function Expenses() {
     }
   };
 
+  const deleteType = async type => {
+    setError('');
+    setNotice('');
+    try {
+      await requestJson(`/expenses/types/${type._id}`, { method: 'DELETE' });
+      setTypes(previous => previous.filter(item => item._id !== type._id));
+      if (editingTypeId === type._id) {
+        setEditingTypeId('');
+        setEditingTypeName('');
+      }
+      setNotice(`Expense type "${type.name}" deleted.`);
+    } catch (deleteError) {
+      setError(deleteError.message || 'Unable to delete expense type');
+    }
+  };
+
   const showAnalysisForMonth = item => {
     setAnalysisMode('month');
     setSelectedYear(item.year);
@@ -286,9 +302,9 @@ export default function Expenses() {
 
       <nav className="expense-nav" aria-label="Expense sections">
         {[
-        ['add', 'Add Expenses'],
+          ['add', 'Add Expenses'],
           ['daily', 'Daily View'],
-        ['overview', 'Monthly Overview'],
+          ['overview', 'Monthly Overview'],
           ['analysis', 'Analysis'],
           ['types', 'Expense Types']
         ].map(([key, label]) => (
@@ -319,18 +335,18 @@ export default function Expenses() {
             <p>No expenses recorded yet. Add entries to see your month-by-month totals.</p>
           ) : (
             <div className="expense-table-scroll">
-              <table className="user-table expense-table">
+              <table className="user-table expense-table expense-mobile-cards">
                 <thead>
                   <tr><th>Year</th><th>Month</th><th>Total Expenses</th><th>Entries</th><th>Analysis</th></tr>
                 </thead>
                 <tbody>
                   {months.map(item => (
                     <tr key={`${item.year}-${item.month}`}>
-                      <td>{item.year}</td>
-                      <td>{monthName(item.month)}</td>
-                      <td>{money(item.total)}</td>
-                      <td>{item.entryCount}</td>
-                      <td><button type="button" onClick={() => showAnalysisForMonth(item)}>View categories</button></td>
+                      <td data-label="Year">{item.year}</td>
+                      <td data-label="Month">{monthName(item.month)}</td>
+                      <td data-label="Total expenses">{money(item.total)}</td>
+                      <td data-label="Entries">{item.entryCount}</td>
+                      <td data-label="Analysis"><button type="button" onClick={() => showAnalysisForMonth(item)}>View categories</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -372,7 +388,7 @@ export default function Expenses() {
                             <tr key={entry._id}>
                               {isEditing ? (
                                 <>
-                                  <td>
+                                  <td data-label="Expense">
                                     <input
                                       aria-label="Edit expense date"
                                       form={`edit-expense-${entry._id}`}
@@ -391,7 +407,7 @@ export default function Expenses() {
                                       {types.map(type => <option key={type._id} value={type._id}>{type.name}</option>)}
                                     </select>
                                   </td>
-                                  <td className="expense-comment-cell">
+                                  <td className="expense-comment-cell" data-label="Comments">
                                     <input
                                       aria-label="Edit expense comments"
                                       form={`edit-expense-${entry._id}`}
@@ -401,7 +417,7 @@ export default function Expenses() {
                                       onChange={event => updateEditingExpense('comments', event.target.value)}
                                     />
                                   </td>
-                                  <td>
+                                  <td data-label="Amount">
                                     <input
                                       aria-label="Edit expense amount"
                                       form={`edit-expense-${entry._id}`}
@@ -413,7 +429,7 @@ export default function Expenses() {
                                       required
                                     />
                                   </td>
-                                  <td className="expense-row-actions">
+                                  <td className="expense-row-actions" data-label="Actions">
                                     <form onSubmit={saveExpenseEdit} id={`edit-expense-${entry._id}`}>
                                       <button type="submit" disabled={isBusy || Boolean(pendingDeleteExpenseId)}>Save</button>
                                     </form>
@@ -428,10 +444,10 @@ export default function Expenses() {
                                 </>
                               ) : (
                                 <>
-                                  <td>{entry.expenseTypeId?.name || 'Expense type unavailable'}</td>
-                                  <td className="expense-comment-cell">{entry.comments || '—'}</td>
-                                  <td>{money(entry.amount)}</td>
-                                  <td className="expense-row-actions">
+                                  <td data-label="Expense">{entry.expenseTypeId?.name || 'Expense type unavailable'}</td>
+                                  <td className="expense-comment-cell" data-label="Comments">{entry.comments || '—'}</td>
+                                  <td data-label="Amount">{money(entry.amount)}</td>
+                                  <td className="expense-row-actions" data-label="Actions">
                                     {isPendingDelete ? (
                                       <>
                                         <button
@@ -509,21 +525,21 @@ export default function Expenses() {
           ) : (
             <form onSubmit={submitEntries}>
               <div className="expense-table-scroll">
-                <table className="user-table expense-table expense-entry-table">
+                <table className="user-table expense-table expense-entry-table expense-mobile-cards">
                   <thead><tr><th>Date</th><th>Expense Description</th><th>Amount</th><th>Comments</th><th>Action</th></tr></thead>
                   <tbody>
                     {entries.map((entry, index) => (
                       <tr key={index}>
-                        <td><input aria-label={`Date for entry ${index + 1}`} type="date" value={entry.date} onChange={event => updateEntry(index, 'date', event.target.value)} required /></td>
-                        <td>
+                        <td data-label="Date"><input aria-label={`Date for entry ${index + 1}`} type="date" value={entry.date} onChange={event => updateEntry(index, 'date', event.target.value)} required /></td>
+                        <td data-label="Description">
                           <select aria-label={`Expense description for entry ${index + 1}`} value={entry.expenseTypeId} onChange={event => updateEntry(index, 'expenseTypeId', event.target.value)} required>
                             <option value="">Select description</option>
                             {types.map(type => <option key={type._id} value={type._id}>{type.name}</option>)}
                           </select>
                         </td>
-                        <td><input aria-label={`Amount for entry ${index + 1}`} type="number" min="0.01" step="0.01" value={entry.amount} onChange={event => updateEntry(index, 'amount', event.target.value)} placeholder="0.00" required /></td>
-                        <td><input aria-label={`Comments for entry ${index + 1}`} type="text" maxLength={500} value={entry.comments} onChange={event => updateEntry(index, 'comments', event.target.value)} placeholder="Optional" /></td>
-                        <td><button type="button" disabled={entries.length === 1} onClick={() => setEntries(previous => previous.filter((_, itemIndex) => itemIndex !== index))}>Remove</button></td>
+                        <td data-label="Amount"><input aria-label={`Amount for entry ${index + 1}`} type="number" min="0.01" step="0.01" value={entry.amount} onChange={event => updateEntry(index, 'amount', event.target.value)} placeholder="0.00" required /></td>
+                        <td data-label="Comments"><input aria-label={`Comments for entry ${index + 1}`} type="text" maxLength={500} value={entry.comments} onChange={event => updateEntry(index, 'comments', event.target.value)} placeholder="Optional" /></td>
+                        <td className="expense-entry-actions" data-label="Action"><button type="button" disabled={entries.length === 1} onClick={() => setEntries(previous => previous.filter((_, itemIndex) => itemIndex !== index))}>Remove</button></td>
                       </tr>
                     ))}
                   </tbody>
@@ -571,15 +587,15 @@ export default function Expenses() {
               <p>No expenses found for {selectedYear}.</p>
             ) : (
               <div className="expense-table-scroll">
-                <table className="user-table expense-table">
+                <table className="user-table expense-table expense-mobile-cards">
                   <thead><tr><th>Month</th><th>Total Expenses</th><th>Entries</th><th>Analysis</th></tr></thead>
                   <tbody>
                     {filteredMonths.map(item => (
                       <tr key={item.month}>
-                        <td>{monthName(item.month)}</td>
-                        <td>{money(item.total)}</td>
-                        <td>{item.entryCount}</td>
-                        <td><button type="button" onClick={() => setSelectedMonth(item.month)}>View categories</button></td>
+                        <td data-label="Month">{monthName(item.month)}</td>
+                        <td data-label="Total expenses">{money(item.total)}</td>
+                        <td data-label="Entries">{item.entryCount}</td>
+                        <td data-label="Analysis"><button type="button" onClick={() => setSelectedMonth(item.month)}>View categories</button></td>
                       </tr>
                     ))}
                   </tbody>
@@ -591,18 +607,18 @@ export default function Expenses() {
               <h3>{analysisMode === 'year' ? `${selectedYear} by expense type` : `${monthName(selectedMonth)} ${selectedYear} by expense type`}</h3>
               {categories.length === 0 ? <p>No expenses found for this period.</p> : (
                 <div className="expense-table-scroll">
-                  <table className="user-table expense-table">
+                  <table className="user-table expense-table expense-mobile-cards">
                     <thead><tr><th>Expense Description</th><th>Total</th><th>Entries</th><th>Share</th></tr></thead>
                     <tbody>
                       {categories.map(category => (
                         <tr key={category.expenseTypeId}>
-                          <td>{category.name}</td>
-                          <td>{money(category.total)}</td>
-                          <td>{category.entryCount}</td>
-                          <td>{categoryTotal > 0 ? ((category.total / categoryTotal) * 100).toFixed(1) : '0.0'}%</td>
+                          <td data-label="Expense description">{category.name}</td>
+                          <td data-label="Total">{money(category.total)}</td>
+                          <td data-label="Entries">{category.entryCount}</td>
+                          <td data-label="Share">{categoryTotal > 0 ? ((category.total / categoryTotal) * 100).toFixed(1) : '0.0'}%</td>
                         </tr>
                       ))}
-                      <tr className="expense-total-row"><td>Total</td><td>{money(categoryTotal)}</td><td>{categories.reduce((sum, item) => sum + item.entryCount, 0)}</td><td>100%</td></tr>
+                      <tr className="expense-total-row"><td data-label="Expense description">Total</td><td data-label="Total">{money(categoryTotal)}</td><td data-label="Entries">{categories.reduce((sum, item) => sum + item.entryCount, 0)}</td><td data-label="Share">100%</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -636,10 +652,13 @@ export default function Expenses() {
               {types.map(type => (
                 <li key={type._id}>
                   <span>{type.name}</span>
-                  <button type="button" onClick={() => {
-                    setEditingTypeId(type._id);
-                    setEditingTypeName(type.name);
-                  }}>Edit</button>
+                  <div className="expense-type-actions">
+                    <button type="button" onClick={() => {
+                      setEditingTypeId(type._id);
+                      setEditingTypeName(type.name);
+                    }}>Edit</button>
+                    <button type="button" onClick={() => deleteType(type)}>Delete</button>
+                  </div>
                 </li>
               ))}
             </ul>
