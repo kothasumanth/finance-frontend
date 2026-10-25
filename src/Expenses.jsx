@@ -7,12 +7,19 @@ const today = () => {
   const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
   return localDate.toISOString().slice(0, 10);
 };
-const newEntry = () => ({ date: today(), expenseTypeId: '', amount: '' });
+const newEntry = () => ({ date: today(), expenseTypeId: '', amount: '', comments: '' });
 const money = value => (Number(value) || 0).toLocaleString('en-IN', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2
 });
 const monthName = month => new Date(Date.UTC(2020, month - 1, 1)).toLocaleString('en', { month: 'long', timeZone: 'UTC' });
+const dateName = date => new Date(`${date}T00:00:00.000Z`).toLocaleDateString('en', {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  timeZone: 'UTC'
+});
 
 async function requestJson(path, options) {
   const response = await fetch(apiUrl(path), options);
@@ -35,6 +42,12 @@ export default function Expenses() {
   const [types, setTypes] = useState([]);
   const [months, setMonths] = useState([]);
   const [entries, setEntries] = useState([newEntry()]);
+  const [dailyMonth, setDailyMonth] = useState(today().slice(0, 7));
+  const [dailyEntries, setDailyEntries] = useState([]);
+  const [editingExpenseId, setEditingExpenseId] = useState('');
+  const [editingExpense, setEditingExpense] = useState(null);
+  const [pendingDeleteExpenseId, setPendingDeleteExpenseId] = useState('');
+  const [busyExpenseId, setBusyExpenseId] = useState('');
   const [newTypeName, setNewTypeName] = useState('');
   const [editingTypeId, setEditingTypeId] = useState('');
   const [editingTypeName, setEditingTypeName] = useState('');
@@ -44,6 +57,7 @@ export default function Expenses() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [dailyLoading, setDailyLoading] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -91,6 +105,24 @@ export default function Expenses() {
     return () => controller.abort();
   }, [analysisMode, selectedMonth, selectedYear, view]);
 
+  useEffect(() => {
+    if (view !== 'daily') return undefined;
+
+    const [year, month] = dailyMonth.split('-');
+    const controller = new AbortController();
+    setDailyLoading(true);
+    setError('');
+    requestJson(`/expenses/entries?${new URLSearchParams({ year, month })}`, { signal: controller.signal })
+      .then(setDailyEntries)
+      .catch(loadError => {
+        if (loadError.name !== 'AbortError') setError(loadError.message || 'Unable to load daily expenses');
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setDailyLoading(false);
+      });
+    return () => controller.abort();
+  }, [dailyMonth, view]);
+
   const years = useMemo(() => [...new Set([
     new Date().getFullYear(),
     ...months.map(item => item.year)
@@ -102,11 +134,77 @@ export default function Expenses() {
   );
 
   const categoryTotal = categories.reduce((sum, item) => sum + item.total, 0);
+  const dailyGroups = useMemo(() => {
+    const groups = new Map();
+    dailyEntries.forEach(entry => {
+      const date = entry.date.slice(0, 10);
+      if (!groups.has(date)) groups.set(date, { date, entries: [], total: 0 });
+      const group = groups.get(date);
+      group.entries.push(entry);
+      group.total += entry.amount;
+    });
+    return [...groups.values()];
+  }, [dailyEntries]);
 
   const updateEntry = (index, key, value) => {
     setEntries(previous => previous.map((entry, itemIndex) => (
       itemIndex === index ? { ...entry, [key]: value } : entry
     )));
+  };
+
+  const updateEditingExpense = (key, value) => {
+    setEditingExpense(previous => ({ ...previous, [key]: value }));
+  };
+
+  const saveExpenseEdit = async event => {
+    event.preventDefault();
+    if (
+      !editingExpense?.date || !editingExpense.expenseTypeId || !editingExpense.amount
+      || !Number.isFinite(Number(editingExpense.amount)) || Number(editingExpense.amount) <= 0
+    ) {
+      setError('Enter a valid date, expense type, and positive amount.');
+      return;
+    }
+
+    setBusyExpenseId(editingExpenseId);
+    setError('');
+    setNotice('');
+    try {
+      const updated = await requestJson(`/expenses/entries/${editingExpenseId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingExpense)
+      });
+      setDailyEntries(previous => previous
+        .map(entry => entry._id === updated._id ? updated : entry)
+        .filter(entry => entry.date.slice(0, 7) === dailyMonth)
+        .sort((first, second) => second.date.localeCompare(first.date) || second._id.localeCompare(first._id)));
+      setEditingExpenseId('');
+      setEditingExpense(null);
+      setNotice('Expense updated.');
+      await loadInitialData();
+    } catch (saveError) {
+      setError(saveError.message || 'Unable to update expense');
+    } finally {
+      setBusyExpenseId('');
+    }
+  };
+
+  const deleteExpense = async entryId => {
+    setBusyExpenseId(entryId);
+    setError('');
+    setNotice('');
+    try {
+      await requestJson(`/expenses/entries/${entryId}`, { method: 'DELETE' });
+      setDailyEntries(previous => previous.filter(item => item._id !== entryId));
+      setPendingDeleteExpenseId('');
+      setNotice('Expense deleted.');
+      await loadInitialData();
+    } catch (deleteError) {
+      setError(deleteError.message || 'Unable to delete expense');
+    } finally {
+      setBusyExpenseId('');
+    }
   };
 
   const submitEntries = async event => {
@@ -188,8 +286,9 @@ export default function Expenses() {
 
       <nav className="expense-nav" aria-label="Expense sections">
         {[
-          ['overview', 'Monthly Overview'],
-          ['add', 'Add Expenses'],
+        ['add', 'Add Expenses'],
+          ['daily', 'Daily View'],
+        ['overview', 'Monthly Overview'],
           ['analysis', 'Analysis'],
           ['types', 'Expense Types']
         ].map(([key, label]) => (
@@ -241,6 +340,167 @@ export default function Expenses() {
         </section>
       )}
 
+      {view === 'daily' && (
+        <section className="expense-panel">
+          <div className="expense-analysis-controls">
+            <h2>Daily Expenses</h2>
+            <label>
+              Month
+              <input
+                type="month"
+                value={dailyMonth}
+                onChange={event => setDailyMonth(event.target.value)}
+              />
+            </label>
+          </div>
+          {dailyLoading ? <p>Loading daily expenses...</p> : error ? null : dailyGroups.length === 0 ? (
+            <p>No expenses recorded for this month.</p>
+          ) : (
+            <div className="expense-day-list">
+              {dailyGroups.map(group => (
+                <section className="expense-day-group" key={group.date}>
+                  <h3><span>{dateName(group.date)}</span><strong>Total: {money(group.total)}</strong></h3>
+                  <div className="expense-table-scroll">
+                    <table className="user-table expense-table expense-daily-table">
+                      <thead><tr><th>Expense Description</th><th>Comments</th><th>Amount</th><th>Actions</th></tr></thead>
+                      <tbody>
+                        {group.entries.map(entry => {
+                          const isEditing = editingExpenseId === entry._id;
+                          const isPendingDelete = pendingDeleteExpenseId === entry._id;
+                          const isBusy = busyExpenseId === entry._id;
+                          return (
+                            <tr key={entry._id}>
+                              {isEditing ? (
+                                <>
+                                  <td>
+                                    <input
+                                      aria-label="Edit expense date"
+                                      form={`edit-expense-${entry._id}`}
+                                      type="date"
+                                      value={editingExpense.date}
+                                      onChange={event => updateEditingExpense('date', event.target.value)}
+                                      required
+                                    />
+                                    <select
+                                      aria-label="Edit expense description"
+                                      form={`edit-expense-${entry._id}`}
+                                      value={editingExpense.expenseTypeId}
+                                      onChange={event => updateEditingExpense('expenseTypeId', event.target.value)}
+                                      required
+                                    >
+                                      {types.map(type => <option key={type._id} value={type._id}>{type.name}</option>)}
+                                    </select>
+                                  </td>
+                                  <td className="expense-comment-cell">
+                                    <input
+                                      aria-label="Edit expense comments"
+                                      form={`edit-expense-${entry._id}`}
+                                      type="text"
+                                      maxLength={500}
+                                      value={editingExpense.comments}
+                                      onChange={event => updateEditingExpense('comments', event.target.value)}
+                                    />
+                                  </td>
+                                  <td>
+                                    <input
+                                      aria-label="Edit expense amount"
+                                      form={`edit-expense-${entry._id}`}
+                                      type="number"
+                                      min="0.01"
+                                      step="0.01"
+                                      value={editingExpense.amount}
+                                      onChange={event => updateEditingExpense('amount', event.target.value)}
+                                      required
+                                    />
+                                  </td>
+                                  <td className="expense-row-actions">
+                                    <form onSubmit={saveExpenseEdit} id={`edit-expense-${entry._id}`}>
+                                      <button type="submit" disabled={isBusy || Boolean(pendingDeleteExpenseId)}>Save</button>
+                                    </form>
+                                    <button
+                                      type="button"
+                                      disabled={isBusy || Boolean(pendingDeleteExpenseId)}
+                                      onClick={() => { setEditingExpenseId(''); setEditingExpense(null); }}
+                                    >
+                                      Cancel
+                                    </button>
+                                  </td>
+                                </>
+                              ) : (
+                                <>
+                                  <td>{entry.expenseTypeId?.name || 'Expense type unavailable'}</td>
+                                  <td className="expense-comment-cell">{entry.comments || '—'}</td>
+                                  <td>{money(entry.amount)}</td>
+                                  <td className="expense-row-actions">
+                                    {isPendingDelete ? (
+                                      <>
+                                        <button
+                                          type="button"
+                                          className="expense-confirm-delete"
+                                          aria-label="Confirm delete expense"
+                                          title="Confirm delete"
+                                          disabled={isBusy}
+                                          onClick={() => deleteExpense(entry._id)}
+                                        >
+                                          {isBusy ? '…' : '✓'}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="expense-cancel-delete"
+                                          aria-label="Cancel delete expense"
+                                          title="Cancel delete"
+                                          disabled={isBusy}
+                                          onClick={() => setPendingDeleteExpenseId('')}
+                                        >
+                                          ×
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <button
+                                          type="button"
+                                          disabled={isBusy || Boolean(editingExpenseId) || Boolean(pendingDeleteExpenseId)}
+                                          onClick={() => {
+                                            setError('');
+                                            setEditingExpenseId(entry._id);
+                                            setEditingExpense({
+                                              date: entry.date.slice(0, 10),
+                                              expenseTypeId: entry.expenseTypeId?._id || '',
+                                              amount: String(entry.amount),
+                                              comments: entry.comments || ''
+                                            });
+                                          }}
+                                        >
+                                          Edit
+                                        </button>
+                                        <button
+                                          type="button"
+                                          disabled={isBusy || Boolean(editingExpenseId) || Boolean(pendingDeleteExpenseId)}
+                                          onClick={() => {
+                                            setError('');
+                                            setPendingDeleteExpenseId(entry._id);
+                                          }}
+                                        >
+                                          Delete
+                                        </button>
+                                      </>
+                                    )}
+                                  </td>
+                                </>
+                              )}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       {view === 'add' && (
         <section className="expense-panel">
           <h2>Add Multiple Expenses</h2>
@@ -250,7 +510,7 @@ export default function Expenses() {
             <form onSubmit={submitEntries}>
               <div className="expense-table-scroll">
                 <table className="user-table expense-table expense-entry-table">
-                  <thead><tr><th>Date</th><th>Expense Description</th><th>Amount</th><th>Action</th></tr></thead>
+                  <thead><tr><th>Date</th><th>Expense Description</th><th>Amount</th><th>Comments</th><th>Action</th></tr></thead>
                   <tbody>
                     {entries.map((entry, index) => (
                       <tr key={index}>
@@ -262,6 +522,7 @@ export default function Expenses() {
                           </select>
                         </td>
                         <td><input aria-label={`Amount for entry ${index + 1}`} type="number" min="0.01" step="0.01" value={entry.amount} onChange={event => updateEntry(index, 'amount', event.target.value)} placeholder="0.00" required /></td>
+                        <td><input aria-label={`Comments for entry ${index + 1}`} type="text" maxLength={500} value={entry.comments} onChange={event => updateEntry(index, 'comments', event.target.value)} placeholder="Optional" /></td>
                         <td><button type="button" disabled={entries.length === 1} onClick={() => setEntries(previous => previous.filter((_, itemIndex) => itemIndex !== index))}>Remove</button></td>
                       </tr>
                     ))}

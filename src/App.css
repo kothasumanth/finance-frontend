@@ -452,6 +452,71 @@ body {
   font-weight: 600;
 }
 
+.expense-analysis-controls input[type="month"] {
+  min-height: 40px;
+  padding: 7px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.expense-day-list {
+  display: grid;
+  gap: 20px;
+}
+
+.expense-day-group h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.expense-daily-table {
+  width: 100%;
+  min-width: 720px;
+}
+
+.expense-daily-table input,
+.expense-daily-table select {
+  min-height: 38px;
+  max-width: 220px;
+  padding: 6px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.expense-row-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.expense-row-actions form {
+  display: contents;
+}
+
+.expense-row-actions .expense-confirm-delete {
+  color: #15803d;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.expense-row-actions .expense-cancel-delete {
+  color: #b91c1c;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.expense-comment-cell {
+  white-space: normal !important;
+}
+
 .expense-message {
   padding: 10px 14px;
   border-radius: 8px;
