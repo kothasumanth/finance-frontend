@@ -413,6 +413,44 @@ body {
   white-space: nowrap;
 }
 
+.expense-category-tooltip {
+ position: relative;
+ display: inline-flex;
+ cursor: help;
+ text-decoration: underline dotted #64748b;
+ text-underline-offset: 4px;
+}
+
+.expense-category-tooltip-content {
+ position: absolute;
+ z-index: 20;
+ left: 0;
+ bottom: calc(100% + 8px);
+ display: none;
+ min-width: 220px;
+ padding: 10px;
+ border: 1px solid var(--line-strong);
+ border-radius: 8px;
+ background: #fff;
+ box-shadow: 0 8px 24px rgb(15 23 42 / 18%);
+ color: var(--ink);
+ font-size: 0.85rem;
+ text-align: left;
+ white-space: normal;
+}
+
+.expense-category-tooltip:hover .expense-category-tooltip-content,
+.expense-category-tooltip:focus-within .expense-category-tooltip-content {
+ display: grid;
+ gap: 6px;
+}
+
+.expense-category-tooltip-row {
+ display: flex;
+ justify-content: space-between;
+ gap: 16px;
+}
+
 .expense-entry-table input,
 .expense-entry-table select,
 .expense-analysis-controls select,

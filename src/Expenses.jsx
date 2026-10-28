@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiUrl } from './api.js';
+import SearchableDropdown from './components/SearchableDropdown';
 
 const today = () => {
   const date = new Date();
@@ -20,7 +21,6 @@ const dateName = date => new Date(`${date}T00:00:00.000Z`).toLocaleDateString('e
   day: 'numeric',
   timeZone: 'UTC'
 });
-
 async function requestJson(path, options) {
   const response = await fetch(apiUrl(path), options);
   const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -532,10 +532,17 @@ export default function Expenses() {
                       <tr key={index}>
                         <td data-label="Date"><input aria-label={`Date for entry ${index + 1}`} type="date" value={entry.date} onChange={event => updateEntry(index, 'date', event.target.value)} required /></td>
                         <td data-label="Description">
-                          <select aria-label={`Expense description for entry ${index + 1}`} value={entry.expenseTypeId} onChange={event => updateEntry(index, 'expenseTypeId', event.target.value)} required>
-                            <option value="">Select description</option>
-                            {types.map(type => <option key={type._id} value={type._id}>{type.name}</option>)}
-                          </select>
+                          <SearchableDropdown
+                            id={`expense-description-${index + 1}`}
+                            ariaLabel={`Expense description for entry ${index + 1}`}
+                            placeholder="Search expense description"
+                            emptyOptionLabel="Select description"
+                            noMatchesLabel="No matching descriptions"
+                            options={types.map(type => ({ value: type._id, label: type.name }))}
+                            value={entry.expenseTypeId}
+                            onChange={value => updateEntry(index, 'expenseTypeId', value)}
+                            inputStyle={{ fontFamily: 'inherit', fontWeight: 400, color: 'var(--ink)', borderColor: 'var(--line-strong)', borderWidth: 1 }}
+                          />
                         </td>
                         <td data-label="Amount"><input aria-label={`Amount for entry ${index + 1}`} type="number" min="0.01" step="0.01" value={entry.amount} onChange={event => updateEntry(index, 'amount', event.target.value)} placeholder="0.00" required /></td>
                         <td data-label="Comments"><input aria-label={`Comments for entry ${index + 1}`} type="text" maxLength={500} value={entry.comments} onChange={event => updateEntry(index, 'comments', event.target.value)} placeholder="Optional" /></td>
@@ -612,7 +619,22 @@ export default function Expenses() {
                     <tbody>
                       {categories.map(category => (
                         <tr key={category.expenseTypeId}>
-                          <td data-label="Expense description">{category.name}</td>
+                          <td data-label="Expense description">
+                            <span className="expense-category-tooltip">
+                              {category.name}
+                              <span className="expense-category-tooltip-content" role="tooltip">
+                                <strong>{category.name}</strong>
+                                {[...(category.entries || [])]
+                                  .sort((first, second) => second.date.localeCompare(first.date))
+                                  .map((entry, index) => (
+                                    <span className="expense-category-tooltip-row" key={`${entry.date}-${index}`}>
+                                      <span>{entry.date.slice(0, 10)}</span>
+                                      <span>₹{money(entry.amount)}</span>
+                                    </span>
+                                  ))}
+                              </span>
+                            </span>
+                          </td>
                           <td data-label="Total">{money(category.total)}</td>
                           <td data-label="Entries">{category.entryCount}</td>
                           <td data-label="Share">{categoryTotal > 0 ? ((category.total / categoryTotal) * 100).toFixed(1) : '0.0'}%</td>

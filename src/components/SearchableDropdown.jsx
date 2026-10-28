@@ -1,4 +1,5 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 export default function SearchableDropdown({
   options,
@@ -6,6 +7,7 @@ export default function SearchableDropdown({
   onChange,
   placeholder = 'Type to search funds',
   emptyOptionLabel,
+  noMatchesLabel = 'No matching funds',
   emptyValue = '',
   ariaLabel,
   id,
@@ -15,13 +17,32 @@ export default function SearchableDropdown({
   inputStyle,
 }) {
   const listboxId = useId()
+  const inputRef = useRef(null)
   const [searchText, setSearchText] = useState('')
   const [isOpen, setIsOpen] = useState(false)
+  const [dropdownPosition, setDropdownPosition] = useState(null)
   const selectedOption = options.find(option => String(option.value) === String(value))
   const filteredOptions = options
     .filter(option => option.label.toLowerCase().includes(searchText.trim().toLowerCase()))
     .slice()
     .sort((a, b) => a.label.localeCompare(b.label))
+
+  const updateDropdownPosition = () => {
+    if (!inputRef.current) return
+    const rect = inputRef.current.getBoundingClientRect()
+    setDropdownPosition({ left: rect.left, top: rect.bottom + 4, width: rect.width })
+  }
+
+  useEffect(() => {
+    if (!isOpen) return undefined
+    updateDropdownPosition()
+    window.addEventListener('resize', updateDropdownPosition)
+    window.addEventListener('scroll', updateDropdownPosition, true)
+    return () => {
+      window.removeEventListener('resize', updateDropdownPosition)
+      window.removeEventListener('scroll', updateDropdownPosition, true)
+    }
+  }, [isOpen])
 
   const selectOption = selectedValue => {
     onChange(selectedValue)
@@ -31,6 +52,7 @@ export default function SearchableDropdown({
   return (
     <div style={{ position: 'relative', width: '100%', ...wrapperStyle }}>
       <input
+        ref={inputRef}
         id={id}
         type="text"
         role="combobox"
@@ -72,12 +94,12 @@ export default function SearchableDropdown({
           ...inputStyle,
         }}
       />
-      {isOpen && !disabled && (
+      {isOpen && !disabled && dropdownPosition && createPortal(
         <div id={listboxId} role="listbox" style={{
-          position: 'absolute',
-          top: 'calc(100% + 4px)',
-          left: 0,
-          right: 0,
+          position: 'fixed',
+          top: dropdownPosition.top,
+          left: dropdownPosition.left,
+          width: dropdownPosition.width,
           maxHeight: 220,
           overflowY: 'auto',
           background: '#fff',
@@ -117,10 +139,11 @@ export default function SearchableDropdown({
           ))}
           {filteredOptions.length === 0 && (
             <div style={{ padding: '0.7rem 0.75rem', color: '#64748b', fontSize: '0.9rem' }}>
-              No matching funds
+              {noMatchesLabel}
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
