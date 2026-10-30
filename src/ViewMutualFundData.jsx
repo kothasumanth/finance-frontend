@@ -91,13 +91,14 @@ function ViewMutualFundData() {
   const handleGetAllNavs = async () => {
     const fund = fundOptions.find(f => f._id === selectedFund)
     if (!fund || !fund.GoogleValue) return
-    const url = `https://api.mfapi.in/mf/${fund.GoogleValue}`
+    const url = apiUrl(`/mf-history/${encodeURIComponent(fund.GoogleValue)}`)
     let apiData = []
     try {
       const res = await fetch(url)
+      if (!res.ok) throw new Error('Failed to fetch NAV history')
       const data = await res.json()
-      if (!data.data || !Array.isArray(data.data)) return
-      apiData = data.data
+      if (!Array.isArray(data)) throw new Error('Invalid NAV history response')
+      apiData = data
     } catch { return }
     // Only process entries with blank nav
     const blankNavEntries = entries.filter(e => !e.nav && e.fundName && (e.fundName._id === selectedFund))

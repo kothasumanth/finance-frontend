@@ -125,10 +125,10 @@ function SIPAnalysis() {
     async function fetchHistory() {
       try {
         if (!selectedFund.GoogleValue) throw new Error('This fund does not have a NAV code configured')
-        const response = await fetch(`https://api.mfapi.in/mf/${encodeURIComponent(selectedFund.GoogleValue)}`)
+        const response = await fetch(apiUrl(`/mf-history/${encodeURIComponent(selectedFund.GoogleValue)}`))
         if (!response.ok) throw new Error('Failed to load fund NAV history')
         const result = await response.json()
-        const navHistory = (Array.isArray(result.data) ? result.data : [])
+        const navHistory = (Array.isArray(result) ? result : [])
           .map(item => ({
             date: parseHistoryDate(item.date),
             nav: Number(item.nav),

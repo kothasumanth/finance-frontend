@@ -118,10 +118,10 @@ function CompareMF() {
       // Fetch NAV data for comparison fund
       const navRes = await fetch(apiUrl(`/mf-api?googleValue=${encodeURIComponent(comparisonMeta.GoogleValue)}`))
       const navData = await navRes.json()
-      const historyRes = await fetch(`https://api.mfapi.in/mf/${comparisonMeta.GoogleValue}`)
+      const historyRes = await fetch(apiUrl(`/mf-history/${encodeURIComponent(comparisonMeta.GoogleValue)}`))
       if (!historyRes.ok) throw new Error('Failed to fetch comparison fund history')
       const historyData = await historyRes.json()
-      const history = Array.isArray(historyData.data) ? historyData.data : []
+      const history = Array.isArray(historyData) ? historyData : []
       const toDateNum = date => {
         const match = /^(\d{2})-(\d{2})-(\d{4})$/.exec(date || '')
         if (!match) return NaN
