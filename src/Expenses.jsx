@@ -630,6 +630,7 @@ export default function Expenses() {
                                     <span className="expense-category-tooltip-row" key={`${entry.date}-${index}`}>
                                       <span>{entry.date.slice(0, 10)}</span>
                                       <span>₹{money(entry.amount)}</span>
+                                      <span className="expense-category-tooltip-comment">{entry.comments || 'No comment'}</span>
                                     </span>
                                   ))}
                               </span>
