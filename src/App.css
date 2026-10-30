@@ -2011,6 +2011,38 @@ textarea::placeholder {
     font-weight: 600;
   }
 
+  .finance-overview-table tbody tr.finance-overview-total-row {
+    background: var(--green);
+    border-color: var(--green);
+  }
+
+  .finance-overview-table tbody tr {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .finance-overview-table tbody td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    text-align: right;
+  }
+
+  .finance-overview-table tbody td::before {
+    flex: 0 0 auto;
+    margin-bottom: 0;
+  }
+
+  .user-table.finance-overview-table tr.finance-overview-total-row td {
+    padding: 0;
+    background: transparent !important;
+    color: #fff !important;
+  }
+
+  .finance-overview-table tr.finance-overview-total-row td::before {
+    color: rgb(255 255 255 / 80%);
+  }
+
   .expense-entry-table tbody td input,
   .expense-entry-table tbody td select {
     width: 100%;

@@ -112,7 +112,7 @@ function FinanceOverview() {
           </nav>
         </header>
         <div className="finance-overview-table-wrap">
-          <table className="user-table colorful-table finance-overview-table">
+          <table className="user-table colorful-table finance-overview-table expense-mobile-cards">
             <thead>
               <tr>
                 <th>Investment Type</th>
@@ -124,19 +124,19 @@ function FinanceOverview() {
             <tbody>
               {summaries.map(([moduleName, summary]) => (
                 <tr key={moduleName}>
-                  <td>{moduleName}</td>
-                  <td>{formatSummaryValue(summary, 'investValue')}</td>
-                  <td>{formatSummaryValue(summary, 'todayValue')}</td>
-                  <td className={summary && !summary.error ? summary.profitLoss >= 0 ? 'is-positive' : 'is-negative' : ''}>
+                  <td data-label="Investment type">{moduleName}</td>
+                  <td data-label="Invest value">{formatSummaryValue(summary, 'investValue')}</td>
+                  <td data-label="Today value">{formatSummaryValue(summary, 'todayValue')}</td>
+                  <td data-label="P/L" className={summary && !summary.error ? summary.profitLoss >= 0 ? 'is-positive' : 'is-negative' : ''}>
                     {formatSummaryValue(summary, 'profitLoss')}
                   </td>
                 </tr>
               ))}
               <tr className="finance-overview-total-row">
-                <td>Total</td>
-                <td>{formatSummaryValue(totalSummary, 'investValue')}</td>
-                <td>{formatSummaryValue(totalSummary, 'todayValue')}</td>
-                <td className={totalSummary && !totalSummary.error ? totalSummary.profitLoss >= 0 ? 'is-positive' : 'is-negative' : ''}>
+                <td data-label="Investment type">Total</td>
+                <td data-label="Invest value">{formatSummaryValue(totalSummary, 'investValue')}</td>
+                <td data-label="Today value">{formatSummaryValue(totalSummary, 'todayValue')}</td>
+                <td data-label="P/L" className={totalSummary && !totalSummary.error ? totalSummary.profitLoss >= 0 ? 'is-positive' : 'is-negative' : ''}>
                   {formatSummaryValue(totalSummary, 'profitLoss')}
                 </td>
               </tr>
