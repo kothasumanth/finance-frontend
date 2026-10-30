@@ -617,30 +617,44 @@ export default function Expenses() {
                   <table className="user-table expense-table expense-mobile-cards">
                     <thead><tr><th>Expense Description</th><th>Total</th><th>Entries</th><th>Share</th></tr></thead>
                     <tbody>
-                      {categories.map(category => (
-                        <tr key={category.expenseTypeId}>
-                          <td data-label="Expense description">
-                            <span className="expense-category-tooltip">
-                              {category.name}
-                              <span className="expense-category-tooltip-content" role="tooltip">
-                                <strong>{category.name}</strong>
-                                {[...(category.entries || [])]
-                                  .sort((first, second) => second.date.localeCompare(first.date))
-                                  .map((entry, index) => (
+                      {categories.map(category => {
+                        const sortedEntries = [...(category.entries || [])]
+                          .sort((first, second) => second.date.localeCompare(first.date));
+                        return (
+                          <tr key={category.expenseTypeId}>
+                            <td data-label="Expense description">
+                              <span className="expense-category-tooltip">
+                                {category.name}
+                                <span className="expense-category-tooltip-content" role="tooltip">
+                                  <strong>{category.name}</strong>
+                                  {sortedEntries.map((entry, index) => (
                                     <span className="expense-category-tooltip-row" key={`${entry.date}-${index}`}>
                                       <span>{entry.date.slice(0, 10)}</span>
                                       <span>₹{money(entry.amount)}</span>
                                       <span className="expense-category-tooltip-comment">{entry.comments || 'No comment'}</span>
                                     </span>
                                   ))}
+                                </span>
                               </span>
-                            </span>
-                          </td>
-                          <td data-label="Total">{money(category.total)}</td>
-                          <td data-label="Entries">{category.entryCount}</td>
-                          <td data-label="Share">{categoryTotal > 0 ? ((category.total / categoryTotal) * 100).toFixed(1) : '0.0'}%</td>
-                        </tr>
-                      ))}
+                              <details className="expense-category-mobile-details">
+                                <summary>{category.name} — View {category.entryCount} {category.entryCount === 1 ? 'entry' : 'entries'}</summary>
+                                <div className="expense-category-mobile-entry-list">
+                                  {sortedEntries.map((entry, index) => (
+                                    <div className="expense-category-mobile-entry" key={`${entry.date}-${index}`}>
+                                      <span>{entry.date.slice(0, 10)}</span>
+                                      <span>₹{money(entry.amount)}</span>
+                                      <span className="expense-category-tooltip-comment">{entry.comments || 'No comment'}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </details>
+                            </td>
+                            <td data-label="Total">{money(category.total)}</td>
+                            <td data-label="Entries">{category.entryCount}</td>
+                            <td data-label="Share">{categoryTotal > 0 ? ((category.total / categoryTotal) * 100).toFixed(1) : '0.0'}%</td>
+                          </tr>
+                        );
+                      })}
                       <tr className="expense-total-row"><td data-label="Expense description">Total</td><td data-label="Total">{money(categoryTotal)}</td><td data-label="Entries">{categories.reduce((sum, item) => sum + item.entryCount, 0)}</td><td data-label="Share">100%</td></tr>
                     </tbody>
                   </table>

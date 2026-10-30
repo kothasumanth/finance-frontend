@@ -421,6 +421,10 @@ body {
  text-underline-offset: 4px;
 }
 
+.expense-category-mobile-details {
+ display: none;
+}
+
 .expense-category-tooltip-content {
  position: absolute;
  z-index: 20;
@@ -2009,6 +2013,49 @@ textarea::placeholder {
     content: attr(data-label);
     font-size: 0.75rem;
     font-weight: 600;
+  }
+
+  .expense-category-tooltip {
+    display: none;
+  }
+
+  .expense-category-mobile-details {
+    display: block;
+  }
+
+  .expense-category-mobile-details summary {
+    color: var(--green);
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .expense-category-mobile-entry-list {
+    display: grid;
+    gap: 8px;
+    max-height: 50vh;
+    margin-top: 10px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .expense-category-mobile-entry {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 12px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface);
+  }
+
+  .expense-category-mobile-entry .expense-category-tooltip-comment {
+    grid-column: 1 / -1;
+  }
+
+  .expense-table.expense-mobile-cards tbody td[data-label="Expense description"] {
+    grid-column: 1 / -1;
   }
 
   .finance-overview-table tbody tr.finance-overview-total-row {
