@@ -54,7 +54,6 @@ function MutualFundDashboard() {
         <nav className="mf-dashboard-actions" aria-label="Mutual fund actions">
           <button onClick={() => navigate(`/user/${userId}/overview`)}>Overview</button>
           {isAdmin && <button onClick={() => navigate(`/user/${userId}/mutualfund-metadata`)}>Add MF Metadata</button>}
-          <button onClick={() => navigate(`/user/${userId}/mutual-funds`)}>MF Entries</button>
           <button onClick={() => navigate(`/user/${userId}/view-mf-data`)}>View MF Data</button>
           <button onClick={() => navigate(`/user/${userId}/mf-metrics`)}>Metrics</button>
           <button onClick={() => setShowSIPPopup(true)}>SIP Info</button>

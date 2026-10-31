@@ -34,6 +34,9 @@ function MutualFundEntries() {
   const [editAmount, setEditAmount] = useState('')
   const [fundOptions, setFundOptions] = useState([])
   const [page, setPage] = useState(1)
+  const [entryToDelete, setEntryToDelete] = useState(null)
+  const [deletingEntry, setDeletingEntry] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
     fetch(apiUrl(`/mutual-funds/${userId}`))
@@ -144,18 +147,27 @@ function MutualFundEntries() {
   }
 
   const handleDelete = (entry) => {
-    if (!window.confirm('Are you sure you want to delete this entry?')) return
-    fetch(apiUrl(`/mutual-funds/${entry._id}`), {
-      method: 'DELETE'
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to delete entry')
-        setEntries(entries.filter(e => e._id !== entry._id))
-        refreshSummary()
+    setDeleteError('')
+    setEntryToDelete(entry)
+  }
+
+  const confirmDelete = async () => {
+    if (!entryToDelete || deletingEntry) return
+    setDeletingEntry(true)
+    setDeleteError('')
+    try {
+      const response = await fetch(apiUrl(`/mutual-funds/${entryToDelete._id}`), {
+        method: 'DELETE'
       })
-      .catch((err) => {
-        alert(err.message)
-      })
+      if (!response.ok) throw new Error('Failed to delete entry')
+      setEntries(currentEntries => currentEntries.filter(entry => entry._id !== entryToDelete._id))
+      setEntryToDelete(null)
+      refreshSummary()
+    } catch (err) {
+      setDeleteError(err.message || 'Failed to delete entry')
+    } finally {
+      setDeletingEntry(false)
+    }
   }
 
   return (
@@ -190,11 +202,11 @@ function MutualFundEntries() {
         }}>
           Add
         </button>
-        <Link to={`/user/${userId}/dashboard`} style={{
+        <Link to={`/user/${userId}/view-mf-data`} style={{
           marginLeft: 'auto',
           background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', textDecoration: 'none', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)',
           whiteSpace: 'nowrap',
-        }}>MF Dashboard</Link>
+        }}>View MF Data</Link>
       </div>
       <SessionSummary fundId={fundName} />
       {showPopup && (
@@ -345,6 +357,34 @@ function MutualFundEntries() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+      {entryToDelete && (
+        <div
+          className="mf-entry-delete-backdrop"
+          onClick={event => {
+            if (event.target === event.currentTarget && !deletingEntry) setEntryToDelete(null)
+          }}
+        >
+          <section className="mf-entry-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="mf-entry-delete-title">
+            <h2 id="mf-entry-delete-title">Delete mutual fund entry?</h2>
+            <p>
+              This will permanently delete the {entryToDelete.investType?.toLowerCase() || 'investment'} entry
+              {entryToDelete.fundName?.MutualFundName ? ` for ${entryToDelete.fundName.MutualFundName}` : ''}.
+            </p>
+            <p className="mf-entry-delete-details">
+              {formatDateDMY(entryToDelete.purchaseDate)} · ₹{Number(entryToDelete.amount || 0).toLocaleString('en-IN')}
+            </p>
+            {deleteError && <p className="mf-entry-delete-error" role="alert">{deleteError}</p>}
+            <div className="mf-entry-delete-actions">
+              <button type="button" onClick={() => setEntryToDelete(null)} disabled={deletingEntry} autoFocus>
+                Cancel
+              </button>
+              <button type="button" className="mf-entry-delete-confirm" onClick={confirmDelete} disabled={deletingEntry}>
+                {deletingEntry ? 'Deleting…' : 'Delete entry'}
+              </button>
+            </div>
+          </section>
         </div>
       )}
       {entries.length === 0 ? (

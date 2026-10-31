@@ -17,6 +17,10 @@ function ViewMutualFundData() {
   const [error, setError] = useState(null)
   const [mfApiData, setMfApiData] = useState(null)
   const [page, setPage] = useState(1)
+  const [editingEntry, setEditingEntry] = useState(null)
+  const [editDraft, setEditDraft] = useState(null)
+  const [editError, setEditError] = useState('')
+  const [savingEdit, setSavingEdit] = useState(false)
 
   useEffect(() => {
     fetch(apiUrl('/mutualfund-metadata'))
@@ -166,6 +170,61 @@ function ViewMutualFundData() {
     await refreshSummary()
   };
 
+  const startEditingEntry = entry => {
+    setEditingEntry(entry)
+    setEditDraft({
+      fundName: entry.fundName?._id || entry.fundName || '',
+      purchaseDate: entry.purchaseDate || '',
+      investType: entry.investType || 'Invest',
+      amount: String(entry.amount ?? '')
+    })
+    setEditError('')
+  }
+
+  const handleSaveEdit = async event => {
+    event.preventDefault()
+    if (!editingEntry || !editDraft) return
+
+    const amount = Number(editDraft.amount)
+    if (!editDraft.fundName || !editDraft.purchaseDate || !Number.isFinite(amount) || amount <= 0) {
+      setEditError('Enter a fund, purchase date, and positive amount.')
+      return
+    }
+
+    setSavingEdit(true)
+    setEditError('')
+    try {
+      const response = await fetch(apiUrl(`/mutual-funds/${editingEntry._id}`), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fundName: editDraft.fundName,
+          purchaseDate: editDraft.purchaseDate,
+          investType: editDraft.investType,
+          amount,
+          nav: null,
+          units: null
+        })
+      })
+      const updatedEntry = await response.json()
+      if (!response.ok) throw new Error(updatedEntry.error || 'Failed to update entry')
+
+      const nextEntries = entries.filter(entry => entry._id !== updatedEntry._id)
+      if (selectedFund === 'ALL' || updatedEntry.fundName?._id === selectedFund) {
+        nextEntries.push(updatedEntry)
+      }
+      setEntries(nextEntries)
+      setPage(currentPage => Math.min(currentPage, Math.max(1, Math.ceil(nextEntries.length / 10))))
+      setEditingEntry(null)
+      setEditDraft(null)
+      await refreshSummary()
+    } catch (saveError) {
+      setEditError(saveError.message || 'Failed to update entry')
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
   // Reset page to 1 whenever selectedFund changes
   useEffect(() => {
     setPage(1);
@@ -288,6 +347,72 @@ function ViewMutualFundData() {
             wrapperStyle={{ maxWidth: 420 }}
           />
         </div>
+        {editingEntry && editDraft && (
+          <div className="view-mf-edit-backdrop">
+            <section className="view-mf-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="view-mf-edit-title">
+              <h2 id="view-mf-edit-title">Edit mutual fund entry</h2>
+              <form onSubmit={handleSaveEdit}>
+                <label>
+                  Mutual fund
+                  <SearchableDropdown
+                    ariaLabel="Edit mutual fund"
+                    options={fundOptions.map(fund => ({ value: fund._id, label: fund.MutualFundName }))}
+                    value={editDraft.fundName}
+                    onChange={fundName => setEditDraft(previous => ({ ...previous, fundName }))}
+                    disabled={savingEdit}
+                  />
+                </label>
+                <label>
+                  Purchase date
+                  <input
+                    type="date"
+                    value={editDraft.purchaseDate}
+                    onChange={event => setEditDraft(previous => ({ ...previous, purchaseDate: event.target.value }))}
+                    required
+                    disabled={savingEdit}
+                  />
+                </label>
+                <label>
+                  Invest type
+                  <select
+                    value={editDraft.investType}
+                    onChange={event => setEditDraft(previous => ({ ...previous, investType: event.target.value }))}
+                    disabled={savingEdit}
+                  >
+                    <option value="Invest">Invest</option>
+                    <option value="Redeem">Redeem</option>
+                  </select>
+                </label>
+                <label>
+                  Amount
+                  <input
+                    type="number"
+                    value={editDraft.amount}
+                    onChange={event => setEditDraft(previous => ({ ...previous, amount: event.target.value }))}
+                    min="0.01"
+                    step="0.01"
+                    required
+                    disabled={savingEdit}
+                  />
+                </label>
+                {editError && <p className="view-mf-edit-error" role="alert">{editError}</p>}
+                <div className="view-mf-edit-actions">
+                  <button type="submit" disabled={savingEdit}>{savingEdit ? 'Saving…' : 'Save changes'}</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingEntry(null)
+                      setEditDraft(null)
+                      setEditError('')
+                    }}
+                    disabled={savingEdit}
+                  >Cancel</button>
+                </div>
+                <p className="view-mf-edit-note">NAV and units are cleared when you save, just as they are when editing from MF Entries. You can recalculate them with Get All NAVs and ReCal.</p>
+              </form>
+            </section>
+          </div>
+        )}
       {loading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {!loading && !error && selectedFund && (
@@ -307,6 +432,7 @@ function ViewMutualFundData() {
                   <th>Amount</th>
                   <th>Today Value</th>
                   <th>P/L</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -352,6 +478,7 @@ function ViewMutualFundData() {
                         }
                         return '';
                       })()}</td>
+                      <td><button type="button" className="view-mf-row-edit" onClick={() => startEditingEntry(entry)}>Edit</button></td>
                     </tr>
                   ))}
               </tbody>

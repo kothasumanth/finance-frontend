@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Outlet, useLocation, useParams } from 'react-router-dom'
 import { fetchUserFundSummary } from '../api/fetchUserFundSummary'
 import { UserSessionSummaryContext, useUserSessionSummary } from './userSessionSummaryContext'
+
+const SUMMARY_REFRESH_INTERVAL = 5 * 60 * 1000
 
 export function UserSessionSummaryProvider({ isAdmin }) {
   const { userId } = useParams()
@@ -9,29 +11,51 @@ export function UserSessionSummaryProvider({ isAdmin }) {
   const [funds, setFunds] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const previousPath = useState(location.pathname)[0]
+  const previousPath = useRef(location.pathname)
+  const lastRefreshedAt = useRef(0)
+  const refreshPromise = useRef(null)
 
-  const refreshSummary = useCallback(async () => {
-    setLoading(true)
-    try {
-      setFunds(await fetchUserFundSummary(userId))
-      setError('')
-    } catch (err) {
-      setFunds([])
-      setError(err.message || 'Unable to load session summary')
-    } finally {
-      setLoading(false)
+  const refreshSummary = useCallback(({ dedupe = false } = {}) => {
+    const startRefresh = () => {
+      let request
+      request = (async () => {
+        setLoading(true)
+        try {
+          setFunds(await fetchUserFundSummary(userId))
+          setError('')
+          lastRefreshedAt.current = Date.now()
+        } catch (err) {
+          setFunds([])
+          setError(err.message || 'Unable to load session summary')
+        } finally {
+          setLoading(false)
+          if (refreshPromise.current === request) refreshPromise.current = null
+        }
+      })()
+      refreshPromise.current = request
+      return request
     }
+
+    if (refreshPromise.current) {
+      if (dedupe) return refreshPromise.current
+      return refreshPromise.current.then(() => refreshPromise.current || startRefresh())
+    }
+
+    return startRefresh()
   }, [userId])
 
   useEffect(() => {
-    refreshSummary()
+    refreshSummary({ dedupe: true })
   }, [refreshSummary])
 
   useEffect(() => {
-    if (previousPath === location.pathname) return
-    if (location.pathname.endsWith('/dashboard')) refreshSummary()
-  }, [location.pathname, previousPath, refreshSummary])
+    const enteredDashboard = !previousPath.current.endsWith('/dashboard')
+      && location.pathname.endsWith('/dashboard')
+    previousPath.current = location.pathname
+    if (enteredDashboard && Date.now() - lastRefreshedAt.current >= SUMMARY_REFRESH_INTERVAL) {
+      refreshSummary({ dedupe: true })
+    }
+  }, [location.pathname, refreshSummary])
 
   return (
     <UserSessionSummaryContext.Provider value={{ funds, loading, error, refreshSummary }}>

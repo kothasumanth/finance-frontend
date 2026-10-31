@@ -15,16 +15,6 @@ export async function fetchUserFundSummary(userId) {
   const capTypesRes = await fetch(apiUrl('/api/mfcaptypes'));
   if (!capTypesRes.ok) throw new Error('Failed to fetch cap types');
   const capTypes = await capTypesRes.json();
-  // Get latest NAVs for all funds
-  const navs = {};
-  for (const meta of metadata) {
-    if (!meta.GoogleValue) continue;
-    try {
-      const navRes = await fetch(apiUrl(`/mf-api?googleValue=${encodeURIComponent(meta.GoogleValue)}`));
-      const navData = await navRes.json();
-      navs[meta._id] = Number(navData.nav) || null;
-    } catch { navs[meta._id] = null; }
-  }
   // Create a map of metadata by ID for quick lookup
   const metadataMap = new Map(metadata.map(meta => [meta._id, meta]));
 
@@ -46,7 +36,7 @@ export async function fetchUserFundSummary(userId) {
         todayValue: 0,
         profitLoss: 0,
         balanceUnits: 0,
-        nav: navs[fundId],
+        nav: null,
         ActiveOrPassive: fundMetadata.ActiveOrPassive || '',
         IndexOrManaged: fundMetadata.IndexOrManaged || '',
         CapType: fundMetadata.CapType || '', // This is the _id from captype table
@@ -58,13 +48,27 @@ export async function fetchUserFundSummary(userId) {
     if (entry.investType === 'Invest' && Number(entry.balanceUnit) > 0) {
       const investment = parseFloat(entry.amount) - (parseFloat(entry.principalRedeem) || 0);
       fundMap[fundId].invested += investment;
-      fundMap[fundId].todayValue += Number(entry.balanceUnit) * (navs[fundId] || 0);
       fundMap[fundId].balanceUnits += Number(entry.balanceUnit);
     }
   }
-  for (const id in fundMap) {
-    fundMap[id].profitLoss = fundMap[id].todayValue - fundMap[id].invested;
+
+  // Only request NAVs for funds that contribute to the user's current holdings.
+  for (const fund of Object.values(fundMap)) {
+    if (fund.balanceUnits <= 0 || Number(fund.invested.toFixed(2)) <= 0 || !fund.metadata.GoogleValue) continue;
+    try {
+      const navRes = await fetch(apiUrl(`/mf-api?googleValue=${encodeURIComponent(fund.metadata.GoogleValue)}`));
+      const navData = await navRes.json();
+      fund.nav = Number(navData.nav) || null;
+    } catch {
+      fund.nav = null;
+    }
   }
+
+  for (const fund of Object.values(fundMap)) {
+    fund.todayValue = fund.balanceUnits * (fund.nav || 0);
+    fund.profitLoss = fund.todayValue - fund.invested;
+  }
+
   // Only include funds with remaining units
   const filtered = Object.values(fundMap)
     .filter(fund => fund.balanceUnits > 0 && Number(fund.invested.toFixed(2)) > 0)

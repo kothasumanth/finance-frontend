@@ -1054,6 +1054,126 @@ body {
   margin-top: 0;
 }
 
+.view-mf-edit-backdrop {
+  position: fixed;
+  z-index: 1100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  overflow-y: auto;
+  background: rgb(15 23 42 / 45%);
+}
+
+.view-mf-edit-dialog {
+  width: min(100%, 480px);
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 16px 48px rgb(15 23 42 / 24%);
+}
+
+.view-mf-edit-dialog h2 {
+  margin: 0 0 18px;
+}
+
+.view-mf-edit-dialog form {
+  display: grid;
+  gap: 14px;
+}
+
+.view-mf-edit-dialog label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.view-mf-edit-dialog input,
+.view-mf-edit-dialog select {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.view-mf-edit-error {
+  margin: 0;
+  color: var(--red);
+}
+
+.view-mf-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.view-mf-edit-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.mf-entry-delete-backdrop {
+  position: fixed;
+  z-index: 1100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(15 23 42 / 45%);
+}
+
+.mf-entry-delete-dialog {
+  width: min(100%, 440px);
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 16px 48px rgb(15 23 42 / 24%);
+}
+
+.mf-entry-delete-dialog h2 {
+  margin: 0 0 12px;
+}
+
+.mf-entry-delete-dialog p {
+  margin: 0 0 12px;
+}
+
+.mf-entry-delete-details {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.mf-entry-delete-error {
+  color: var(--red);
+}
+
+.mf-entry-delete-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.mf-entry-delete-confirm {
+  border-color: var(--red);
+  background: var(--red);
+  color: #fff;
+}
+
+.view-mf-row-edit {
+  min-height: 34px;
+  padding: 5px 12px;
+}
+
 .view-mf-pagination {
   display: flex;
   align-items: center;
