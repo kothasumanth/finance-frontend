@@ -16,6 +16,9 @@ dist-ssr/
 .vite/
 build/
 
+# Playwright MCP page snapshots
+.playwright-mcp/page-*.yml
+
 # Environment files
 .env
 .env.*
