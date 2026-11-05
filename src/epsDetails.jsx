@@ -172,17 +172,10 @@ function EpsDetails() {
         setEditId(null);
         setEditForm({ date: '', amountDeposited: '' });
       } else {
-        let errBody = null;
-        try {
-          errBody = await res.json();
-        } catch (e) {
-          errBody = { error: res.statusText || 'Server error' };
-        }
-        console.error('Save failed', res.status, errBody);
-        alert('Error saving changes: ' + (errBody.error || JSON.stringify(errBody)));
+        const errBody = await res.json().catch(() => ({}));
+        alert('Error saving changes: ' + (errBody.error || res.statusText || 'Server error'));
       }
     } catch (err) {
-      console.error('Error in handleEditSave', err);
       alert('Error saving changes: ' + (err.message || err));
     }
   };
