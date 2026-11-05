@@ -1,6 +1,7 @@
 import { apiUrl } from './api.js'
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { getDefaultSetupEndDate, getSetupDateRange } from './utils/pfSetupDates.js';
 
 function PfDashboard() {
   const { userId } = useParams();
@@ -8,6 +9,8 @@ function PfDashboard() {
   const [deletePFLoading, setDeletePFLoading] = useState(false);
   const [showSetupPFPopup, setShowSetupPFPopup] = useState(false);
   const [setupPFStartDate, setSetupPFStartDate] = useState('');
+  const [setupPFEndDate, setSetupPFEndDate] = useState('');
+  const [setupPFHasEntries, setSetupPFHasEntries] = useState(false);
   const [setupPFLoading, setSetupPFLoading] = useState(false);
   
   // ROI Setup state
@@ -22,7 +25,7 @@ function PfDashboard() {
   const [pfYearwise, setPfYearwise] = useState([]);
   const [pfYearwiseLoading, setPfYearwiseLoading] = useState(true);
   // PF summary panel state
-  const [pfSummary, setPfSummary] = useState({ totalDeposits: 0, totalInterest: 0, totalAfter15Y: 0 });
+  const [pfSummary, setPfSummary] = useState({ totalDeposits: 0, totalInterest: 0, totalBalance: 0 });
 
   useEffect(() => {
     // Fetch and group PF entries yearwise
@@ -93,10 +96,10 @@ function PfDashboard() {
     if (pfYearwise && pfYearwise.length > 0) {
       const totalDeposits = pfYearwise.reduce((sum, y) => sum + y.amountDeposited, 0);
       const totalInterest = pfYearwise.reduce((sum, y) => sum + y.interest, 0);
-      const totalAfter15Y = totalDeposits + totalInterest;
-      setPfSummary({ totalDeposits, totalInterest, totalAfter15Y });
+      const totalBalance = totalDeposits + totalInterest;
+      setPfSummary({ totalDeposits, totalInterest, totalBalance });
     } else {
-      setPfSummary({ totalDeposits: 0, totalInterest: 0, totalAfter15Y: 0 });
+      setPfSummary({ totalDeposits: 0, totalInterest: 0, totalBalance: 0 });
     }
   }, [pfYearwise]);
 
@@ -168,34 +171,62 @@ function PfDashboard() {
       });
   };
 
-  const handleSetupPFClick = () => {
-    setShowSetupPFPopup(true);
-    setSetupPFStartDate('');
+  const handleSetupPFClick = async () => {
+    setSetupPFLoading(true);
+    try {
+      const pfTypesRes = await fetch(apiUrl('/pf-types'));
+      if (!pfTypesRes.ok) throw new Error('Unable to load PF types');
+      const pfTypes = await pfTypesRes.json();
+      const pfType = pfTypes.find(t => t.name === 'PF');
+      if (!pfType) throw new Error('PF type not found');
+      const entriesRes = await fetch(apiUrl(`/pfentry/user/${userId}/type/${pfType._id}`));
+      if (!entriesRes.ok) throw new Error('Unable to load existing PF periods');
+      const entries = await entriesRes.json();
+      const { startDate, endDate } = getSetupDateRange(entries);
+      setSetupPFHasEntries(entries.length > 0);
+      setSetupPFStartDate(startDate);
+      setSetupPFEndDate(endDate);
+      setShowSetupPFPopup(true);
+    } catch (loadError) {
+      alert(loadError.message || 'Unable to load PF periods');
+    } finally {
+      setSetupPFLoading(false);
+    }
   };
 
   const handleSetupPFSave = async () => {
     setSetupPFLoading(true);
     try {
       const pfTypesRes = await fetch(apiUrl('/pf-types'));
+      if (!pfTypesRes.ok) throw new Error('Unable to load PF types');
       const pfTypes = await pfTypesRes.json();
       const pfType = pfTypes.find(t => t.name === 'PF');
-      if (!pfType) { alert('PF type not found'); setSetupPFLoading(false); return; }
+      if (!pfType) throw new Error('PF type not found');
       const res = await fetch(apiUrl('/pfentry/pf-bulk-create'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, pfTypeId: pfType._id, startDate: setupPFStartDate })
+        body: JSON.stringify({
+          userId,
+          pfTypeId: pfType._id,
+          startDate: setupPFStartDate,
+          endDate: setupPFEndDate
+        })
       });
-      if (res.ok) {
-        setShowSetupPFPopup(false);
-        alert('PF entries created for 15 years.');
-      } else {
-        const err = await res.json();
-        alert(err.error || 'Error creating PF entries');
+      const result = await res.json();
+      if (!res.ok) {
+        const periods = result.periods?.map(period =>
+          `${period.date.slice(0, 7)} (₹${Number(period.amountDeposited).toLocaleString('en-IN')})`
+        ).join('\n');
+        alert(`${result.error || 'Error updating PF periods'}${periods ? `\n${periods}` : ''}`);
+        return;
       }
-    } catch (e) {
-      alert('Error creating PF entries');
+      setShowSetupPFPopup(false);
+      alert(`PF periods updated. Added ${result.createdCount || 0} and removed ${result.deletedCount || 0} periods.`);
+    } catch (saveError) {
+      alert(saveError.message || 'Error updating PF periods');
+    } finally {
+      setSetupPFLoading(false);
     }
-    setSetupPFLoading(false);
   };
 
   const handleDeletePF = async () => {
@@ -231,7 +262,7 @@ function PfDashboard() {
           >Overview</button>
           <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }} onClick={() => navigate(`/user/${userId}/pf-details`)}>PF Details</button>
           <button className="pf-dashboard-btn" style={{ minWidth: 140, marginLeft: '2rem', background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(16,185,129,0.08)' }} onClick={handleOpenPopup}>Setup Interest</button>
-          <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(245,158,66,0.08)' }} onClick={handleSetupPFClick}>Setup PF</button>
+          <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(245,158,66,0.08)' }} onClick={handleSetupPFClick} disabled={setupPFLoading}>{setupPFLoading ? 'Loading...' : 'Setup PF'}</button>
           <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(239,68,68,0.08)' }} onClick={handleDeletePF} disabled={deletePFLoading}>{deletePFLoading ? 'Deleting...' : 'Delete PF'}</button>
           <button className="pf-dashboard-btn" style={{ minWidth: 180, background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem' }} onClick={async () => {
             if (!window.confirm('Recalculate all PF entries for all users?')) return;
@@ -326,14 +357,27 @@ function PfDashboard() {
         {showSetupPFPopup && (
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ background: '#fff', borderRadius: 10, padding: 32, minWidth: 340, boxShadow: '0 4px 24px rgba(0,0,0,0.13)' }}>
-              <h2 style={{ marginTop: 0 }}>Setup PF for 15 Years</h2>
+              <h2 style={{ marginTop: 0 }}>Setup PF Period</h2>
               <div style={{ marginBottom: 16 }}>
-                <label style={{ fontWeight: 600 }}>Start Date (first month): </label>
-                <input type="date" value={setupPFStartDate} onChange={e => setSetupPFStartDate(e.target.value)} style={{ marginLeft: 8, padding: 4, borderRadius: 4, border: '1px solid #ccc' }} />
+                <label style={{ fontWeight: 600 }}>
+                  Start date
+                  <input type="date" value={setupPFStartDate} disabled={setupPFHasEntries} onChange={e => {
+                    const startDate = e.target.value;
+                    setSetupPFStartDate(startDate);
+                    setSetupPFEndDate(getDefaultSetupEndDate(startDate));
+                  }} style={{ display: 'block', marginTop: 4, padding: 4, borderRadius: 4, border: '1px solid #ccc' }} />
+                </label>
               </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontWeight: 600 }}>
+                  End date (inclusive month)
+                  <input type="date" value={setupPFEndDate} min={setupPFStartDate} onChange={e => setSetupPFEndDate(e.target.value)} style={{ display: 'block', marginTop: 4, padding: 4, borderRadius: 4, border: '1px solid #ccc' }} />
+                </label>
+              </div>
+              <p>Existing monthly periods and deposits are preserved. Reducing the end date requires zero deposits in every period being removed.</p>
               <div style={{ display: 'flex', flexDirection: 'row', gap: 16, marginTop: 24 }}>
-                <button onClick={handleSetupPFSave} disabled={setupPFLoading || !setupPFStartDate} style={{ background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', minWidth: 100 }}>{setupPFLoading ? 'Setting up...' : 'Setup PF'}</button>
-                <button onClick={() => setShowSetupPFPopup(false)} style={{ background: '#eee', color: '#333', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', minWidth: 100 }}>Cancel</button>
+                <button onClick={handleSetupPFSave} disabled={setupPFLoading || !setupPFStartDate || !setupPFEndDate} style={{ background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', minWidth: 100 }}>{setupPFLoading ? 'Setting up...' : 'Save Period'}</button>
+                <button onClick={() => setShowSetupPFPopup(false)} disabled={setupPFLoading} style={{ background: '#eee', color: '#333', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', minWidth: 100 }}>Cancel</button>
               </div>
             </div>
           </div>
@@ -399,8 +443,8 @@ function PfDashboard() {
             <span style={{ fontWeight: 700, fontSize: 20, color: '#6366f1' }}>{pfSummary.totalInterest.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
           <div style={{ borderTop: '1px solid #e5e7eb', margin: '10px 0 0 0', paddingTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#64748b', fontWeight: 600 }}>Total After 15Y</span>
-            <span style={{ fontWeight: 800, fontSize: 22, color: '#059669', letterSpacing: 0.5 }}>{pfSummary.totalAfter15Y.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            <span style={{ color: '#64748b', fontWeight: 600 }}>Total Balance</span>
+            <span style={{ fontWeight: 800, fontSize: 22, color: '#059669', letterSpacing: 0.5 }}>{pfSummary.totalBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
         </div>
       </aside>

@@ -1,6 +1,7 @@
 import { apiUrl } from './api.js'
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { getDefaultSetupEndDate, getSetupDateRange } from './utils/pfSetupDates.js';
 
 function EpsDashboard() {
   const { userId } = useParams();
@@ -12,6 +13,8 @@ function EpsDashboard() {
   const [actionLoading, setActionLoading] = useState(false);
   const [showSetupEpsPopup, setShowSetupEpsPopup] = useState(false);
   const [setupEpsStartDate, setSetupEpsStartDate] = useState('');
+  const [setupEpsEndDate, setSetupEpsEndDate] = useState('');
+  const [setupEpsHasEntries, setSetupEpsHasEntries] = useState(false);
 
   // ROI Setup state (like PF page)
   const [showInterestPopup, setShowInterestPopup] = useState(false);
@@ -26,7 +29,7 @@ function EpsDashboard() {
   const [epsYearwiseLoading, setEpsYearwiseLoading] = useState(true);
 
   // EPS summary panel state
-  const [epsSummary, setEpsSummary] = useState({ totalDeposits: 0, totalInterest: 0, totalAfter15Y: 0 });
+  const [epsSummary, setEpsSummary] = useState({ totalDeposits: 0, totalInterest: 0, totalBalance: 0 });
 
   useEffect(() => {
     fetchEpsEntries();
@@ -38,10 +41,10 @@ function EpsDashboard() {
     if (epsYearwise && epsYearwise.length > 0) {
       const totalDeposits = epsYearwise.reduce((sum, y) => sum + y.amountDeposited, 0);
       const totalInterest = epsYearwise.reduce((sum, y) => sum + y.interest, 0);
-      const totalAfter15Y = totalDeposits + totalInterest;
-      setEpsSummary({ totalDeposits, totalInterest, totalAfter15Y });
+      const totalBalance = totalDeposits + totalInterest;
+      setEpsSummary({ totalDeposits, totalInterest, totalBalance });
     } else {
-      setEpsSummary({ totalDeposits: 0, totalInterest: 0, totalAfter15Y: 0 });
+      setEpsSummary({ totalDeposits: 0, totalInterest: 0, totalBalance: 0 });
     }
   }, [epsYearwise]);
 
@@ -114,21 +117,24 @@ function EpsDashboard() {
     setEpsYearwiseLoading(false);
   }
 
-  async function handleSetupEps() {
+  async function handleSetupEpsClick() {
     setActionLoading(true);
     try {
       const pfTypesRes = await fetch(apiUrl('/pf-types'));
+      if (!pfTypesRes.ok) throw new Error('Unable to load PF types');
       const pfTypes = await pfTypesRes.json();
       const epsType = pfTypes.find(t => t.name === 'EPS');
       if (!epsType) throw new Error('EPS type not found');
-      await fetch(apiUrl('/pfentry/pf-bulk-create'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, pfTypeId: epsType._id, years: 15 })
-      });
-      await fetchEpsEntries();
+      const entriesRes = await fetch(apiUrl(`/pfentry/user/${userId}/type/${epsType._id}`));
+      if (!entriesRes.ok) throw new Error('Unable to load existing EPS periods');
+      const entries = await entriesRes.json();
+      const { startDate, endDate } = getSetupDateRange(entries);
+      setSetupEpsHasEntries(entries.length > 0);
+      setSetupEpsStartDate(startDate);
+      setSetupEpsEndDate(endDate);
+      setShowSetupEpsPopup(true);
     } catch (err) {
-      setError(err.message);
+      alert(err.message || 'Unable to load EPS periods');
     } finally {
       setActionLoading(false);
     }
@@ -243,25 +249,34 @@ function EpsDashboard() {
     setActionLoading(true);
     try {
       const pfTypesRes = await fetch(apiUrl('/pf-types'));
+      if (!pfTypesRes.ok) throw new Error('Unable to load PF types');
       const pfTypes = await pfTypesRes.json();
       const epsType = pfTypes.find(t => t.name === 'EPS');
       if (!epsType) throw new Error('EPS type not found');
       const res = await fetch(apiUrl('/pfentry/pf-bulk-create'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, pfTypeId: epsType._id, startDate: setupEpsStartDate })
+        body: JSON.stringify({
+          userId,
+          pfTypeId: epsType._id,
+          startDate: setupEpsStartDate,
+          endDate: setupEpsEndDate
+        })
       });
-      setShowSetupEpsPopup(false);
-      if (res.ok) {
-        alert('EPS entries created for 15 years.');
-      } else {
-        const err = await res.json();
-        alert(err.error || 'Error creating EPS entries');
+      const result = await res.json();
+      if (!res.ok) {
+        const periods = result.periods?.map(period =>
+          `${period.date.slice(0, 7)} (₹${Number(period.amountDeposited).toLocaleString('en-IN')})`
+        ).join('\n');
+        alert(`${result.error || 'Error updating EPS periods'}${periods ? `\n${periods}` : ''}`);
+        return;
       }
+      setShowSetupEpsPopup(false);
+      alert(`EPS periods updated. Added ${result.createdCount || 0} and removed ${result.deletedCount || 0} periods.`);
       await fetchEpsEntries();
       await fetchEpsYearwise();
     } catch (err) {
-      setError(err.message);
+      alert(err.message || 'Error updating EPS periods');
     } finally {
       setActionLoading(false);
     }
@@ -289,7 +304,7 @@ function EpsDashboard() {
           >Setup Interest</button>
           <button
             style={{ background: '#059669', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}
-            onClick={() => { setShowSetupEpsPopup(true); setSetupEpsStartDate(''); }}
+            onClick={handleSetupEpsClick}
             disabled={loading || actionLoading}
           >{actionLoading ? 'Setting up...' : 'Setup EPS'}</button>
           <button
@@ -395,8 +410,8 @@ function EpsDashboard() {
             <span style={{ fontWeight: 700, fontSize: 20, color: '#6366f1' }}>{epsSummary.totalInterest.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
           <div style={{ borderTop: '1px solid #e5e7eb', margin: '10px 0 0 0', paddingTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#64748b', fontWeight: 600 }}>Total After 15Y</span>
-            <span style={{ fontWeight: 800, fontSize: 22, color: '#059669', letterSpacing: 0.5 }}>{epsSummary.totalAfter15Y.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            <span style={{ color: '#64748b', fontWeight: 600 }}>Total Balance</span>
+            <span style={{ fontWeight: 800, fontSize: 22, color: '#059669', letterSpacing: 0.5 }}>{epsSummary.totalBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
         </div>
       </aside>
@@ -466,14 +481,27 @@ function EpsDashboard() {
       {showSetupEpsPopup && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#fff', borderRadius: 10, padding: 32, minWidth: 340, boxShadow: '0 4px 24px rgba(0,0,0,0.13)' }}>
-            <h2 style={{ marginTop: 0 }}>Setup EPS for 15 Years</h2>
+            <h2 style={{ marginTop: 0 }}>Setup EPS Period</h2>
             <div style={{ marginBottom: 16 }}>
-              <label style={{ fontWeight: 600 }}>Start Date (first month): </label>
-              <input type="date" value={setupEpsStartDate} onChange={e => setSetupEpsStartDate(e.target.value)} style={{ marginLeft: 8, padding: 4, borderRadius: 4, border: '1px solid #ccc' }} />
+              <label style={{ fontWeight: 600 }}>
+                Start date
+                <input type="date" value={setupEpsStartDate} disabled={setupEpsHasEntries} onChange={e => {
+                  const startDate = e.target.value;
+                  setSetupEpsStartDate(startDate);
+                  setSetupEpsEndDate(getDefaultSetupEndDate(startDate));
+                }} style={{ display: 'block', marginTop: 4, padding: 4, borderRadius: 4, border: '1px solid #ccc' }} />
+              </label>
             </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontWeight: 600 }}>
+                End date (inclusive month)
+                <input type="date" value={setupEpsEndDate} min={setupEpsStartDate} onChange={e => setSetupEpsEndDate(e.target.value)} style={{ display: 'block', marginTop: 4, padding: 4, borderRadius: 4, border: '1px solid #ccc' }} />
+              </label>
+            </div>
+            <p>Existing monthly periods and deposits are preserved. Reducing the end date requires zero deposits in every period being removed.</p>
             <div style={{ display: 'flex', flexDirection: 'row', gap: 16, marginTop: 24 }}>
-              <button onClick={handleSetupEpsSave} disabled={actionLoading || !setupEpsStartDate} style={{ background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', minWidth: 100 }}>{actionLoading ? 'Setting up...' : 'Setup EPS'}</button>
-              <button onClick={() => setShowSetupEpsPopup(false)} style={{ background: '#eee', color: '#333', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', minWidth: 100 }}>Cancel</button>
+              <button onClick={handleSetupEpsSave} disabled={actionLoading || !setupEpsStartDate || !setupEpsEndDate} style={{ background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', minWidth: 100 }}>{actionLoading ? 'Setting up...' : 'Save Period'}</button>
+              <button onClick={() => setShowSetupEpsPopup(false)} disabled={actionLoading} style={{ background: '#eee', color: '#333', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', minWidth: 100 }}>Cancel</button>
             </div>
           </div>
         </div>

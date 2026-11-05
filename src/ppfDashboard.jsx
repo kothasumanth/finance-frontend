@@ -1,6 +1,7 @@
 import { apiUrl } from './api.js'
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { getDefaultSetupEndDate, getSetupDateRange } from './utils/pfSetupDates.js';
 
 function PfDashboard() {
   const { userId } = useParams();
@@ -17,6 +18,8 @@ function PfDashboard() {
   const [ppfLoading, setPPFLoading] = useState(false);
   const [showSetupPPFPopup, setShowSetupPPFPopup] = useState(false);
   const [setupPPFStartDate, setSetupPPFStartDate] = useState('');
+  const [setupPPFEndDate, setSetupPPFEndDate] = useState('');
+  const [setupPPFHasEntries, setSetupPPFHasEntries] = useState(false);
   const [setupPPFLoading, setSetupPPFLoading] = useState(false);
   const [deletePPFLoading, setDeletePPFLoading] = useState(false);
 
@@ -25,7 +28,7 @@ function PfDashboard() {
   const [ppfYearwiseLoading, setPpfYearwiseLoading] = useState(true);
 
   // PPF summary panel state
-  const [ppfSummary, setPpfSummary] = useState({ totalDeposits: 0, totalInterest: 0, totalAfter15Y: 0 });
+  const [ppfSummary, setPpfSummary] = useState({ totalDeposits: 0, totalInterest: 0, totalBalance: 0 });
 
   useEffect(() => {
     if (showPopup) {
@@ -98,11 +101,10 @@ function PfDashboard() {
     if (ppfYearwise && ppfYearwise.length > 0) {
       const totalDeposits = ppfYearwise.reduce((sum, y) => sum + y.amountDeposited, 0);
       const totalInterest = ppfYearwise.reduce((sum, y) => sum + y.interest, 0);
-      // Total After 15Y = Total Deposit + Interest Accumulated for all 15 Years
-      const totalAfter15Y = totalDeposits + totalInterest;
-      setPpfSummary({ totalDeposits, totalInterest, totalAfter15Y });
+      const totalBalance = totalDeposits + totalInterest;
+      setPpfSummary({ totalDeposits, totalInterest, totalBalance });
     } else {
-      setPpfSummary({ totalDeposits: 0, totalInterest: 0, totalAfter15Y: 0 });
+      setPpfSummary({ totalDeposits: 0, totalInterest: 0, totalBalance: 0 });
     }
   }, [ppfYearwise]);
 
@@ -211,30 +213,62 @@ function PfDashboard() {
     setPPFLoading(false);
   };
 
-  const handleSetupPPFClick = () => {
-    setShowSetupPPFPopup(true);
-    setSetupPPFStartDate('');
+  const handleSetupPPFClick = async () => {
+    setSetupPPFLoading(true);
+    try {
+      const pfTypesRes = await fetch(apiUrl('/pf-types'));
+      if (!pfTypesRes.ok) throw new Error('Unable to load PF types');
+      const pfTypes = await pfTypesRes.json();
+      const ppfType = pfTypes.find(t => t.name === 'PPF');
+      if (!ppfType) throw new Error('PPF type not found');
+      const entriesRes = await fetch(apiUrl(`/pfentry/user/${userId}/type/${ppfType._id}`));
+      if (!entriesRes.ok) throw new Error('Unable to load existing PPF periods');
+      const entries = await entriesRes.json();
+      const { startDate, endDate } = getSetupDateRange(entries);
+      setSetupPPFHasEntries(entries.length > 0);
+      setSetupPPFStartDate(startDate);
+      setSetupPPFEndDate(endDate);
+      setShowSetupPPFPopup(true);
+    } catch (loadError) {
+      alert(loadError.message || 'Unable to load PPF periods');
+    } finally {
+      setSetupPPFLoading(false);
+    }
   };
 
   const handleSetupPPFSave = async () => {
     setSetupPPFLoading(true);
-    const pfTypesRes = await fetch(apiUrl('/pf-types'));
-    const pfTypes = await pfTypesRes.json();
-    const ppfType = pfTypes.find(t => t.name === 'PPF');
-    if (!ppfType) { alert('PPF type not found'); setSetupPPFLoading(false); return; }
-    const res = await fetch(apiUrl('/pfentry/ppf-bulk-create'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, pfTypeId: ppfType._id, startDate: setupPPFStartDate })
-    });
-    if (res.ok) {
+    try {
+      const pfTypesRes = await fetch(apiUrl('/pf-types'));
+      if (!pfTypesRes.ok) throw new Error('Unable to load PF types');
+      const pfTypes = await pfTypesRes.json();
+      const ppfType = pfTypes.find(t => t.name === 'PPF');
+      if (!ppfType) throw new Error('PPF type not found');
+      const res = await fetch(apiUrl('/pfentry/ppf-bulk-create'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          pfTypeId: ppfType._id,
+          startDate: setupPPFStartDate,
+          endDate: setupPPFEndDate
+        })
+      });
+      const result = await res.json();
+      if (!res.ok) {
+        const periods = result.periods?.map(period =>
+          `${period.date.slice(0, 7)} (₹${Number(period.amountDeposited).toLocaleString('en-IN')})`
+        ).join('\n');
+        alert(`${result.error || 'Error updating PPF periods'}${periods ? `\n${periods}` : ''}`);
+        return;
+      }
       setShowSetupPPFPopup(false);
-      alert('PPF entries created for 15 years.');
-    } else {
-      const err = await res.json();
-      alert(err.error || 'Error creating PPF entries');
+      alert(`PPF periods updated. Added ${result.createdCount || 0} and removed ${result.deletedCount || 0} periods.`);
+    } catch (saveError) {
+      alert(saveError.message || 'Error updating PPF periods');
+    } finally {
+      setSetupPPFLoading(false);
     }
-    setSetupPPFLoading(false);
   };
 
   const handleDeletePPF = async () => {
@@ -270,7 +304,7 @@ function PfDashboard() {
           >Overview</button>
           <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }} onClick={() => navigate(`/user/${userId}/ppf-details`)}>PPF</button>
           <button className="pf-dashboard-btn" style={{ minWidth: 140, background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(16,185,129,0.08)' }} onClick={handleOpenPopup}>Setup Interest</button>
-          <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(245,158,66,0.08)' }} onClick={handleSetupPPFClick}>Setup PPF</button>
+          <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(245,158,66,0.08)' }} onClick={handleSetupPPFClick} disabled={setupPPFLoading}>{setupPPFLoading ? 'Loading...' : 'Setup PPF'}</button>
           <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(239,68,68,0.08)' }} onClick={handleDeletePPF} disabled={deletePPFLoading}>{deletePPFLoading ? 'Deleting...' : 'Delete PPF'}</button>
           <button
             className="pf-dashboard-btn"
@@ -379,10 +413,22 @@ function PfDashboard() {
         {showSetupPPFPopup && (
           <div className="popup-bg" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.2)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div className="popup" style={{ background: '#fff', borderRadius: 8, padding: 24, minWidth: 320, boxShadow: '0 2px 16px rgba(0,0,0,0.12)' }}>
-              <h2 style={{ marginTop: 0 }}>Setup PPF - Enter Start Date</h2>
-              <input type="date" value={setupPPFStartDate} onChange={e => setSetupPPFStartDate(e.target.value)} style={{ fontSize: 16, padding: 6, marginBottom: 16 }} />
+              <h2 style={{ marginTop: 0 }}>Setup PPF Period</h2>
+              <label style={{ display: 'block', marginBottom: 12 }}>
+                Start date
+                <input type="date" value={setupPPFStartDate} disabled={setupPPFHasEntries} onChange={e => {
+                  const startDate = e.target.value;
+                  setSetupPPFStartDate(startDate);
+                  setSetupPPFEndDate(getDefaultSetupEndDate(startDate));
+                }} style={{ display: 'block', fontSize: 16, padding: 6 }} />
+              </label>
+              <label style={{ display: 'block', marginBottom: 16 }}>
+                End date (inclusive month)
+                <input type="date" value={setupPPFEndDate} min={setupPPFStartDate} onChange={e => setSetupPPFEndDate(e.target.value)} style={{ display: 'block', fontSize: 16, padding: 6 }} />
+              </label>
+              <p>Existing monthly periods and deposits are preserved. Reducing the end date requires zero deposits in every period being removed.</p>
               <div>
-                <button onClick={handleSetupPPFSave} style={{ marginRight: 8 }} disabled={setupPPFLoading || !setupPPFStartDate}>Save</button>
+                <button onClick={handleSetupPPFSave} style={{ marginRight: 8 }} disabled={setupPPFLoading || !setupPPFStartDate || !setupPPFEndDate}>Save</button>
                 <button onClick={() => setShowSetupPPFPopup(false)} disabled={setupPPFLoading}>Cancel</button>
               </div>
             </div>
@@ -451,8 +497,8 @@ function PfDashboard() {
             <span style={{ fontWeight: 700, fontSize: 20, color: '#6366f1' }}>{ppfSummary.totalInterest.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
           <div style={{ borderTop: '1px solid #e5e7eb', margin: '10px 0 0 0', paddingTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#64748b', fontWeight: 600 }}>Total After 15Y</span>
-            <span style={{ fontWeight: 800, fontSize: 22, color: '#059669', letterSpacing: 0.5 }}>{ppfSummary.totalAfter15Y.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+            <span style={{ color: '#64748b', fontWeight: 600 }}>Total Balance</span>
+            <span style={{ fontWeight: 800, fontSize: 22, color: '#059669', letterSpacing: 0.5 }}>{ppfSummary.totalBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
         </div>
       </aside>
