@@ -297,11 +297,6 @@ function PfDashboard() {
       <header className="retirement-page-topbar ppf-retirement-topbar">
         <h1 className="colorful-title">Public Provident Fund Dashboard</h1>
         <div className="pf-dashboard-btn-row">
-          <button
-            className="pf-dashboard-btn"
-            style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }}
-            onClick={() => navigate(`/user/${userId}/overview`)}
-          >Overview</button>
           <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(99,102,241,0.08)' }} onClick={() => navigate(`/user/${userId}/ppf-details`)}>PPF</button>
           <button className="pf-dashboard-btn" style={{ minWidth: 140, background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(16,185,129,0.08)' }} onClick={handleOpenPopup}>Setup Interest</button>
           <button className="pf-dashboard-btn" style={{ minWidth: 120, background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.2rem', fontWeight: 600, fontSize: '1rem', boxShadow: '0 2px 8px rgba(245,158,66,0.08)' }} onClick={handleSetupPPFClick} disabled={setupPPFLoading}>{setupPPFLoading ? 'Loading...' : 'Setup PPF'}</button>

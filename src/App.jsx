@@ -1,6 +1,6 @@
 import { apiUrl } from './api.js'
-import { useEffect, useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import './App.css'
 import MutualFundDashboard from './MutualFundDashboard'
 import MutualFundDetails from './MutualFundDetails'
@@ -127,7 +127,30 @@ function AuthenticatedApp() {
 function ProtectedUser({ user, isAdmin, onLogout }) {
   const { userId } = useParams()
   const [error, setError] = useState('')
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false)
+  const [isPfSubmenuOpen, setIsPfSubmenuOpen] = useState(false)
+  const location = useLocation()
   const navigate = useNavigate()
+  const accountMenuRef = useRef(null)
+  const isOverviewPage = location.pathname === `/user/${userId}/overview`
+
+  useEffect(() => {
+    if (!isAccountMenuOpen) return undefined
+
+    const handlePointerDown = event => {
+      if (!accountMenuRef.current?.contains(event.target)) setIsAccountMenuOpen(false)
+    }
+    const handleKeyDown = event => {
+      if (event.key === 'Escape') setIsAccountMenuOpen(false)
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isAccountMenuOpen])
 
   if (userId !== user.id) {
     return <Navigate to={`/user/${user.id}/overview`} replace />
@@ -143,11 +166,71 @@ function ProtectedUser({ user, isAdmin, onLogout }) {
     }
   }
 
+  const navigateFromMenu = path => {
+    setIsAccountMenuOpen(false)
+    setIsPfSubmenuOpen(false)
+    navigate(`/user/${userId}/${path}`)
+  }
+
   return (
     <>
       <div className="auth-session-bar">
         <span>Signed in as <strong>{user.name}</strong></span>
-        <button type="button" onClick={handleLogout}>Log out</button>
+        <div className="auth-account-menu" ref={accountMenuRef}>
+          <button
+            type="button"
+            className="auth-account-menu-toggle"
+            aria-label="Open account menu"
+            aria-expanded={isAccountMenuOpen}
+            aria-controls="auth-account-menu"
+            onClick={() => setIsAccountMenuOpen(open => !open)}
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M3 5h14M3 10h14M3 15h14" />
+            </svg>
+          </button>
+          {isAccountMenuOpen && (
+            <div className="auth-account-menu-dropdown" id="auth-account-menu">
+              {isOverviewPage ? (
+                <>
+                  <button type="button" onClick={() => navigateFromMenu('dashboard')}>Mutual Fund</button>
+                  <div className="auth-account-menu-item">
+                    <button
+                      type="button"
+                      className="auth-account-submenu-toggle"
+                      aria-expanded={isPfSubmenuOpen}
+                      aria-controls="auth-account-pf-submenu"
+                      onClick={() => setIsPfSubmenuOpen(open => !open)}
+                    >
+                      PF <span aria-hidden="true">{isPfSubmenuOpen ? '‹' : '›'}</span>
+                    </button>
+                    {isPfSubmenuOpen && (
+                      <div className="auth-account-submenu" id="auth-account-pf-submenu">
+                        <button type="button" onClick={() => navigateFromMenu('ppf-dashboard')}>PPF</button>
+                        <button type="button" onClick={() => navigateFromMenu('pf-dashboard')}>Provident Fund</button>
+                        <button type="button" onClick={() => navigateFromMenu('eps-dashboard')}>EPS</button>
+                      </div>
+                    )}
+                  </div>
+                  <button type="button" onClick={() => navigateFromMenu('gold')}>Gold</button>
+                  <button type="button" onClick={() => navigateFromMenu('expenses')}>Expenses</button>
+                  {isAdmin && <button type="button" onClick={() => navigateFromMenu('admin-users')}>Manage Users</button>}
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAccountMenuOpen(false)
+                    navigate(`/user/${userId}/overview`)
+                  }}
+                >
+                  Overview
+                </button>
+              )}
+              <button type="button" onClick={handleLogout}>Log out</button>
+            </div>
+          )}
+        </div>
         {error && <span role="alert">{error}</span>}
       </div>
       <Outlet context={{ isAdmin }} />

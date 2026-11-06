@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import { apiUrl } from './api.js';
 import SearchableDropdown from './components/SearchableDropdown';
 
@@ -36,8 +35,6 @@ async function requestJson(path, options) {
 }
 
 export default function Expenses() {
-  const navigate = useNavigate();
-  const { userId } = useParams();
   const [view, setView] = useState('overview');
   const [types, setTypes] = useState([]);
   const [months, setMonths] = useState([]);
@@ -297,7 +294,6 @@ export default function Expenses() {
     <main className="expense-page">
       <header className="expense-topbar">
         <h1 className="colorful-title">Daily Expenses</h1>
-        <button type="button" onClick={() => navigate(`/user/${userId}/overview`)}>Overview</button>
       </header>
 
       <nav className="expense-nav" aria-label="Expense sections">

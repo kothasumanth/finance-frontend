@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Navigate, useNavigate, useOutletContext, useParams } from 'react-router-dom';
+import { Navigate, useOutletContext, useParams } from 'react-router-dom';
 import { apiUrl } from './api.js';
 
 async function requestJson(path, options) {
@@ -13,7 +13,6 @@ async function requestJson(path, options) {
 export default function AdminUsers() {
   const { isAdmin } = useOutletContext();
   const { userId } = useParams();
-  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +91,6 @@ export default function AdminUsers() {
     <main className="admin-users-page">
       <header className="admin-users-topbar">
         <h1 className="colorful-title">Manage Users</h1>
-        <button type="button" onClick={() => navigate(`/user/${userId}/overview`)}>Finance Overview</button>
       </header>
       <section className="admin-users-panel">
         <p>Assign account roles. Deleting a user permanently removes all financial records owned by that account.</p>

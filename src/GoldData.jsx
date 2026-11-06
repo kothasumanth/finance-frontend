@@ -2,7 +2,7 @@ import { apiUrl } from './api.js'
 import IconButton from './IconButton';
 import { Fragment, useEffect, useState } from 'react';
 import { fetchTodayGoldPrice, saveTodayGoldPrice } from './api/goldPrice';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 function GoldData() {
   const [deleteIdx, setDeleteIdx] = useState(null);
@@ -110,7 +110,6 @@ function GoldData() {
     <div className="gold-page">
       <header className="gold-topbar">
         <h1 className="colorful-title gold-details-title">Gold Details</h1>
-        <Link className="gold-back-link" to={`/user/${userId}/overview`}>Back to Overview</Link>
         <div className="gold-actions">
           <button onClick={handleAdd}>Add New</button>
           <button onClick={() => setShowGoldPriceModal(true)}>Enter Today Gold Price</button>

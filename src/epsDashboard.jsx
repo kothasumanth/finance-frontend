@@ -288,11 +288,6 @@ function EpsDashboard() {
         <h1 className="colorful-title">EPS Dashboard</h1>
         <div className="eps-dashboard-actions">
           <button
-            style={{ background: '#f59e42', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}
-            onClick={() => navigate(`/user/${userId}/overview`)}
-            disabled={loading || actionLoading}
-          >Overview</button>
-          <button
             style={{ background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}
             onClick={() => navigate(`/user/${userId}/eps-details`)}
             disabled={loading || actionLoading}

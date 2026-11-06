@@ -63,7 +63,6 @@ function MutualFundDashboard() {
           <h1 className="colorful-title mf-dashboard-title">Mutual Fund Dashboard</h1>
         </div>
         <nav className="mf-dashboard-actions" aria-label="Mutual fund actions">
-          <button onClick={() => navigate(`/user/${userId}/overview`)}>Overview</button>
           {isAdmin && <button onClick={() => navigate(`/user/${userId}/mutualfund-metadata`)}>Add MF Metadata</button>}
           <button onClick={() => navigate(`/user/${userId}/view-mf-data`)}>View MF Data</button>
           <button onClick={() => navigate(`/user/${userId}/mf-metrics`)}>Metrics</button>
