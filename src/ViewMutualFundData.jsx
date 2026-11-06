@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx'
 import SearchableDropdown from './components/SearchableDropdown'
 import { SessionSummary } from './components/UserSessionSummary'
 import { useUserSessionSummary } from './components/userSessionSummaryContext'
+import { calculateXirr } from './utils/calculateXirr'
 
 function ViewMutualFundData() {
   const { userId } = useParams()
@@ -286,6 +287,13 @@ function ViewMutualFundData() {
       .reduce((sum, entry) => sum + (Number(entry.balanceUnit) * Number(mfApiData.nav)), 0)
     : null
   const profitLoss = todayValue === null ? null : todayValue - invested
+  const xirrCashFlows = entries
+    .filter(entry => entry.investType === 'Invest' || entry.investType === 'Redeem')
+    .map(entry => ({
+      date: entry.purchaseDate,
+      amount: (entry.investType === 'Invest' ? -1 : 1) * Number(entry.amount)
+    }))
+  const xirr = todayValue === null ? null : calculateXirr(xirrCashFlows, todayValue, mfApiData?.date)
   const selectedFundName = selectedFund === 'ALL'
     ? 'All Mutual Funds'
     : fundOptions.find(fund => fund._id === selectedFund)?.MutualFundName || 'Selected mutual fund'
@@ -328,6 +336,12 @@ function ViewMutualFundData() {
               <span>P/L</span>
               <strong className={profitLoss === null ? '' : profitLoss >= 0 ? 'is-positive' : 'is-negative'}>
                 {profitLoss === null ? '-' : profitLoss.toFixed(2)}
+              </strong>
+            </div>
+            <div>
+              <span>XIRR</span>
+              <strong className={xirr === null ? '' : xirr >= 0 ? 'is-positive' : 'is-negative'}>
+                {xirr === null ? '-' : `${(xirr * 100).toFixed(2)}%`}
               </strong>
             </div>
             <div><span>Balance Units</span><strong>{entries.length ? balanceUnits.toFixed(3) : '-'}</strong></div>

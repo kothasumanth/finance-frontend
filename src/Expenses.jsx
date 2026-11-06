@@ -297,7 +297,7 @@ export default function Expenses() {
     <main className="expense-page">
       <header className="expense-topbar">
         <h1 className="colorful-title">Daily Expenses</h1>
-        <button type="button" onClick={() => navigate(`/user/${userId}/overview`)}>Finance Overview</button>
+        <button type="button" onClick={() => navigate(`/user/${userId}/overview`)}>Overview</button>
       </header>
 
       <nav className="expense-nav" aria-label="Expense sections">

@@ -2,6 +2,7 @@ import { apiUrl } from './api.js'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import SearchableDropdown from './components/SearchableDropdown'
+import { calculateXirr } from './utils/calculateXirr'
 
 function getLocalDateString(date = new Date()) {
   const year = date.getFullYear()
@@ -35,47 +36,6 @@ function formatDate(isoDate) {
     month: 'short',
     year: 'numeric',
   })
-}
-
-function calculateXirr(rows, terminalValue, valuationDate) {
-  if (!rows.length || !Number.isFinite(terminalValue) || terminalValue <= 0) return null
-  const cashFlows = [
-    ...rows.map(row => ({ date: row.navDate, amount: -row.amount })),
-    { date: valuationDate, amount: terminalValue },
-  ]
-  const startTime = new Date(`${cashFlows[0].date}T00:00:00Z`).getTime()
-  const endTime = new Date(`${valuationDate}T00:00:00Z`).getTime()
-  if (!Number.isFinite(startTime) || endTime <= startTime) return null
-
-  const netPresentValue = rate => cashFlows.reduce((total, flow) => {
-    const flowTime = new Date(`${flow.date}T00:00:00Z`).getTime()
-    const years = (flowTime - startTime) / (365 * 24 * 60 * 60 * 1000)
-    return total + flow.amount * Math.exp(-years * Math.log1p(rate))
-  }, 0)
-
-  let low = -0.999999
-  let high = 0.1
-  let lowValue = netPresentValue(low)
-  let highValue = netPresentValue(high)
-  for (let attempt = 0; attempt < 40 && Math.sign(lowValue) === Math.sign(highValue); attempt += 1) {
-    high = high * 2 + 0.1
-    highValue = netPresentValue(high)
-  }
-  if (!Number.isFinite(lowValue) || !Number.isFinite(highValue) || Math.sign(lowValue) === Math.sign(highValue)) return null
-
-  for (let iteration = 0; iteration < 100; iteration += 1) {
-    const middle = (low + high) / 2
-    const middleValue = netPresentValue(middle)
-    if (Math.abs(middleValue) < 0.000001) return middle
-    if (Math.sign(middleValue) === Math.sign(lowValue)) {
-      low = middle
-      lowValue = middleValue
-    } else {
-      high = middle
-      highValue = middleValue
-    }
-  }
-  return (low + high) / 2
 }
 
 function SIPAnalysis() {
@@ -188,7 +148,9 @@ function SIPAnalysis() {
   }
 
   const totals = rows.length ? rows[rows.length - 1] : null
-  const xirr = totals ? calculateXirr(rows, totals.todayValue, latestNav.date) : null
+  const xirr = totals
+    ? calculateXirr(rows.map(row => ({ date: row.navDate, amount: -row.amount })), totals.todayValue, latestNav.date)
+    : null
   const fundName = fundOptions.find(fund => fund._id === selectedFundId)?.MutualFundName || 'SIP Analysis'
   const formatCurrency = value => value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 

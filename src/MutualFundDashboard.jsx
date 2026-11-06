@@ -15,6 +15,7 @@ function MutualFundDashboard() {
   const [capTypesError, setCapTypesError] = useState(null)
   const [sortConfig, setSortConfig] = useState({ key: 'fundName', direction: 'asc' })
   const [showSIPPopup, setShowSIPPopup] = useState(false)
+  const [showXirr, setShowXirr] = useState(false)
 
   useEffect(() => {
     setCapTypesLoading(true)
@@ -45,6 +46,16 @@ function MutualFundDashboard() {
     })
   }
 
+  const toggleSummaryMetric = () => {
+    const nextShowXirr = !showXirr
+    setShowXirr(nextShowXirr)
+    setSortConfig(current => (
+      current.key === 'xirr' || current.key === 'profitLoss'
+        ? { ...current, key: nextShowXirr ? 'xirr' : 'profitLoss' }
+        : current
+    ))
+  }
+
   return (
     <div className="mf-dashboard-page">
       <header className="mf-dashboard-topbar">
@@ -73,7 +84,15 @@ function MutualFundDashboard() {
                 <span title="Passive"><b>P</b> Passive</span>
               </div>
               <h2>Fund Wise Summary</h2>
-              <span aria-hidden="true" />
+              <button
+                type="button"
+                className="mf-dashboard-metric-toggle"
+                onClick={toggleSummaryMetric}
+                aria-pressed={showXirr}
+                aria-label={`Show ${showXirr ? 'P/L' : 'XIRR'} column`}
+              >
+                {showXirr ? 'P/L' : 'XIRR'}
+              </button>
             </div>
             {summaryLoading || capTypesLoading ? <p>Loading summary...</p> : summaryError || capTypesError ? <p style={{color: 'red'}}>{summaryError || capTypesError}</p> : (
               <div className="mf-dashboard-table-scroll">
@@ -123,10 +142,10 @@ function MutualFundDashboard() {
                   </span>
                 </th>
                 <th>
-                  P/L
+                  {showXirr ? 'XIRR' : 'P/L'}
                   <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: 4 }}>
-                    <button onClick={() => handleSort('profitLoss')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▲</button>
-                    <button onClick={() => handleSort('profitLoss')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▼</button>
+                    <button onClick={() => handleSort(showXirr ? 'xirr' : 'profitLoss')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▲</button>
+                    <button onClick={() => handleSort(showXirr ? 'xirr' : 'profitLoss')} style={{ fontSize: '0.85em', padding: 0, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>▼</button>
                   </span>
                 </th>
                 {/* <th>
@@ -170,7 +189,13 @@ function MutualFundDashboard() {
                   <td style={{ fontSize: '0.95em', minWidth: 70 }}>{capTypes.find(ct => ct._id === fund.CapType)?.name || ''}</td>
                   <td>{fund.invested.toFixed(2)}</td>
                   <td>{fund.todayValue.toFixed(2)}</td>
-                  <td className={fund.profitLoss >= 0 ? 'is-positive' : 'is-negative'}>{fund.profitLoss.toFixed(2)}</td>
+                  {showXirr ? (
+                    <td className={fund.xirr === null ? '' : fund.xirr >= 0 ? 'is-positive' : 'is-negative'}>
+                      {fund.xirr === null ? '-' : `${(fund.xirr * 100).toFixed(2)}%`}
+                    </td>
+                  ) : (
+                    <td className={fund.profitLoss >= 0 ? 'is-positive' : 'is-negative'}>{fund.profitLoss.toFixed(2)}</td>
+                  )}
                   {/* <td>{fund.balanceUnits.toFixed(2)}</td> */}
                 </tr>
               ))}
