@@ -245,9 +245,7 @@ function SIPAnalysis() {
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>SIP Date</th>
                     <th>NAV Date</th>
-                    <th>SIP Amount</th>
                     <th>NAV</th>
                     <th>Units Bought</th>
                     <th>Invested To Date</th>
@@ -259,9 +257,7 @@ function SIPAnalysis() {
                   {rows.map((row, index) => (
                     <tr key={row.sipDate}>
                       <td>{index + 1}</td>
-                      <td>{formatDate(row.sipDate)}</td>
                       <td>{formatDate(row.navDate)}</td>
-                      <td>{row.amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       <td>{row.nav.toFixed(4)}</td>
                       <td>{row.unitsPurchased.toFixed(4)}</td>
                       <td>{row.investedToDate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
