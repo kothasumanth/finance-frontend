@@ -21,6 +21,7 @@ import PfDetails from './pfDetails'
 import EpsDashboard from './epsDashboard'
 import EpsDetails from './epsDetails'
 import { UserSessionSummaryProvider } from './components/UserSessionSummary'
+import MfNavAlerts from './components/MfNavAlerts'
 
 function App() {
   return (
@@ -176,6 +177,7 @@ function ProtectedUser({ user, isAdmin, onLogout }) {
     <>
       <div className="auth-session-bar">
         <span>Signed in as <strong>{user.name}</strong></span>
+        <MfNavAlerts userId={userId} />
         <div className="auth-account-menu" ref={accountMenuRef}>
           <button
             type="button"

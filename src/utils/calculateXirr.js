@@ -14,6 +14,8 @@ function toTimestamp(date) {
     : null
 }
 
+const oneYearInMs = 365 * 24 * 60 * 60 * 1000
+
 export function calculateXirr(cashFlows, terminalValue, valuationDate) {
   if (!Array.isArray(cashFlows) || cashFlows.length === 0 || !Number.isFinite(terminalValue) || terminalValue <= 0) {
     return null
@@ -29,11 +31,14 @@ export function calculateXirr(cashFlows, terminalValue, valuationDate) {
   })
   if (normalizedFlows.some(flow => flow === null || flow.timestamp > valuationTime)) return null
 
-  const startTime = Math.min(...normalizedFlows.map(flow => flow.timestamp))
-  if (valuationTime <= startTime) return null
+  const nonZeroFlows = normalizedFlows.filter(flow => flow.amount !== 0)
+  if (nonZeroFlows.length === 0) return null
+
+  const startTime = Math.min(...nonZeroFlows.map(flow => flow.timestamp))
+  if (valuationTime - startTime < oneYearInMs) return null
 
   const flows = [
-    ...normalizedFlows.filter(flow => flow.amount !== 0),
+    ...nonZeroFlows,
     { timestamp: valuationTime, amount: terminalValue }
   ]
   if (!flows.some(flow => flow.amount < 0) || !flows.some(flow => flow.amount > 0)) return null
