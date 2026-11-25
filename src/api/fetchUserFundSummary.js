@@ -1,4 +1,5 @@
 import { apiUrl } from '../api.js'
+import { calculateXirr } from '../utils/calculateXirr.js';
 // Fetches all entries and metadata for a user, grouped by fund
 export async function fetchUserFundSummary(userId) {
   // Get all entries for the user
@@ -37,6 +38,8 @@ export async function fetchUserFundSummary(userId) {
         profitLoss: 0,
         balanceUnits: 0,
         nav: null,
+        navDate: '',
+        cashFlows: [],
         ActiveOrPassive: fundMetadata.ActiveOrPassive || '',
         IndexOrManaged: fundMetadata.IndexOrManaged || '',
         CapType: fundMetadata.CapType || '', // This is the _id from captype table
@@ -50,6 +53,13 @@ export async function fetchUserFundSummary(userId) {
       fundMap[fundId].invested += investment;
       fundMap[fundId].balanceUnits += Number(entry.balanceUnit);
     }
+
+    if (entry.investType === 'Invest' || entry.investType === 'Redeem') {
+      fundMap[fundId].cashFlows.push({
+        date: entry.purchaseDate,
+        amount: (entry.investType === 'Invest' ? -1 : 1) * Number(entry.amount)
+      });
+    }
   }
 
   // Only request NAVs for funds that contribute to the user's current holdings.
@@ -59,6 +69,7 @@ export async function fetchUserFundSummary(userId) {
       const navRes = await fetch(apiUrl(`/mf-api?googleValue=${encodeURIComponent(fund.metadata.GoogleValue)}`));
       const navData = await navRes.json();
       fund.nav = Number(navData.nav) || null;
+      fund.navDate = navData.date || '';
     } catch {
       fund.nav = null;
     }
@@ -67,6 +78,11 @@ export async function fetchUserFundSummary(userId) {
   for (const fund of Object.values(fundMap)) {
     fund.todayValue = fund.balanceUnits * (fund.nav || 0);
     fund.profitLoss = fund.todayValue - fund.invested;
+    fund.xirr = fund.nav
+      ? calculateXirr(fund.cashFlows, fund.todayValue, fund.navDate)
+      : null;
+    delete fund.cashFlows;
+    delete fund.navDate;
   }
 
   // Only include funds with remaining units

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import { apiUrl } from './api.js';
 import SearchableDropdown from './components/SearchableDropdown';
 
@@ -36,8 +35,6 @@ async function requestJson(path, options) {
 }
 
 export default function Expenses() {
-  const navigate = useNavigate();
-  const { userId } = useParams();
   const [view, setView] = useState('overview');
   const [types, setTypes] = useState([]);
   const [months, setMonths] = useState([]);
@@ -297,7 +294,6 @@ export default function Expenses() {
     <main className="expense-page">
       <header className="expense-topbar">
         <h1 className="colorful-title">Daily Expenses</h1>
-        <button type="button" onClick={() => navigate(`/user/${userId}/overview`)}>Finance Overview</button>
       </header>
 
       <nav className="expense-nav" aria-label="Expense sections">
@@ -623,27 +619,14 @@ export default function Expenses() {
                         return (
                           <tr key={category.expenseTypeId}>
                             <td data-label="Expense description">
-                              <span className="expense-category-tooltip">
-                                {category.name}
-                                <span className="expense-category-tooltip-content" role="tooltip">
-                                  <strong>{category.name}</strong>
-                                  {sortedEntries.map((entry, index) => (
-                                    <span className="expense-category-tooltip-row" key={`${entry.date}-${index}`}>
-                                      <span>{entry.date.slice(0, 10)}</span>
-                                      <span>₹{money(entry.amount)}</span>
-                                      <span className="expense-category-tooltip-comment">{entry.comments || 'No comment'}</span>
-                                    </span>
-                                  ))}
-                                </span>
-                              </span>
-                              <details className="expense-category-mobile-details">
+                              <details className="expense-category-details">
                                 <summary>{category.name} — View {category.entryCount} {category.entryCount === 1 ? 'entry' : 'entries'}</summary>
-                                <div className="expense-category-mobile-entry-list">
+                                <div className="expense-category-entry-list">
                                   {sortedEntries.map((entry, index) => (
-                                    <div className="expense-category-mobile-entry" key={`${entry.date}-${index}`}>
+                                    <div className="expense-category-entry" key={`${entry.date}-${index}`}>
                                       <span>{entry.date.slice(0, 10)}</span>
                                       <span>₹{money(entry.amount)}</span>
-                                      <span className="expense-category-tooltip-comment">{entry.comments || 'No comment'}</span>
+                                      <span className="expense-category-entry-comment">{entry.comments || 'No comment'}</span>
                                     </div>
                                   ))}
                                 </div>
